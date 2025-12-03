@@ -18,7 +18,7 @@ export const authOptions = {
         email: { label: 'Email', type: 'email' },
         password: { label: 'Password', type: 'password' },
       },
-      async authorize(credentials, req) {
+      async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
         const user = await getUserByEmail(credentials.email);
         if (!user) return null;

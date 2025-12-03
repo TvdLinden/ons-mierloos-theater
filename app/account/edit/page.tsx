@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { Button, Input, FormField, Alert } from '@/components/ui';
+import { Button, Input, SimpleFormField as FormField, Alert } from '@/components/ui';
 import Link from 'next/link';
 
 export default function EditProfilePage() {
@@ -98,7 +98,7 @@ export default function EditProfilePage() {
             />
           </FormField>
 
-          {error && <Alert variant="error">{error}</Alert>}
+          {error && <Alert variant="destructive">{error}</Alert>}
           {success && <Alert variant="success">{success}</Alert>}
 
           <div className="flex gap-4">

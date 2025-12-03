@@ -1,6 +1,6 @@
 'use server';
 
-import { redirect } from 'next/navigation';
+// redirect not needed here
 import { getUserByEmail } from '@/lib/queries/users';
 import { updateUser } from '@/lib/commands/users';
 import { generateVerificationToken, sendPasswordResetEmail } from '@/lib/utils/email';

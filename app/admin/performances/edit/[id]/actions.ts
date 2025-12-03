@@ -21,8 +21,6 @@ export async function updatePerformanceAction(
   const totalSeats = formData.get('totalSeats') as string;
   const availableSeats = formData.get('availableSeats') as string;
   const status = formData.get('status') as string;
-  const publicationDate = formData.get('publicationDate') as string;
-  const depublicationDate = formData.get('depublicationDate') as string;
   const notes = formData.get('notes') as string;
 
   if (!date) {

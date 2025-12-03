@@ -1,11 +1,12 @@
 'use client';
 
-import { useActionState } from 'react';
-import { Button, FormField, Input, Textarea } from '@/components/ui';
-import { FormError } from './FormError';
-import { ImageUpload } from './ImageUpload';
+import { useActionState, useState } from 'react';
+import { Button, SimpleFormField as FormField, Input, Textarea } from '@/components/ui';
+import FormError from './FormError';
+import ImageUpload from './ImageUpload';
 import StatusSelector from './StatusSelector';
 import TagSelector from './TagSelector';
+import { Tag } from '@/lib/db';
 
 type ShowFormProps = {
   action: (prevState: { error?: string }, formData: FormData) => Promise<{ error?: string }>;
@@ -18,10 +19,12 @@ type ShowFormProps = {
     status?: 'draft' | 'published' | 'archived';
     tagIds?: string[];
   };
+  availableTags: Tag[];
 };
 
-export default function AddShowForm({ action, initialData }: ShowFormProps) {
+export default function AddShowForm({ action, initialData, availableTags }: ShowFormProps) {
   const [state, formAction, isPending] = useActionState(action, {});
+  const [previewUrl, setPreviewUrl] = useState<string | undefined>(undefined);
 
   return (
     <form action={formAction} className="space-y-6">
@@ -78,18 +81,34 @@ export default function AddShowForm({ action, initialData }: ShowFormProps) {
       </FormField>
 
       <FormField label="Afbeelding" helperText="JPEG of PNG, max 5MB">
-        <ImageUpload name="image" disabled={isPending} />
+        <ImageUpload
+          name="image"
+          label=""
+          onChange={(file) => {
+            if (file) {
+              const reader = new FileReader();
+              reader.onload = (e) => setPreviewUrl(e.target?.result as string);
+              reader.readAsDataURL(file);
+            } else {
+              setPreviewUrl(undefined);
+            }
+          }}
+          previewUrl={previewUrl}
+        />
       </FormField>
 
       <FormField label="Tags" helperText="Categoriseer de voorstelling">
-        <TagSelector name="tagIds" defaultValue={initialData?.tagIds} disabled={isPending} />
+        <TagSelector
+          availableTags={availableTags}
+          selectedTagIds={initialData?.tagIds}
+          name="tagIds"
+        />
       </FormField>
 
       <FormField label="Status" required>
         <StatusSelector
           name="status"
           defaultValue={initialData?.status || 'draft'}
-          disabled={isPending}
           options={[
             { value: 'draft', label: 'Concept' },
             { value: 'published', label: 'Gepubliceerd' },

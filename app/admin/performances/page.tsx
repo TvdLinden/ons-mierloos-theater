@@ -1,10 +1,10 @@
 'use server';
 import Link from 'next/link';
 import { getAllShows } from '@/lib/queries/shows';
-import { updatePerformance, updateShow } from '@/lib/commands/shows';
+import { updateShow } from '@/lib/commands/shows';
 import { requireRole } from '@/lib/utils/auth';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
-import { Column, DataTable, EmptyRow, Row } from '@/components/admin/DataTable';
+import { Column, DataTable, Row } from '@/components/admin/DataTable';
 import { Inbox } from 'lucide-react';
 
 export default async function AdminPerformanceOverview() {

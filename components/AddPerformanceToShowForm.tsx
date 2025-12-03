@@ -1,8 +1,8 @@
 'use client';
 
 import { useActionState } from 'react';
-import { Button, FormField, Input } from '@/components/ui';
-import { FormError } from './FormError';
+import { Button, SimpleFormField as FormField, Input } from '@/components/ui';
+import FormError from './FormError';
 import StatusSelector from './StatusSelector';
 import DateTimeInput from './DateTimeInput';
 import Textarea from './Textarea';
@@ -18,7 +18,7 @@ export default function AddPerformanceToShowForm({ action, showBasePrice }: Perf
   return (
     <form action={formAction} className="space-y-6">
       <FormField label="Datum en tijd" required>
-        <DateTimeInput name="date" required disabled={isPending} />
+        <DateTimeInput name="date" required />
       </FormField>
 
       <FormField
@@ -40,30 +40,24 @@ export default function AddPerformanceToShowForm({ action, showBasePrice }: Perf
       </FormField>
 
       <FormField label="Publicatiedatum" helperText="Wanneer wordt deze speeltijd zichtbaar?">
-        <DateTimeInput name="publicationDate" disabled={isPending} />
+        <DateTimeInput name="publicationDate" />
       </FormField>
 
       <FormField label="Depublicatiedatum" helperText="Wanneer wordt deze speeltijd verborgen?">
-        <DateTimeInput name="depublicationDate" disabled={isPending} />
+        <DateTimeInput name="depublicationDate" />
       </FormField>
 
       <FormField
         label="Notities"
         helperText="Interne aantekeningen (niet zichtbaar voor bezoekers)"
       >
-        <Textarea
-          name="notes"
-          placeholder="Bijv. Extra matinee, Special pricing"
-          disabled={isPending}
-          rows={3}
-        />
+        <Textarea name="notes" placeholder="Bijv. Extra matinee, Special pricing" rows={3} />
       </FormField>
 
       <FormField label="Status" required>
         <StatusSelector
           name="status"
           defaultValue="draft"
-          disabled={isPending}
           options={[
             { value: 'draft', label: 'Concept' },
             { value: 'published', label: 'Gepubliceerd' },

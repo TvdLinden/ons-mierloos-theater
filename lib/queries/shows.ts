@@ -7,8 +7,8 @@ import {
   Performance,
   PerformanceWithShow,
 } from '@/lib/db';
-import { shows, performances, showTags } from '@/lib/db/schema';
-import { eq, gt, and, desc, asc, or, lte, isNull, gte } from 'drizzle-orm';
+import { shows, performances } from '@/lib/db/schema';
+import { eq, and, desc, asc, or, lte, isNull, gte } from 'drizzle-orm';
 import { getTagsForShow } from './tags';
 
 /**

@@ -1,4 +1,4 @@
-import { Performance, Show } from '@/lib/db';
+import { Show } from '@/lib/db';
 
 /**
  * Get the image URL for a performance's main image

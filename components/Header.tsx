@@ -78,21 +78,21 @@ export default function Header() {
           <NavigationMenu>
             <NavigationMenuList>
               <NavigationMenuItem>
-                <Link href="/" legacyBehavior passHref>
+                <Link href="/" passHref>
                   <NavigationMenuLink className="text-secondary hover:text-secondary/80 px-3 font-medium">
                     Home
                   </NavigationMenuLink>
                 </Link>
               </NavigationMenuItem>
               <NavigationMenuItem>
-                <Link href="/sponsors" legacyBehavior passHref>
+                <Link href="/sponsors" passHref>
                   <NavigationMenuLink className="text-secondary hover:text-secondary/80 px-3 font-medium">
                     Sponsors
                   </NavigationMenuLink>
                 </Link>
               </NavigationMenuItem>
               <NavigationMenuItem>
-                <Link href="/contact" legacyBehavior passHref>
+                <Link href="/contact" passHref>
                   <NavigationMenuLink className="text-secondary hover:text-secondary/80 px-3 font-medium">
                     Contact
                   </NavigationMenuLink>
@@ -100,7 +100,7 @@ export default function Header() {
               </NavigationMenuItem>
               {isAdmin && (
                 <NavigationMenuItem>
-                  <Link href="/admin" legacyBehavior passHref>
+                  <Link href="/admin" passHref>
                     <NavigationMenuLink className="text-secondary hover:text-secondary/80 px-3 font-medium">
                       Beheer
                     </NavigationMenuLink>

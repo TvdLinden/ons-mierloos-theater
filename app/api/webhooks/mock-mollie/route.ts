@@ -72,7 +72,11 @@ export async function POST(request: NextRequest) {
         const orderLineItems = await db.query.lineItems.findMany({
           where: eq(lineItems.orderId, payment.orderId),
           with: {
-            performance: true,
+            performance: {
+              with: {
+                show: true,
+              },
+            },
           },
         });
 

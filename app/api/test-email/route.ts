@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sendTestEmail } from '@/lib/utils/email';
-import { requireRole } from '@/lib/utils/auth';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/utils/auth';
 

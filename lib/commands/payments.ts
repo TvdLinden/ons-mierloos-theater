@@ -1,5 +1,5 @@
 import { db, Payment, Order } from '@/lib/db';
-import { payments, orders, lineItems, performances, couponUsages } from '@/lib/db/schema';
+import { payments, orders, lineItems, couponUsages } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { sendOrderConfirmationEmail } from '@/lib/utils/email';
 
@@ -298,7 +298,11 @@ export async function handleMollieWebhook(molliePaymentId: string): Promise<void
       const orderLineItems = await db.query.lineItems.findMany({
         where: eq(lineItems.orderId, payment.orderId),
         with: {
-          performance: true,
+          performance: {
+            with: {
+              show: true,
+            },
+          },
         },
       });
 

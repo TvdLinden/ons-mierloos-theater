@@ -118,7 +118,7 @@ export default async function AccountPage() {
                     >
                       <div>
                         <p className="font-medium text-text-primary">
-                          {item.performance?.title || 'Voorstelling'}
+                          {item.performance?.show?.title || 'Voorstelling'}
                         </p>
                         {item.performance?.date && (
                           <p className="text-text-secondary">

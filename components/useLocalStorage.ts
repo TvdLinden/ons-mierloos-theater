@@ -1,30 +1,39 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 export function useLocalStorage<T>(key: string, initialValue: T) {
-  const [value, setValue] = useState<T>(initialValue);
-  const [isInitialized, setIsInitialized] = useState(false);
-
-  // Initialize from localStorage on mount
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
+  const [value, setValue] = useState<T>(() => {
+    try {
+      if (typeof window === 'undefined') return initialValue;
       const stored = window.localStorage.getItem(key);
-      if (stored) {
-        setValue(JSON.parse(stored));
-      }
-      setIsInitialized(true);
+      return stored ? (JSON.parse(stored) as T) : initialValue;
+    } catch {
+      return initialValue;
     }
-  }, [key]);
+  });
+
+  // Use a ref to track whether we've skipped the initial save
+  const isFirstRunRef = useRef(true);
 
   // Save to localStorage when value changes (but not on initial load)
   useEffect(() => {
-    if (isInitialized && typeof window !== 'undefined') {
-      window.localStorage.setItem(key, JSON.stringify(value));
+    if (typeof window === 'undefined') return;
+    if (isFirstRunRef.current) {
+      // Skip the initial write because state was populated from storage
+      isFirstRunRef.current = false;
+      return;
     }
-  }, [key, value, isInitialized]);
+    try {
+      window.localStorage.setItem(key, JSON.stringify(value));
+    } catch {
+      // ignore write errors
+    }
+  }, [key, value]);
 
   // Stable setter function that doesn't change on every render
   const setStoredValue = useCallback((newValue: T | ((prev: T) => T)) => {
-    setValue(newValue);
+    setValue((prev) =>
+      typeof newValue === 'function' ? (newValue as (p: T) => T)(prev) : newValue,
+    );
   }, []);
 
   return [value, setStoredValue] as const;

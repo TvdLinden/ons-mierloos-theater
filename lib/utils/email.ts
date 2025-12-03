@@ -1,5 +1,5 @@
 import nodemailer from 'nodemailer';
-import { Order, LineItem, Performance, CouponUsage, Coupon } from '@/lib/db';
+import { Order, LineItem, Performance, CouponUsage, Coupon, PerformanceWithShow } from '@/lib/db';
 import crypto from 'crypto';
 
 // Email configuration
@@ -11,7 +11,7 @@ const FROM_EMAIL = process.env.FROM_EMAIL || SMTP_USER;
 const FROM_NAME = process.env.FROM_NAME || 'Ons Mierloos Theater';
 
 type LineItemWithPerformance = LineItem & {
-  performance: Performance | null;
+  performance: PerformanceWithShow | null;
 };
 
 /**
@@ -55,7 +55,7 @@ function generateTicketEmail(
       (item) => `
     <tr style="border-bottom: 1px solid #eee;">
       <td style="padding: 12px 8px;">
-        <strong>${item.performance?.title || 'Voorstelling'}</strong><br/>
+        <strong>${item.performance?.show?.title || 'Voorstelling'}</strong><br/>
         <small style="color: #666;">
           ${item.performance?.date ? new Date(item.performance.date).toLocaleString('nl-NL', { dateStyle: 'long', timeStyle: 'short' }) : ''}
         </small>
@@ -94,10 +94,10 @@ function generateTicketEmail(
     (sum, item) => sum + parseFloat(item.pricePerTicket || '0') * (item.quantity || 0),
     0,
   );
-  const totalDiscount = couponUsages.reduce(
-    (sum, usage) => sum + parseFloat(usage.discountAmount || '0'),
-    0,
-  );
+  // const totalDiscount = couponUsages.reduce(
+  //   (sum, usage) => sum + parseFloat(usage.discountAmount || '0'),
+  //   0,
+  // );
 
   return `
 <!DOCTYPE html>

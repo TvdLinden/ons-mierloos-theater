@@ -1,17 +1,16 @@
 import Image from 'next/image';
 import CurrencyDisplay from '@/components/CurrencyDisplay';
-import DateDisplay from '@/components/DateDisplay';
 import { ShowWithTagsAndPerformances } from '@/lib/db';
 import { getShowImageUrl } from '@/lib/utils/performanceImages';
 import TagsContainer from './TagsContainer';
 
-export type PerformanceDetailProps = {
+export type ShowDetailProps = {
   show: ShowWithTagsAndPerformances;
   children?: React.ReactNode;
 };
 
-export default function PerformanceDetail({ show, children }: PerformanceDetailProps) {
-  const { title, subtitle, date, description, price } = show;
+export default function ShowDetail({ show, children }: ShowDetailProps) {
+  const { title, subtitle, description, basePrice: price } = show;
   const imageUrl = getShowImageUrl(show);
   return (
     <div className="max-w-xl w-full bg-surface dark:bg-accent rounded-lg shadow p-8 flex flex-col items-center">
@@ -32,13 +31,13 @@ export default function PerformanceDetail({ show, children }: PerformanceDetailP
           {subtitle}
         </p>
       )}
-      <p className="text-accent dark:text-surface mb-2">
+      {/* <p className="text-accent dark:text-surface mb-2">
         {date ? (
           <DateDisplay value={date} options={{ dateStyle: 'short', timeStyle: 'short' }} />
         ) : (
           <span className="text-accent">Datum</span>
         )}
-      </p>
+      </p> */}
       <TagsContainer tags={show.tags} size="md" />
       <p className="text-accent dark:text-surface mb-6 text-center">
         {description || <span className="text-accent">Beschrijving</span>}

@@ -11,7 +11,11 @@ export async function getAllOrders() {
     with: {
       lineItems: {
         with: {
-          performance: true,
+          performance: {
+            with: {
+              show: true,
+            },
+          },
         },
       },
       payments: true,
@@ -96,7 +100,11 @@ export async function getUserOrders(userId: string) {
     with: {
       lineItems: {
         with: {
-          performance: true,
+          performance: {
+            with: {
+              show: true,
+            },
+          },
         },
       },
       payments: true,

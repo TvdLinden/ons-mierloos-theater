@@ -1,6 +1,4 @@
 import { db } from '@/lib/db';
-import { sponsors } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
 
 export async function getAllSponsors() {
   return await db.query.sponsors.findMany({

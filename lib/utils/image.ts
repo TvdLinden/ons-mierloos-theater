@@ -1,5 +1,4 @@
 import sharp from 'sharp';
-import { readFile } from 'fs/promises';
 
 export async function readFormFile(file: File): Promise<Buffer> {
   const buffer = await file.arrayBuffer().then((ab) => Buffer.from(ab));

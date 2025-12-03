@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { getAllSponsors } from '@/lib/queries/sponsors';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { DataTable } from '@/components/admin/DataTable';
@@ -37,10 +38,12 @@ export default async function SponsorsAdminPage() {
             <tr key={sponsor.id} className="border-b border-border hover:bg-muted/50">
               <td className="px-6 py-4">
                 {sponsor.logoId && sponsor.logo ? (
-                  <img
+                  <Image
                     src={getImageUrl(sponsor.logoId)}
                     alt={sponsor.name}
-                    className="h-12 w-24 object-contain"
+                    width={96}
+                    height={48}
+                    className="object-contain"
                   />
                 ) : (
                   <span className="text-text-secondary text-sm">Geen logo</span>
