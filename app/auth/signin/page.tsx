@@ -2,7 +2,7 @@
 import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { signIn } from 'next-auth/react';
-import { Button, Input, Alert, Card, SimpleFormField } from '@/components/ui';
+import { Alert } from '@/components/ui';
 
 function SignInForm() {
   const router = useRouter();
@@ -47,33 +47,35 @@ function SignInForm() {
   };
 
   return (
-    <Card className="max-w-md mx-auto mt-10">
+    <div className="max-w-md mx-auto mt-10 p-6 bg-surface rounded-lg shadow-lg">
       <h1 className="text-2xl font-bold mb-4 text-primary">Inloggen</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && <Alert variant="destructive">{error}</Alert>}
-        <SimpleFormField label="E-mailadres" htmlFor="email" required>
-          <Input
-            id="email"
-            type="email"
-            name="email"
-            placeholder="E-mailadres"
-            required
-            disabled={isLoading}
-          />
-        </SimpleFormField>
-        <SimpleFormField label="Wachtwoord" htmlFor="password" required>
-          <Input
-            id="password"
-            type="password"
-            name="password"
-            placeholder="Wachtwoord"
-            required
-            disabled={isLoading}
-          />
-        </SimpleFormField>
-        <Button type="submit" className="w-full" disabled={isLoading}>
+        <input
+          id="email"
+          type="email"
+          name="email"
+          placeholder="E-mailadres"
+          required
+          disabled={isLoading}
+          className="w-full px-3 py-2 border rounded"
+        />
+        <input
+          id="password"
+          type="password"
+          name="password"
+          placeholder="Wachtwoord"
+          required
+          disabled={isLoading}
+          className="w-full px-3 py-2 border rounded"
+        />
+        <button
+          type="submit"
+          disabled={isLoading}
+          className="w-full bg-primary text-surface py-2 rounded hover:bg-secondary"
+        >
           {isLoading ? 'Bezig met inloggen...' : 'Inloggen'}
-        </Button>
+        </button>
       </form>
       <div className="mt-4 text-center space-y-2">
         <a href="/auth/forgot-password" className="block text-sm text-primary hover:underline">
@@ -86,7 +88,7 @@ function SignInForm() {
           Nog geen account? Registreer
         </a>
       </div>
-    </Card>
+    </div>
   );
 }
 
