@@ -3,6 +3,6 @@
   "out": "drizzle/migrations",
   "dialect": "postgresql",
   "dbCredentials": {
-    "url": "postgresql://postgres.ioaacnuyzlioogfqhzsw:RcFrNbESA6DwEDGC@aws-1-eu-west-2.pooler.supabase.com:6543/postgres?pgbouncer=true"
+    "url": "postgres://username:password@localhost:5432/database"
   }
 }

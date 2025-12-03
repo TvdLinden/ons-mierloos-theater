@@ -1,8 +1,7 @@
 import { users } from '@/lib/db/schema';
-import { db } from '@/lib/db';
+import { db, User } from '@/lib/db';
 import { asc, eq, ilike, or } from 'drizzle-orm';
 
-export type User = typeof users.$inferSelect;
 export async function getUserByEmail(email: string): Promise<User | null> {
   const result = await db.select().from(users).where(eq(users.email, email)).limit(1);
 

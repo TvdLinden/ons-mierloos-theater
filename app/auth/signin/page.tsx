@@ -1,20 +1,56 @@
 'use client';
-import { useActionState, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { signIn } from 'next-auth/react';
 import { Button, Input, Alert, Card, SimpleFormField } from '@/components/ui';
-import { signinAction } from './actions';
 
 function SignInForm() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const redirectUrl = searchParams.get('redirectUrl') || '/';
-  const [state, formAction, isPending] = useActionState(signinAction, {});
+  const [error, setError] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError('');
+    setIsLoading(true);
+
+    const formData = new FormData(e.currentTarget);
+    const email = formData.get('email') as string;
+    const password = formData.get('password') as string;
+
+    if (!email || !password) {
+      setError('E-mailadres en wachtwoord zijn verplicht.');
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const result = await signIn('credentials', {
+        email,
+        password,
+        redirect: false,
+      });
+
+      if (result?.error) {
+        setError('Ongeldige inloggegevens.');
+        setIsLoading(false);
+      } else if (result?.ok) {
+        // Redirect on successful signin
+        router.push(redirectUrl);
+      }
+    } catch (err) {
+      setError('Er is een fout opgetreden. Probeer het opnieuw.');
+      setIsLoading(false);
+    }
+  };
 
   return (
     <Card className="max-w-md mx-auto mt-10">
       <h1 className="text-2xl font-bold mb-4 text-primary">Inloggen</h1>
-      <form action={formAction} className="space-y-4">
-        <input type="hidden" name="redirectUrl" value={redirectUrl} />
-        {state.error && <Alert variant="destructive">{state.error}</Alert>}
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {error && <Alert variant="destructive">{error}</Alert>}
         <SimpleFormField label="E-mailadres" htmlFor="email" required>
           <Input
             id="email"
@@ -22,7 +58,7 @@ function SignInForm() {
             name="email"
             placeholder="E-mailadres"
             required
-            disabled={isPending}
+            disabled={isLoading}
           />
         </SimpleFormField>
         <SimpleFormField label="Wachtwoord" htmlFor="password" required>
@@ -32,11 +68,11 @@ function SignInForm() {
             name="password"
             placeholder="Wachtwoord"
             required
-            disabled={isPending}
+            disabled={isLoading}
           />
         </SimpleFormField>
-        <Button type="submit" className="w-full" disabled={isPending}>
-          {isPending ? 'Bezig met inloggen...' : 'Inloggen'}
+        <Button type="submit" className="w-full" disabled={isLoading}>
+          {isLoading ? 'Bezig met inloggen...' : 'Inloggen'}
         </Button>
       </form>
       <div className="mt-4 text-center space-y-2">

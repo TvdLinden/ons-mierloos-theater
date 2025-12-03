@@ -9,6 +9,51 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import { getUserByEmail } from '@/lib/queries/users';
 import { updateUser } from '@/lib/commands/users';
 
+/**
+ * Validates user credentials and returns user info if valid
+ */
+export async function validateCredentials(
+  email: string,
+  password: string,
+): Promise<{ success: true; user: User } | { success: false; error: string }> {
+  if (!email || !password) {
+    return { success: false, error: 'E-mailadres en wachtwoord zijn verplicht.' };
+  }
+
+  const user = await getUserByEmail(email);
+  if (!user) {
+    return { success: false, error: 'Ongeldige inloggegevens.' };
+  }
+
+  if (!user.passwordHash || typeof user.passwordHash !== 'string') {
+    console.log('Missing or invalid password hash for user:', email);
+    return { success: false, error: 'Ongeldige inloggegevens.' };
+  }
+
+  const valid = await verifyPassword(password, user);
+  if (!valid) {
+    console.log('Invalid password for user:', email);
+    return { success: false, error: 'Ongeldige inloggegevens.' };
+  }
+
+  // Check if email is verified
+  if (!user.emailVerified) {
+    console.log('Email not verified for user:', email);
+    return {
+      success: false,
+      error: 'Email niet geverifieerd. Controleer je inbox voor de verificatie link.',
+    };
+  }
+
+  // Ensure role is of type UserRole and not null
+  if (!user.role) {
+    console.log('Missing role for user:', email);
+    return { success: false, error: 'Ongeldige gebruikersrol.' };
+  }
+
+  return { success: true, user };
+}
+
 export const authOptions = {
   debug: false,
   providers: [
@@ -20,39 +65,24 @@ export const authOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
-        const user = await getUserByEmail(credentials.email);
-        if (!user) return null;
-        if (!user.passwordHash || typeof user.passwordHash !== 'string') {
-          console.log('Missing or invalid password hash for user:', credentials.email);
-          return null;
-        }
 
-        const valid = await verifyPassword(credentials.password, user);
-        if (!valid) {
-          console.log('Invalid password for user:', credentials.email);
-          return null;
-        }
+        const result = await validateCredentials(credentials.email, credentials.password);
 
-        // Check if email is verified
-        if (!user.emailVerified) {
-          console.log('Email not verified for user:', credentials.email);
-          throw new Error('Email niet geverifieerd. Controleer je inbox voor de verificatie link.');
-        }
-
-        // Ensure role is of type UserRole and not null
-        if (!user.role) {
-          console.log('Missing role for user:', credentials.email);
+        if (!result.success) {
+          if (result.error.includes('geverifieerd')) {
+            throw new Error(result.error);
+          }
           return null;
         }
 
         // Update last signin timestamp
-        await updateUser(user.id, { lastSignin: new Date() });
+        await updateUser(result.user.id, { lastSignin: new Date() });
 
         return {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          role: user.role as UserRole,
+          id: result.user.id,
+          name: result.user.name,
+          email: result.user.email,
+          role: result.user.role as UserRole,
         };
       },
     }),
