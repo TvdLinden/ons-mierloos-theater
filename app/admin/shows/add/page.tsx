@@ -96,6 +96,8 @@ export default async function AddShowPage() {
         basePrice: form.basePrice,
         status: (form.status as ShowStatus) || 'draft',
         imageId: fileId || undefined,
+        publicationDate: null,
+        depublicationDate: null,
         thumbnailImageId: thumbnailFileId || undefined,
       });
 
@@ -114,7 +116,7 @@ export default async function AddShowPage() {
   return (
     <Card className="max-w-2xl mx-auto py-12 px-6">
       <h1 className="text-3xl font-bold mb-8 text-primary">Nieuwe voorstelling toevoegen</h1>
-      <AddShowForm action={handleAddShow} />
+      <AddShowForm action={handleAddShow} availableTags={[]} />
     </Card>
   );
 }

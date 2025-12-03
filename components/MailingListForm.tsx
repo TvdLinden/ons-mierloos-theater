@@ -19,7 +19,7 @@ export default function MailingListForm({ action, subscriberCount }: MailingList
 
   return (
     <form action={formAction} className="space-y-6">
-      {state.error && <Alert variant="error">{state.error}</Alert>}
+      {state.error && <Alert variant="destructive">{state.error}</Alert>}
       {state.success && (
         <Alert variant="success">E-mail succesvol verzonden naar alle abonnees!</Alert>
       )}

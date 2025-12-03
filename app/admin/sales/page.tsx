@@ -37,7 +37,7 @@ export default async function SalesPage() {
             performanceSales.map((sale) => (
               <tr key={sale.performanceId} className="hover:bg-zinc-50">
                 <td className="px-6 py-4">
-                  <div className="font-medium text-primary">{sale.performanceTitle}</div>
+                  <div className="font-medium text-primary">{sale.showTitle}</div>
                 </td>
                 <td className="px-6 py-4 text-zinc-600">
                   {sale.performanceDate
@@ -83,7 +83,7 @@ export default async function SalesPage() {
                 <div className="text-sm">
                   {order.lineItems.map((item, idx) => (
                     <div key={idx} className="text-zinc-600">
-                      {item.quantity}x {item.performance?.title || 'Onbekend'}
+                      {item.quantity}x {item.performance?.show?.title || 'Onbekend'}
                     </div>
                   ))}
                 </div>

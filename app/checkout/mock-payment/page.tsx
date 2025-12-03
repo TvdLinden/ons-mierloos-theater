@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 
-export default function MockPaymentPage() {
+function MockPaymentContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [processing, setProcessing] = useState(false);
@@ -113,5 +113,13 @@ export default function MockPaymentPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function MockPaymentPage() {
+  return (
+    <Suspense fallback={<div className="max-w-md mx-auto py-12 px-6 text-center">Laden...</div>}>
+      <MockPaymentContent />
+    </Suspense>
   );
 }

@@ -1,5 +1,5 @@
 import { db } from '@/lib/db';
-import { orders, lineItems, performances } from '@/lib/db/schema';
+import { orders, lineItems, performances, shows } from '@/lib/db/schema';
 import { desc, eq, sql } from 'drizzle-orm';
 
 /**
@@ -77,16 +77,17 @@ export async function getTicketSalesByPerformance() {
   return db
     .select({
       performanceId: performances.id,
-      performanceTitle: performances.title,
+      showTitle: shows.title,
       performanceDate: performances.date,
       totalTickets: sql<number>`coalesce(sum(${lineItems.quantity}), 0)`,
       totalRevenue: sql<string>`coalesce(sum(${lineItems.quantity} * ${lineItems.pricePerTicket}), 0)`,
     })
     .from(lineItems)
     .innerJoin(performances, eq(lineItems.performanceId, performances.id))
+    .innerJoin(shows, eq(performances.showId, shows.id))
     .innerJoin(orders, eq(lineItems.orderId, orders.id))
     .where(eq(orders.status, 'paid'))
-    .groupBy(performances.id, performances.title, performances.date)
+    .groupBy(performances.id, shows.title, performances.date)
     .orderBy(desc(performances.date));
 }
 

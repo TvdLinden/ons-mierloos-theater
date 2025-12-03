@@ -47,8 +47,6 @@ export default async function ShowPerformancesPage({ params }: Props) {
         availableSeats: totalSeats ? parseInt(totalSeats) : 100,
         status:
           (status as 'draft' | 'published' | 'sold_out' | 'cancelled' | 'archived') || 'draft',
-        publicationDate: publicationDate ? new Date(publicationDate) : null,
-        depublicationDate: depublicationDate ? new Date(depublicationDate) : null,
         notes: notes || null,
       });
 
@@ -133,7 +131,7 @@ export default async function ShowPerformancesPage({ params }: Props) {
                 </div>
                 <div className="flex gap-2">
                   <Link href={`/admin/performances/edit/${performance.id}`}>
-                    <Button variant="secondary" size="small">
+                    <Button variant="secondary" size="sm">
                       Bewerk
                     </Button>
                   </Link>

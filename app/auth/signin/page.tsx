@@ -1,7 +1,7 @@
 'use client';
 import { useActionState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Button, Input, FormField, Alert, Card } from '@/components/ui';
+import { Button, Input, Alert, Card, SimpleFormField } from '@/components/ui';
 import { signinAction } from './actions';
 
 function SignInForm() {
@@ -14,8 +14,8 @@ function SignInForm() {
       <h1 className="text-2xl font-bold mb-4 text-primary">Inloggen</h1>
       <form action={formAction} className="space-y-4">
         <input type="hidden" name="redirectUrl" value={redirectUrl} />
-        {state.error && <Alert variant="error">{state.error}</Alert>}
-        <FormField label="E-mailadres" htmlFor="email" required>
+        {state.error && <Alert variant="destructive">{state.error}</Alert>}
+        <SimpleFormField label="E-mailadres" htmlFor="email" required>
           <Input
             id="email"
             type="email"
@@ -24,8 +24,8 @@ function SignInForm() {
             required
             disabled={isPending}
           />
-        </FormField>
-        <FormField label="Wachtwoord" htmlFor="password" required>
+        </SimpleFormField>
+        <SimpleFormField label="Wachtwoord" htmlFor="password" required>
           <Input
             id="password"
             type="password"
@@ -34,7 +34,7 @@ function SignInForm() {
             required
             disabled={isPending}
           />
-        </FormField>
+        </SimpleFormField>
         <Button type="submit" className="w-full" disabled={isPending}>
           {isPending ? 'Bezig met inloggen...' : 'Inloggen'}
         </Button>

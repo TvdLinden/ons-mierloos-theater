@@ -1,5 +1,5 @@
 import { db } from '@/lib/db';
-import { images, performances, sponsors } from '@/lib/db/schema';
+import { images, performances, shows, sponsors } from '@/lib/db/schema';
 import { eq, notInArray, sql } from 'drizzle-orm';
 
 export type Image = typeof images.$inferSelect;
@@ -17,12 +17,10 @@ export async function findDanglingImages(): Promise<Image[]> {
   // Get all image IDs referenced by performances
   const performanceImages = await db
     .select({
-      id: sql<string>`COALESCE(${performances.imageId}, ${performances.thumbnailImageId})`,
+      id: sql<string>`COALESCE(${shows.imageId}, ${shows.thumbnailImageId})`,
     })
-    .from(performances)
-    .where(
-      sql`${performances.imageId} IS NOT NULL OR ${performances.thumbnailImageId} IS NOT NULL`,
-    );
+    .from(shows)
+    .where(sql`${shows.imageId} IS NOT NULL OR ${shows.thumbnailImageId} IS NOT NULL`);
 
   // Get all image IDs referenced by sponsors
   const sponsorImages = await db

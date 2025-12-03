@@ -96,19 +96,19 @@ export function validateImageFile(file: File): { valid: boolean; error?: string 
 /**
  * Process performance form data into Performance object
  */
-export function processPerformanceData(
-  form: PerformanceFormData,
-  imageId?: string,
-  thumbnailImageId?: string,
-): Omit<Performance, 'id'> {
-  const performance = mapFormToPerformance(form);
+// export function processPerformanceData(
+//   form: PerformanceFormData,
+//   imageId?: string,
+//   thumbnailImageId?: string,
+// ): Omit<Performance, 'id'> {
+//   const performance = mapFormToPerformance(form);
 
-  if (imageId) {
-    performance.imageId = imageId;
-  }
-  if (thumbnailImageId) {
-    performance.thumbnailImageId = thumbnailImageId;
-  }
+//   if (imageId) {
+//     performance.imageId = imageId;
+//   }
+//   if (thumbnailImageId) {
+//     performance.thumbnailImageId = thumbnailImageId;
+//   }
 
-  return performance as Omit<Performance, 'id'>;
-}
+//   return performance as Omit<Performance, 'id'>;
+// }
