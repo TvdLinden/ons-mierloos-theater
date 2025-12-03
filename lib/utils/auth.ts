@@ -69,8 +69,9 @@ export const authOptions = {
         const result = await validateCredentials(credentials.email, credentials.password);
 
         if (!result.success) {
-          if (result.error.includes('geverifieerd')) {
-            throw new Error(result.error);
+          const err = (result as { success: false; error: string }).error;
+          if (err.includes('geverifieerd')) {
+            throw new Error(err);
           }
           return null;
         }
