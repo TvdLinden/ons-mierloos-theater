@@ -1,0 +1,90 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1764420466302,
+      "tag": "0000_curved_ultimatum",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1764421539712,
+      "tag": "0001_purple_adam_warlock",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1764508078737,
+      "tag": "0002_awesome_psylocke",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1764510283248,
+      "tag": "0003_slow_sheva_callister",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1764510444682,
+      "tag": "0004_bent_ted_forrester",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1764516906582,
+      "tag": "0005_safe_rafael_vega",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1764517758957,
+      "tag": "0006_rapid_sunfire",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1764518027539,
+      "tag": "0007_confused_ultron",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1764524674191,
+      "tag": "0008_talented_invisible_woman",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1764526958678,
+      "tag": "0009_yellow_hiroim",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1732977600000,
+      "tag": "0010_add_shows_table",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1764756497630,
+      "tag": "0011_hot_lifeguard",
+      "breakpoints": true
+    }
+  ]
+}

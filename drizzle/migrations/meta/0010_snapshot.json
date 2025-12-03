@@ -1,0 +1,14 @@
+{
+  "id": "0010_add_shows_table",
+  "prevId": "0009_yellow_hiroim",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {},
+  "enums": {},
+  "schemas": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

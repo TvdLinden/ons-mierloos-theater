@@ -1,0 +1,1 @@
+ALTER TABLE "performances" ADD COLUMN "subtitle" varchar(255);
