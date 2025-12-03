@@ -9,6 +9,12 @@ const SMTP_USER = process.env.SMTP_USER;
 const SMTP_PASS = process.env.SMTP_PASS;
 const FROM_EMAIL = process.env.FROM_EMAIL || SMTP_USER;
 const FROM_NAME = process.env.FROM_NAME || 'Ons Mierloos Theater';
+const REPLY_TO = process.env.REPLY_TO || FROM_EMAIL;
+const ENVELOPE_FROM = process.env.ENVELOPE_FROM || FROM_EMAIL;
+const UNSUBSCRIBE_EMAIL =
+  process.env.UNSUBSCRIBE_EMAIL || (FROM_EMAIL && FROM_EMAIL.includes('@') ? `unsubscribe@${FROM_EMAIL.split('@')[1]}` : undefined);
+const SITE_URL = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+const LIST_UNSUBSCRIBE = UNSUBSCRIBE_EMAIL ? `<mailto:${UNSUBSCRIBE_EMAIL}>, <${SITE_URL}/unsubscribe>` : undefined;
 
 type LineItemWithPerformance = LineItem & {
   performance: PerformanceWithShow | null;
@@ -40,6 +46,16 @@ function createTransporter() {
       pass: SMTP_PASS,
     },
   });
+}
+
+function htmlToText(html: string) {
+  // Very small and forgiving HTML -> text converter for email text alternative
+  return html
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/p>/gi, '\n')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 /**
@@ -317,6 +333,7 @@ export async function sendMailingListEmail(
           to: subscriber.email,
           subject,
           html: htmlContent,
+          
         });
         sent++;
         console.log(`✓ Email sent to ${subscriber.email}`);

@@ -9,5 +9,7 @@ export function invalidatePerformancePaths(performanceId: string) {
   revalidatePath('/admin/performances'); // Admin overview
   revalidatePath('/performances'); // Public listing
   revalidatePath(`/performances/${performanceId}`); // Performance detail page
+  revalidatePath('/'); // Homepage
+
   // Add more paths here if needed
 }

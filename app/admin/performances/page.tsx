@@ -4,7 +4,7 @@ import { getAllShows } from '@/lib/queries/shows';
 import { updateShow } from '@/lib/commands/shows';
 import { requireRole } from '@/lib/utils/auth';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
-import { Column, DataTable, Row } from '@/components/admin/DataTable';
+import { Column, DataTable, EmptyRow, Row } from '@/components/admin/DataTable';
 import { Inbox } from 'lucide-react';
 
 export default async function AdminPerformanceOverview() {
@@ -68,57 +68,57 @@ function Table({ shows }: { shows: ShowWithTagsAndPerformances[] }) {
       headers={[
         'Titel',
         'Ondertitel',
-        'Voorstellingsdatum',
+        'Prijs',
+        'Status',
         'Publicatiedatum',
         'Depublicatiedatum',
-        'Prijs',
         'Acties',
       ]}
     >
       {shows.length === 0 ? (
-        <Row>
-          <Column colSpan={7}>
-            <Empty>
-              <EmptyHeader>
-                <EmptyMedia variant="icon">
-                  <Inbox className="h-8 w-8 text-zinc-400" />
-                </EmptyMedia>
-                <EmptyTitle>Geen voorstelling</EmptyTitle>
-              </EmptyHeader>
-              <EmptyContent>
-                <Button>Nieuwe voorstelling toevoegen</Button>
-              </EmptyContent>
-            </Empty>
-          </Column>
-        </Row>
+        <EmptyRow colSpan={7} message="Geen voorstellingen in deze groep" />
       ) : (
-        // <EmptyRow colSpan={7} message="Geen voorstellingen in deze groep" />
         shows.map((performance) => {
           const isPublished = performance.status === 'published';
           const actionLabel = isPublished ? 'Maak concept' : 'Publiceer';
           const targetStatus = isPublished ? 'draft' : 'published';
+          const publicationDate = performance.publicationDate
+            ? new Date(performance.publicationDate).toLocaleDateString('nl-NL')
+            : '-';
+          const depublicationDate = performance.depublicationDate
+            ? new Date(performance.depublicationDate).toLocaleDateString('nl-NL')
+            : '-';
           return (
             <tr key={performance.id} className="hover:bg-zinc-50">
               <td className="px-6 py-4">
                 <div className="font-medium text-primary">{performance.title}</div>
               </td>
               <td className="px-6 py-4 text-zinc-600 text-sm">{performance.subtitle || '-'}</td>
-
+              <td className="px-6 py-4 text-zinc-600 text-sm">
+                €{performance.basePrice || '0.00'}
+              </td>
+              <td className="px-6 py-4">
+                <span
+                  className={`px-2 py-1 rounded text-sm font-semibold ${
+                    isPublished ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                  }`}
+                >
+                  {isPublished ? 'Gepubliceerd' : 'Concept'}
+                </span>
+              </td>
+              <td className="px-6 py-4 text-zinc-600 text-sm">{publicationDate}</td>
+              <td className="px-6 py-4 text-zinc-600 text-sm">{depublicationDate}</td>
               <td className="px-6 py-4">
                 <div className="flex gap-2">
-                  <Link
-                    href={`/admin/performances/edit/${performance.id}`}
-                    className="px-3 py-1 bg-primary text-surface rounded hover:bg-secondary text-sm font-semibold"
-                  >
-                    Bewerken
+                  <Link href={`/admin/performances/edit/${performance.id}`}>
+                    <Button type="button" variant="default">
+                      Bewerken
+                    </Button>
                   </Link>
                   <form action={handleStatusChange.bind(null, performance.id, targetStatus)}>
-                    <button
-                      type="submit"
-                      className="px-3 py-1 bg-accent text-surface rounded hover:bg-secondary text-sm font-semibold"
-                    >
+                    <Button type="submit" variant="secondary">
                       {actionLabel}
-                    </button>
+                    </Button>
                   </form>
                 </div>
               </td>

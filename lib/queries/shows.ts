@@ -169,15 +169,16 @@ export async function getShowBySlugWithTagsAndPerformances(
  */
 export async function getUpcomingShows(): Promise<ShowWithTagsAndPerformances[]> {
   const now = new Date();
+  const nowUTC = new Date(now.toISOString());
 
   const result = await db.query.shows.findMany({
     where: and(
       eq(shows.status, 'published'),
-      or(isNull(shows.publicationDate), lte(shows.publicationDate, now)),
+      or(isNull(shows.publicationDate), lte(shows.publicationDate, nowUTC)),
     ),
     with: {
       performances: {
-        where: and(gte(performances.date, now), eq(performances.status, 'published')),
+        where: and(gte(performances.date, nowUTC), eq(performances.status, 'published')),
         orderBy: [asc(performances.date)],
       },
       showTags: {
