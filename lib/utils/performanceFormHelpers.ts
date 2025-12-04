@@ -78,11 +78,11 @@ export function validatePerformanceForm(form: PerformanceFormData): {
  * Validate image file
  */
 export function validateImageFile(file: File): { valid: boolean; error?: string } {
-  const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
   const fileType = file.type || '';
 
   if (!allowedTypes.includes(fileType)) {
-    return { valid: false, error: 'Alleen JPEG en PNG afbeeldingen zijn toegestaan.' };
+    return { valid: false, error: 'Alleen JPEG, PNG en WebP afbeeldingen zijn toegestaan.' };
   }
 
   const maxSizeInBytes = 5 * 1024 * 1024; // 5MB

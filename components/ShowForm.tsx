@@ -25,7 +25,6 @@ import StatusSelector from './StatusSelector';
 export type ShowFormState = {
   title: string;
   subtitle?: string;
-  date: string;
   description: string;
   slug: string;
   imageId?: string;
@@ -39,9 +38,10 @@ export type ShowFormState = {
 };
 
 type NewPerformance = {
+  id?: string;
   date: string;
-  price: string;
-  totalSeats: number;
+  price?: string;
+  totalSeats?: number;
   availableSeats: number;
   status: PerformanceStatus;
   notes?: string;
@@ -62,19 +62,9 @@ export default function ShowForm({
 }) {
   const [state, formAction, isPending] = useActionState(action, { error: undefined });
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [dateTime, setDateTime] = useState<{ date?: Date; time: string }>({
-    date: initial?.date ? new Date(initial.date) : undefined,
-    time: initial?.date
-      ? new Date(initial.date).toLocaleTimeString('nl-NL', {
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit',
-          hour12: false,
-        })
-      : '10:30:00',
-  });
   const [performances, setPerformances] = useState<NewPerformance[]>(
     initial?.performances?.map((p) => ({
+      id: p.id,
       date: typeof p.date === 'string' ? p.date : new Date(p.date).toISOString().slice(0, 16),
       price: p.price?.toString() || '',
       totalSeats: p.totalSeats || 100,
@@ -151,7 +141,7 @@ export default function ShowForm({
           <Input id="subtitle" name="subtitle" type="text" defaultValue={initial?.subtitle} />
         </SimpleFormField>
         <SimpleFormField label="Slug" htmlFor="slug" required>
-          <div className="flex flex-col gap-2">
+          <div className="flex gap-2">
             <Input
               id="slug"
               name="slug"
@@ -161,30 +151,14 @@ export default function ShowForm({
               placeholder="bijv: eaque-nam-ab-quidem"
               required
             />
-            <div className="flex items-center justify-between gap-3">
-              <p className="text-xs text-zinc-600">
-                Alleen lowercase letters, cijfers en streepjes.
-              </p>
-              <button
-                type="button"
-                onClick={handleGenerateSlug}
-                className="text-xs px-3 py-1.5 bg-primary text-surface rounded hover:bg-secondary transition-colors"
-              >
-                Genereer slug
-              </button>
-            </div>
+            <Button type="button" onClick={handleGenerateSlug} variant="outline">
+              Genereer
+            </Button>
           </div>
+          <p className="text-xs text-zinc-600 mt-1">
+            URL-vriendelijke naam: alleen kleine letters, cijfers en streepjes.
+          </p>
         </SimpleFormField>
-        <DateTimePicker
-          value={dateTime}
-          onValueChange={setDateTime}
-          defaultValue={new Date()}
-          name="date"
-          dateLabel="Datum"
-          timeLabel="Tijd"
-          datePlaceholder="Selecteer datum"
-          defaultTime="10:30:00"
-        />
         <SimpleFormField label="Beschrijving" htmlFor="description" required>
           <Textarea
             id="description"
@@ -208,24 +182,48 @@ export default function ShowForm({
         </SimpleFormField>
 
         <SimpleFormField label="Publicatiedatum" htmlFor="publicationDate">
-          <Input
-            id="publicationDate"
-            name="publicationDate"
-            type="datetime-local"
-            defaultValue={initial?.publicationDate}
-          />
+          <div className="flex gap-2">
+            <Input
+              id="publicationDate"
+              name="publicationDate"
+              type="datetime-local"
+              defaultValue={initial?.publicationDate}
+            />
+            <button
+              type="button"
+              onClick={() => {
+                const input = document.getElementById('publicationDate') as HTMLInputElement;
+                if (input) input.value = '';
+              }}
+              className="px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors text-sm"
+            >
+              Wissen
+            </button>
+          </div>
           <p className="text-xs text-zinc-600 mt-1">
             Optioneel: wanneer deze show zichtbaar moet worden.
           </p>
         </SimpleFormField>
 
         <SimpleFormField label="Depublicatiedatum" htmlFor="depublicationDate">
-          <Input
-            id="depublicationDate"
-            name="depublicationDate"
-            type="datetime-local"
-            defaultValue={initial?.depublicationDate}
-          />
+          <div className="flex gap-2">
+            <Input
+              id="depublicationDate"
+              name="depublicationDate"
+              type="datetime-local"
+              defaultValue={initial?.depublicationDate}
+            />
+            <button
+              type="button"
+              onClick={() => {
+                const input = document.getElementById('depublicationDate') as HTMLInputElement;
+                if (input) input.value = '';
+              }}
+              className="px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors text-sm"
+            >
+              Wissen
+            </button>
+          </div>
           <p className="text-xs text-zinc-600 mt-1">
             Optioneel: wanneer deze show verborgen moet worden.
           </p>
@@ -388,48 +386,28 @@ function PerformanceDialogContent({
           />
         </SimpleFormField>
 
-        <SimpleFormField label="Prijs (€)" htmlFor="perf-price" required>
+        <SimpleFormField label="Prijs (€)" htmlFor="perf-price">
           <Input
             id="perf-price"
             type="number"
             step="0.01"
-            value={formData.price}
+            value={formData.price || ''}
             onChange={(e) => handleChange('price', e.target.value)}
-            required
           />
         </SimpleFormField>
 
-        <div className="grid grid-cols-2 gap-4">
-          <SimpleFormField label="Totaal aantal stoelen" htmlFor="perf-total" required>
-            <Input
-              id="perf-total"
-              type="number"
-              min="1"
-              value={formData.totalSeats}
-              onChange={(e) => {
-                const total = parseInt(e.target.value);
-                handleChange('totalSeats', total);
-                // Keep available seats in sync if it was equal before
-                if (formData.availableSeats === formData.totalSeats) {
-                  handleChange('availableSeats', total);
-                }
-              }}
-              required
-            />
-          </SimpleFormField>
-
-          <SimpleFormField label="Beschikbare stoelen" htmlFor="perf-available" required>
-            <Input
-              id="perf-available"
-              type="number"
-              min="0"
-              max={formData.totalSeats}
-              value={formData.availableSeats}
-              onChange={(e) => handleChange('availableSeats', parseInt(e.target.value))}
-              required
-            />
-          </SimpleFormField>
-        </div>
+        <SimpleFormField label="Totaal aantal stoelen" htmlFor="perf-total">
+          <Input
+            id="perf-total"
+            type="number"
+            min="1"
+            value={formData.totalSeats || ''}
+            onChange={(e) => {
+              const total = e.target.value ? parseInt(e.target.value) : undefined;
+              handleChange('totalSeats', total || 0);
+            }}
+          />
+        </SimpleFormField>
 
         <SimpleFormField label="Status" htmlFor="perf-status" required>
           <StatusSelector

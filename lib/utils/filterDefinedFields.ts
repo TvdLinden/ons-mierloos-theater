@@ -7,8 +7,8 @@ export function filterDefinedFields<T>(
   const omitKeys = options?.omitKeys ?? defaultOmitKeys;
   Object.keys(updateFields).forEach((key) => {
     const value = updateFields[key as keyof T];
-    // Skip undefined or null
-    if (value === undefined || value === null) return;
+    // Skip undefined only (allow null to pass through for unsetting fields)
+    if (value === undefined) return;
 
     if (omitKeys.includes(key as keyof T)) {
       return;

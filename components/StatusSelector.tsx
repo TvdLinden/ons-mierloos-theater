@@ -30,7 +30,7 @@ export default function StatusSelector({
         value={value}
         defaultValue={defaultValue}
         onChange={onChange}
-        className="w-full p-3 border rounded bg-surface text-accent"
+        className="w-full p-3 border rounded bg-surface text-primary"
       >
         {options.map((option) => (
           <option key={option.value} value={option.value}>

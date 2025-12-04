@@ -17,7 +17,7 @@ export default async function AdminOverview() {
       <ul className="space-y-6">
         <li>
           <Link
-            href="/admin/performances"
+            href="/admin/shows"
             className="block px-6 py-4 bg-primary text-surface rounded-lg shadow hover:bg-primary/90 font-semibold transition-colors"
           >
             Overzicht Voorstellingen

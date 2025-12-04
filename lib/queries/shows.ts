@@ -175,6 +175,7 @@ export async function getUpcomingShows(): Promise<ShowWithTagsAndPerformances[]>
     where: and(
       eq(shows.status, 'published'),
       or(isNull(shows.publicationDate), lte(shows.publicationDate, nowUTC)),
+      or(isNull(shows.depublicationDate), gte(shows.depublicationDate, nowUTC)),
     ),
     with: {
       performances: {
