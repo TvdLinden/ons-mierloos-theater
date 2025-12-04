@@ -6,7 +6,6 @@ export function mapPerformanceToForm(show: Show): ShowFormState {
     title: show.title ?? '',
     subtitle: show.subtitle ?? '',
     slug: show.slug ?? '',
-    date: '',
     description: show.description ?? '',
     imageId: show.imageId ?? '',
     thumbnailImageId: show.thumbnailImageId ?? '',

@@ -33,7 +33,7 @@ export default function PerformanceCard({ show, href }: PerformanceCardProps) {
         : `${availablePerformances.length} beschikbare voorstellingen`
       : null;
 
-  const toggleInfo = (e: React.MouseEvent) => {
+  const toggleInfo = (e: React.MouseEvent | React.KeyboardEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setInfoVisible(!infoVisible);
@@ -67,7 +67,7 @@ export default function PerformanceCard({ show, href }: PerformanceCardProps) {
             tabIndex={0}
             onClick={toggleInfo}
             onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') toggleInfo(e as any);
+              if (e.key === 'Enter' || e.key === ' ') toggleInfo(e);
             }}
           >
             <div>
@@ -102,7 +102,9 @@ export default function PerformanceCard({ show, href }: PerformanceCardProps) {
           <div
             ref={contentRef}
             className="overflow-hidden transition-all duration-300"
+            // eslint-disable-next-line react-hooks/refs
             style={{
+              // eslint-disable-next-line react-hooks/refs
               maxHeight: infoVisible ? contentRef.current?.scrollHeight : 0,
               opacity: infoVisible ? 1 : 0,
               visibility: infoVisible ? 'visible' : 'hidden',
@@ -137,7 +139,7 @@ export default function PerformanceCard({ show, href }: PerformanceCardProps) {
                 <div className="mb-3">
                   <p className="text-xs font-semibold text-foreground mb-1.5">Categorieën</p>
                   <div className="flex flex-wrap gap-1.5">
-                    <TagsContainer tags={tags} size="xs" />
+                    <TagsContainer tags={tags} />
                   </div>
                 </div>
               )}
