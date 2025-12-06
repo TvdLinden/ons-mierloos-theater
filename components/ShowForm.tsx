@@ -1,10 +1,9 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useRef } from 'react';
 import {
   Button,
   Input,
-  Textarea,
   SimpleFormField,
   Alert,
   Dialog,
@@ -12,15 +11,16 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-  DateTimePicker,
 } from '@/components/ui';
 import TagSelector from './TagSelector';
+import MarkdownEditor, { type MarkdownEditorRef } from './MarkdownEditor';
 import { PerformanceStatus, Tag, Performance } from '@/lib/db';
 import { generateSlug } from '@/lib/utils/slug';
 import Image from 'next/image';
 import { useState } from 'react';
 import { DataTable, Row } from './admin/DataTable';
 import StatusSelector from './StatusSelector';
+import { Textarea } from '@/components/ui/textarea';
 
 export type ShowFormState = {
   title: string;
@@ -75,6 +75,19 @@ export default function ShowForm({
   );
   const [editingPerformance, setEditingPerformance] = useState<NewPerformance | null>(null);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const descriptionEditorRef = useRef<MarkdownEditorRef>(null);
+
+  // const handleFormSubmit = async (formData: FormData) => {
+  //   // Get markdown content from editor and include it in form submission
+  //   if (descriptionEditorRef.current) {
+  //     const markdown = descriptionEditorRef.current.getMarkdown();
+  //     if (markdown) {
+  //       formData.set('description', markdown);
+  //     }
+  //   }
+  //   // Use formAction from useActionState to properly handle submission
+  //   return formAction(formData);
+  // };
 
   const handleImageChange = (file: File | null) => {
     if (file) {
@@ -160,11 +173,11 @@ export default function ShowForm({
           </p>
         </SimpleFormField>
         <SimpleFormField label="Beschrijving" htmlFor="description" required>
-          <Textarea
-            id="description"
+          <MarkdownEditor
             name="description"
             defaultValue={initial?.description}
-            required
+            disabled={isPending}
+            ref={descriptionEditorRef}
           />
         </SimpleFormField>
         <SimpleFormField label="Prijs (€)" htmlFor="price" required>

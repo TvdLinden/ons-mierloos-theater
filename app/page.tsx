@@ -11,7 +11,7 @@ export default async function HomePage() {
         {/* Voorstellingen Sectie */}
         <section id="performances" className="w-full mb-12">
           <h1 className="text-5xl font-bold text-center text-primary mb-10 font-serif">
-            Voorstellingen
+            {/* Voorstellingen */}
           </h1>
           <div className="grid gap-10 sm:grid-cols-1 md:grid-cols-2">
             {schows.length === 0 ? (

@@ -1,6 +1,7 @@
 import { db } from '@/lib/db';
 import { sponsors } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
+import { revalidatePath } from 'next/cache';
 
 export async function createSponsor(data: {
   name: string;
@@ -21,6 +22,8 @@ export async function createSponsor(data: {
       active: data.active,
     })
     .returning();
+
+  revalidatePath('/sponsors');
   return sponsor;
 }
 
@@ -36,9 +39,11 @@ export async function updateSponsor(
   },
 ) {
   const [sponsor] = await db.update(sponsors).set(data).where(eq(sponsors.id, id)).returning();
+  revalidatePath('/sponsors');
   return sponsor;
 }
 
 export async function deleteSponsor(id: string) {
   await db.delete(sponsors).where(eq(sponsors.id, id));
+  revalidatePath('/sponsors');
 }

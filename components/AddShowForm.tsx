@@ -1,11 +1,12 @@
 'use client';
 
 import { useActionState, useState } from 'react';
-import { Button, SimpleFormField as FormField, Input, Textarea } from '@/components/ui';
+import { Button, SimpleFormField as FormField, Input } from '@/components/ui';
 import FormError from './FormError';
 import ImageUpload from './ImageUpload';
 import StatusSelector from './StatusSelector';
 import TagSelector from './TagSelector';
+import MarkdownEditor from './MarkdownEditor';
 import { Tag } from '@/lib/db';
 
 type ShowFormProps = {
@@ -57,12 +58,10 @@ export default function AddShowForm({ action, initialData, availableTags }: Show
       </FormField>
 
       <FormField label="Beschrijving" required>
-        <Textarea
+        <MarkdownEditor
           name="description"
           defaultValue={initialData?.description}
           placeholder="Vertel meer over de voorstelling..."
-          rows={6}
-          required
           disabled={isPending}
         />
       </FormField>

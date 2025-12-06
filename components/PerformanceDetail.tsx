@@ -3,17 +3,25 @@ import CurrencyDisplay from '@/components/CurrencyDisplay';
 import { ShowWithTagsAndPerformances } from '@/lib/db';
 import { getShowImageUrl } from '@/lib/utils/performanceImages';
 import TagsContainer from './TagsContainer';
+import Markdown from './ui/markdown';
 
 export type ShowDetailProps = {
   show: ShowWithTagsAndPerformances;
   children?: React.ReactNode;
 };
 
+const markdownContent = `
+## Welcome to Ons Mierloos Theater
+- Algemene informatie
+- Contact
+- Voorstellingen
+`;
+
 export default function ShowDetail({ show, children }: ShowDetailProps) {
   const { title, subtitle, description, basePrice: price } = show;
   const imageUrl = getShowImageUrl(show);
   return (
-    <div className="max-w-xl w-full bg-surface dark:bg-accent rounded-lg shadow p-8 flex flex-col items-center">
+    <div className="max-w-xl w-full p-8 flex flex-col items-center">
       {show.imageId && (
         <Image
           src={imageUrl}
@@ -39,9 +47,7 @@ export default function ShowDetail({ show, children }: ShowDetailProps) {
         )}
       </p> */}
       <TagsContainer tags={show.tags} size="md" />
-      <p className="text-accent dark:text-surface mb-6 text-center">
-        {description || <span className="text-accent">Beschrijving</span>}
-      </p>
+      <Markdown content={description} />
       {price && (
         <p className="mt-2 text-lg font-bold text-primary">
           Prijs: <CurrencyDisplay value={price} />

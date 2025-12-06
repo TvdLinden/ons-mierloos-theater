@@ -18,7 +18,7 @@ export default async function AdminPerformanceOverview() {
       <AdminPageHeader
         title="Voorstellingen Beheer"
         action={{
-          href: '/admin/performances/add',
+          href: '/admin/shows/add',
           label: 'Nieuwe voorstelling toevoegen',
         }}
       />
