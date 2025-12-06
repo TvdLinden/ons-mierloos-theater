@@ -19,7 +19,7 @@ export default function Footer() {
           <div className="flex items-center gap-3">{/* <Logo className="gap-3" /> */}</div>
         </a>
 
-        <div className="flex items-center gap-5 whitespace-nowrap">
+        <div className="flex items-center gap-5 flex-wrap justify-center">
           {links.map((link) => (
             <a key={link.name} href={link.href}>
               {link.name}
