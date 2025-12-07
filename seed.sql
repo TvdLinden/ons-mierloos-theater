@@ -1,32 +1,33 @@
--- ============================================
--- Theater Database Seed Script
--- Seeds 40+ shows with performances and tags
--- ============================================
-
--- Clear existing data (in reverse order of foreign key dependencies)
-DELETE FROM show_tags;
-DELETE FROM performances;
-DELETE FROM shows;
-DELETE FROM tags;
--- Note: Images are inserted by seed-database.mjs (not deleted to preserve image data)
 
 -- ============================================
--- Insert Tags
+-- Seed-script voor theaterdatabase
+-- Voegt 40+ voorstellingen toe met voorstellingen en tags
+-- ============================================
+
+-- Wis bestaande gegevens (in omgekeerde volgorde van foreign key-afhankelijkheden)
+TRUNCATE TABLE show_tags RESTART IDENTITY CASCADE;
+TRUNCATE TABLE performances RESTART IDENTITY CASCADE;
+TRUNCATE TABLE shows RESTART IDENTITY CASCADE;
+TRUNCATE TABLE tags RESTART IDENTITY CASCADE;
+-- Opmerking: afbeeldingen worden ingevoegd door `seed-database.mjs` (niet verwijderd om afbeeldingsdata te behouden)
+
+-- ============================================
+-- Voeg tags toe
 -- ============================================
 INSERT INTO tags (id, name, slug, description, created_at) VALUES
-  (gen_random_uuid(), 'Drama', 'drama', 'Dramatic theater performances', NOW()),
-  (gen_random_uuid(), 'Comedy', 'comedy', 'Comedic and humorous performances', NOW()),
-  (gen_random_uuid(), 'Musical', 'musical', 'Musical theater and song-based performances', NOW()),
-  (gen_random_uuid(), 'Dance', 'dance', 'Dance performances and choreography', NOW()),
-  (gen_random_uuid(), 'Kids', 'kids', 'Family-friendly performances for children', NOW()),
-  (gen_random_uuid(), 'Contemporary', 'contemporary', 'Contemporary and experimental theater', NOW()),
-  (gen_random_uuid(), 'Shakespeare', 'shakespeare', 'Classical Shakespeare productions', NOW()),
-  (gen_random_uuid(), 'Improv', 'improv', 'Improvisational theater', NOW()),
-  (gen_random_uuid(), 'Stand-up', 'stand-up', 'Stand-up comedy and monologues', NOW()),
-  (gen_random_uuid(), 'World Theater', 'world-theater', 'Theater from around the world', NOW());
+  (gen_random_uuid(), 'Drama', 'drama', 'Dramatische theatervoorstellingen', NOW()),
+  (gen_random_uuid(), 'Komedie', 'comedy', 'Komedische en humoristische voorstellingen', NOW()),
+  (gen_random_uuid(), 'Musical', 'musical', 'Musicaltheater en zangvoorstellingen', NOW()),
+  (gen_random_uuid(), 'Dans', 'dance', 'Dansvoorstellingen en choreografie', NOW()),
+  (gen_random_uuid(), 'Kinderen', 'kids', 'Gezinsvriendelijke voorstellingen voor kinderen', NOW()),
+  (gen_random_uuid(), 'Hedendaags', 'contemporary', 'Hedendaags en experimenteel theater', NOW()),
+  (gen_random_uuid(), 'Shakespeare', 'shakespeare', 'Klassieke Shakespeare-producties', NOW()),
+  (gen_random_uuid(), 'Improvisatie', 'improv', 'Improvisatietheater', NOW()),
+  (gen_random_uuid(), 'Stand-up', 'stand-up', 'Stand-upcomedy en monologen', NOW()),
+  (gen_random_uuid(), 'Wereldtheater', 'world-theater', 'Theater uit alle windstreken', NOW());
 
 -- ============================================
--- Insert Shows (40+ entries)
+-- Voeg voorstellingen toe (40+ items)
 -- ============================================
 WITH image_map AS (
   SELECT DISTINCT ON (filename) id, filename 
@@ -138,54 +139,54 @@ SELECT
   gen_random_uuid(),
   show_images.show_title as title,
   CASE
-    WHEN show_images.show_title = 'Hamlet: A Tragedy Revisited' THEN 'Modern interpretation of Shakespeare''s masterpiece'
-    WHEN show_images.show_title = 'The Glass Menagerie' THEN 'A memory play about family and dreams'
-    WHEN show_images.show_title = 'Ghosts' THEN 'Norwegian tragedy of secrets and sin'
-    WHEN show_images.show_title = 'A Doll''s House' THEN 'The story of Nora''s liberation'
-    WHEN show_images.show_title = 'The Crucible' THEN 'Witch hunts in 1600s Salem'
-    WHEN show_images.show_title = 'The Importance of Being Earnest' THEN 'A comedy of errors and mistaken identities'
-    WHEN show_images.show_title = 'Much Ado About Nothing' THEN 'Shakespeare''s romantic comedy'
-    WHEN show_images.show_title = 'Twelfth Night' THEN 'Love, mistaken identities, and magic'
-    WHEN show_images.show_title = 'Noises Off' THEN 'Chaos backstage at a theater'
-    WHEN show_images.show_title = 'One-Liners and Laughter' THEN 'Stand-up comedy showcase'
-    WHEN show_images.show_title = 'Les Misérables' THEN 'The epic tale of love and revolution'
-    WHEN show_images.show_title = 'The Phantom of the Opera' THEN 'Love in the shadows of an opera house'
-    WHEN show_images.show_title = 'Evita' THEN 'The story of Argentina''s first lady'
-    WHEN show_images.show_title = 'West Side Story' THEN 'Modern Romeo and Juliet on New York streets'
-    WHEN show_images.show_title = 'Sweeney Todd' THEN 'The demon barber of Fleet Street'
-    WHEN show_images.show_title = 'Swan Lake' THEN 'The timeless ballet of tragedy and magic'
-    WHEN show_images.show_title = 'The Nutcracker' THEN 'A holiday classic for all ages'
-    WHEN show_images.show_title = 'Giselle' THEN 'Love beyond the grave'
-    WHEN show_images.show_title = 'Contemporary Dance Fusion' THEN 'Modern movements and ancient rhythms'
-    WHEN show_images.show_title = 'Stomp' THEN 'Percussion and movement art'
-    WHEN show_images.show_title = 'Cinderella''s Magical Ball' THEN 'A fairy tale adventure'
-    WHEN show_images.show_title = 'The Lion King Jr.' THEN 'The Pride Lands come to life'
-    WHEN show_images.show_title = 'Frozen: A Musical Journey' THEN 'Let it go - into adventure'
-    WHEN show_images.show_title = 'Peter Pan: Never Grow Up' THEN 'Tales from Neverland'
-    WHEN show_images.show_title = 'The Tale of Pinocchio' THEN 'When wishes come true'
-    WHEN show_images.show_title = 'Scenes from a Memory' THEN 'A philosophical exploration'
-    WHEN show_images.show_title = 'The Absurd Chronicles' THEN 'Theater of the illogical'
-    WHEN show_images.show_title = 'Metamorphosis: A Body Work' THEN 'Physical theater at its finest'
-    WHEN show_images.show_title = 'The Hour Glass' THEN 'Time slips through our fingers'
-    WHEN show_images.show_title = 'The Merchant of Venice' THEN 'Portia''s wisdom and Shylock''s pound of flesh'
-    WHEN show_images.show_title = 'The Tempest' THEN 'Magic, forgiveness, and restoration'
-    WHEN show_images.show_title = 'A Midsummer Night''s Dream' THEN 'Love and magic in the forest'
-    WHEN show_images.show_title = 'The Taming of the Shrew' THEN 'Love through conflict and wit'
-    WHEN show_images.show_title = 'Tartuffe' THEN 'Molière''s comedy of deceit'
-    WHEN show_images.show_title = 'A Streetcar Named Desire' THEN 'Passion and desperation in New Orleans'
-    WHEN show_images.show_title = 'Death of a Salesman' THEN 'The tragedy of American dreams'
-    WHEN show_images.show_title = 'The Visit' THEN 'A town''s conscience tested'
-    WHEN show_images.show_title = 'Blood Wedding' THEN 'García Lorca''s tragedy of love and fate'
-    WHEN show_images.show_title = 'Waiting for Godot' THEN 'Absurdism in a masterpiece'
-    WHEN show_images.show_title = 'The Birthday Party' THEN 'A sinister gathering'
-    WHEN show_images.show_title = 'Rosencrantz and Guildenstern Are Dead' THEN 'Hamlet reimagined'
-    WHEN show_images.show_title = 'An Inspector Calls' THEN 'A mystery unfolds over dinner'
-    WHEN show_images.show_title = 'The Crucible: A New Vision' THEN 'Witch hunts reimagined'
-    WHEN show_images.show_title = 'Cabaret' THEN 'Decadence and darkness in Berlin'
-    WHEN show_images.show_title = 'Chicago' THEN 'Razzle dazzle and murder'
-    WHEN show_images.show_title = 'Rent' THEN 'Love and bohemia in NYC'
-    WHEN show_images.show_title = 'Hamilton' THEN 'An American musical revolution'
-    WHEN show_images.show_title = 'Dear Evan Hansen' THEN 'A letter that changes everything'
+    WHEN show_images.show_title = 'Hamlet: A Tragedy Revisited' THEN 'Moderne interpretatie van Shakespeares meesterwerk'
+    WHEN show_images.show_title = 'The Glass Menagerie' THEN 'Een herinneringsspel over familie en dromen'
+    WHEN show_images.show_title = 'Ghosts' THEN 'Noorse tragedie over geheimen en zonden'
+    WHEN show_images.show_title = 'A Doll''s House' THEN 'Het verhaal van Nora''s bevrijding'
+    WHEN show_images.show_title = 'The Crucible' THEN 'Heksenjachten in het Salem van de 17e eeuw'
+    WHEN show_images.show_title = 'The Importance of Being Earnest' THEN 'Een komedie van verwisselde identiteiten en misverstanden'
+    WHEN show_images.show_title = 'Much Ado About Nothing' THEN 'Shakespeares romantische komedie'
+    WHEN show_images.show_title = 'Twelfth Night' THEN 'Liefde, verwisselde identiteiten en magie'
+    WHEN show_images.show_title = 'Noises Off' THEN 'Chaos achter de schermen van een voorstelling'
+    WHEN show_images.show_title = 'One-Liners and Laughter' THEN 'Een avond vol stand-up en scherpe grappen'
+    WHEN show_images.show_title = 'Les Misérables' THEN 'Het epische verhaal van liefde en revolutie'
+    WHEN show_images.show_title = 'The Phantom of the Opera' THEN 'Liefde in de schaduw van een operagebouw'
+    WHEN show_images.show_title = 'Evita' THEN 'Het levensverhaal van Argentiniës eerste dame'
+    WHEN show_images.show_title = 'West Side Story' THEN 'Een moderne Romeo en Julia op de straten van New York'
+    WHEN show_images.show_title = 'Sweeney Todd' THEN 'De demonische kapper van Fleet Street'
+    WHEN show_images.show_title = 'Swan Lake' THEN 'Het tijdloze ballet van tragedie en magie'
+    WHEN show_images.show_title = 'The Nutcracker' THEN 'Een feestelijke klassieker voor alle leeftijden'
+    WHEN show_images.show_title = 'Giselle' THEN 'Liefde voorbij het graf'
+    WHEN show_images.show_title = 'Contemporary Dance Fusion' THEN 'Moderne bewegingen met invloeden van over de hele wereld'
+    WHEN show_images.show_title = 'Stomp' THEN 'Percussie en beweging als kunstvorm'
+    WHEN show_images.show_title = 'Cinderella''s Magical Ball' THEN 'Een sprookjesachtige familievoorstelling'
+    WHEN show_images.show_title = 'The Lion King Jr.' THEN 'De Pride Lands komen tot leven'
+    WHEN show_images.show_title = 'Frozen: A Musical Journey' THEN 'Een muzikaal avontuur met Elsa en Anna'
+    WHEN show_images.show_title = 'Peter Pan: Never Grow Up' THEN 'Verhalen uit Nooitgedachtland'
+    WHEN show_images.show_title = 'The Tale of Pinocchio' THEN 'Het verhaal van een houten pop die mens wil worden'
+    WHEN show_images.show_title = 'Scenes from a Memory' THEN 'Een filosofische verkenning van geheugen en identiteit'
+    WHEN show_images.show_title = 'The Absurd Chronicles' THEN 'Een surrealistische reis vol onlogische situaties'
+    WHEN show_images.show_title = 'Metamorphosis: A Body Work' THEN 'Fysiek theater op zijn best'
+    WHEN show_images.show_title = 'The Hour Glass' THEN 'Een experimentele meditatie over tijd en vergankelijkheid'
+    WHEN show_images.show_title = 'The Merchant of Venice' THEN 'Shakespeares verhaal over liefde, geld en gerechtigheid'
+    WHEN show_images.show_title = 'The Tempest' THEN 'Shakespeares meesterwerk over magie en vergeving'
+    WHEN show_images.show_title = 'A Midsummer Night''s Dream' THEN 'Liefde en magie in het bos'
+    WHEN show_images.show_title = 'The Taming of the Shrew' THEN 'Liefde door conflict en verstandigheid'
+    WHEN show_images.show_title = 'Tartuffe' THEN 'Molières komedie over bedrog'
+    WHEN show_images.show_title = 'A Streetcar Named Desire' THEN 'Passie en wanhoop in New Orleans'
+    WHEN show_images.show_title = 'Death of a Salesman' THEN 'De tragedie van de Amerikaanse droom'
+    WHEN show_images.show_title = 'The Visit' THEN 'Het geweten van een stad op de proef gesteld'
+    WHEN show_images.show_title = 'Blood Wedding' THEN 'Een Spaanse tragedie over verboden liefde en lotsbestemming'
+    WHEN show_images.show_title = 'Waiting for Godot' THEN 'Beckett''s enigmatische stuk over wachten en bestaan'
+    WHEN show_images.show_title = 'The Birthday Party' THEN 'Een onheilspellend samenzijn'
+    WHEN show_images.show_title = 'Rosencrantz and Guildenstern Are Dead' THEN 'Tom Stoppards metatheatrale komedie'
+    WHEN show_images.show_title = 'An Inspector Calls' THEN 'Een thriller over onthullende geheimen tijdens een diner'
+    WHEN show_images.show_title = 'The Crucible: A New Vision' THEN 'Een frisse, hedendaagse bewerking over massahysterie'
+    WHEN show_images.show_title = 'Cabaret' THEN 'Het muziektheater over decadentie en donker Berlijn'
+    WHEN show_images.show_title = 'Chicago' THEN 'Een cynische musical over misdaad en showbizz'
+    WHEN show_images.show_title = 'Rent' THEN 'Een rockmusical over liefde, verlies en gemeenschap'
+    WHEN show_images.show_title = 'Hamilton' THEN 'Lin-Manuel Mirandas hiphopmusical over Alexander Hamilton'
+    WHEN show_images.show_title = 'Dear Evan Hansen' THEN 'Een hedendaagse musical over verbinding en rouw'
   END as subtitle,
   CASE
     WHEN show_images.show_title = 'Hamlet: A Tragedy Revisited' THEN 'hamlet-revisited'
@@ -238,54 +239,54 @@ SELECT
     WHEN show_images.show_title = 'Dear Evan Hansen' THEN 'dear-evan-hansen'
   END as slug,
   CASE
-    WHEN show_images.show_title = 'Hamlet: A Tragedy Revisited' THEN 'A bold reinterpretation of Shakespeare''s greatest tragedy, bringing medieval Denmark into contemporary times. Explore themes of madness, revenge, and mortality through avant-garde staging.'
-    WHEN show_images.show_title = 'The Glass Menagerie' THEN 'Tennessee Williams'' poignant masterpiece about the Wingfield family, their fragile dreams, and the weight of unfulfilled aspirations in post-war America.'
-    WHEN show_images.show_title = 'Ghosts' THEN 'Henrik Ibsen''s haunting exploration of family secrets, inherited sins, and the ghosts of the past that haunt us all.'
-    WHEN show_images.show_title = 'A Doll''s House' THEN 'A revolutionary play about personal freedom, marriage, and self-discovery. Nora''s journey will challenge everything you know about family and identity.'
-    WHEN show_images.show_title = 'The Crucible' THEN 'Arthur Miller''s gripping examination of the Salem witch trials as a metaphor for McCarthyism and mass hysteria.'
-    WHEN show_images.show_title = 'The Importance of Being Earnest' THEN 'Oscar Wilde''s brilliant comedy of manners filled with wit, wordplay, and absurd situations that will keep you laughing throughout.'
-    WHEN show_images.show_title = 'Much Ado About Nothing' THEN 'A delightful Shakespeare comedy about love, wit, and the games we play to win each other''s hearts.'
-    WHEN show_images.show_title = 'Twelfth Night' THEN 'Shakespeare''s magical comedy about love in all its forms, featuring a shipwrecked heroine, a lovesick duke, and countless laughs.'
-    WHEN show_images.show_title = 'Noises Off' THEN 'A hilarious farce that takes you behind the curtain to witness the absolute mayhem of a failing production.'
-    WHEN show_images.show_title = 'One-Liners and Laughter' THEN 'An evening of sharp wit, clever observations, and laugh-out-loud moments from some of the best comedians around.'
-    WHEN show_images.show_title = 'Les Misérables' THEN 'The world''s most beloved musical brings the streets of Paris to life with unforgettable songs and a story that will move you to tears.'
-    WHEN show_images.show_title = 'The Phantom of the Opera' THEN 'Andrew Lloyd Webber''s masterpiece about obsession, beauty, and the power of music. A theatrical experience like no other.'
-    WHEN show_images.show_title = 'Evita' THEN 'A dynamic musical about ambition, power, and the rise of Eva Perón. Featuring the iconic "Don''t Cry For Me Argentina."'
-    WHEN show_images.show_title = 'West Side Story' THEN 'The groundbreaking musical retelling Shakespeare''s greatest love story in 1950s New York with stunning choreography and music.'
-    WHEN show_images.show_title = 'Sweeney Todd' THEN 'Stephen Sondheim''s dark musical masterpiece about a revenge-driven barber and the secrets hidden in Victorian London.'
-    WHEN show_images.show_title = 'Swan Lake' THEN 'Tchaikovsky''s magnificent ballet about love, deception, and transformation. A visual and musical feast.'
-    WHEN show_images.show_title = 'The Nutcracker' THEN 'Journey into a magical world of dancing sugar plums, toy soldiers, and holiday wonder. The perfect festive experience.'
-    WHEN show_images.show_title = 'Giselle' THEN 'The romantic ballet about a peasant girl who rises from the dead to protect her lover from vengeance.'
-    WHEN show_images.show_title = 'Contemporary Dance Fusion' THEN 'An innovative exploration of contemporary dance mixed with influences from cultures around the world.'
-    WHEN show_images.show_title = 'Stomp' THEN 'A unique theatrical experience where everything from trash cans to brooms becomes an instrument.'
-    WHEN show_images.show_title = 'Cinderella''s Magical Ball' THEN 'An interactive retelling of Cinderella with sing-alongs, dancing, and magic. Perfect for children and families.'
-    WHEN show_images.show_title = 'The Lion King Jr.' THEN 'A stunning adaptation of the beloved Disney musical performed by an ensemble of talented young actors.'
-    WHEN show_images.show_title = 'Frozen: A Musical Journey' THEN 'Follow Elsa and Anna''s journey as they navigate love, power, and sisterhood in this theatrical adaptation.'
-    WHEN show_images.show_title = 'Peter Pan: Never Grow Up' THEN 'Soar through the night sky to Neverland with Peter Pan, mermaids, pirates, and Lost Boys in an enchanting adventure.'
-    WHEN show_images.show_title = 'The Tale of Pinocchio' THEN 'A charming retelling of the puppet who dreams of becoming a real boy, with lessons about honesty and courage.'
-    WHEN show_images.show_title = 'Scenes from a Memory' THEN 'An abstract, poetic piece that questions the nature of memory, identity, and reality. Not for the easily confused!'
-    WHEN show_images.show_title = 'The Absurd Chronicles' THEN 'A surreal journey through illogical scenarios and impossible situations. Expect the unexpected.'
-    WHEN show_images.show_title = 'Metamorphosis: A Body Work' THEN 'A stunning contemporary piece using the body as a canvas to explore transformation, struggle, and rebirth.'
-    WHEN show_images.show_title = 'The Hour Glass' THEN 'An experimental meditation on time, aging, and the fleeting nature of existence. Visually mesmerizing.'
-    WHEN show_images.show_title = 'The Merchant of Venice' THEN 'Shakespeare''s complex play about love, money, justice, and prejudice in renaissance Venice.'
-    WHEN show_images.show_title = 'The Tempest' THEN 'Shakespeare''s final masterpiece about shipwrecks, sorcery, and the power of forgiveness.'
-    WHEN show_images.show_title = 'A Midsummer Night''s Dream' THEN 'Shakespeare''s enchanting comedy about young lovers, magical fairies, and hilarious confusion.'
-    WHEN show_images.show_title = 'The Taming of the Shrew' THEN 'Shakespeare''s battle-of-the-sexes comedy about stubborn Katherine and the man who tames her.'
-    WHEN show_images.show_title = 'Tartuffe' THEN 'A Parisian household is thrown into chaos when a cunning con-man manipulates a wealthy family.'
-    WHEN show_images.show_title = 'A Streetcar Named Desire' THEN 'Tennessee Williams'' searing drama about social status, mental illness, and raw human passion colliding.'
-    WHEN show_images.show_title = 'Death of a Salesman' THEN 'Arthur Miller''s masterpiece about Willy Loman''s downfall and the cost of chasing the American dream.'
-    WHEN show_images.show_title = 'The Visit' THEN 'A wealthy woman returns to her hometown to exact revenge, testing the morality of its residents.'
-    WHEN show_images.show_title = 'Blood Wedding' THEN 'A dark Spanish drama about a wedding interrupted by a forbidden love affair and its fatal consequences.'
-    WHEN show_images.show_title = 'Waiting for Godot' THEN 'Beckett''s enigmatic play about two men waiting for someone who never arrives. Philosophical and peculiar.'
-    WHEN show_images.show_title = 'The Birthday Party' THEN 'Pinter''s unsettling comedy-drama about the mysterious arrival of two men to a seaside boarding house.'
-    WHEN show_images.show_title = 'Rosencrantz and Guildenstern Are Dead' THEN 'Tom Stoppard''s brilliant metatheatrical comedy following minor Hamlet characters in their own story.'
-    WHEN show_images.show_title = 'An Inspector Calls' THEN 'J.B. Priestley''s thriller about a mysterious inspector''s visit to a wealthy family revealing dark secrets.'
-    WHEN show_images.show_title = 'The Crucible: A New Vision' THEN 'A fresh, contemporary staging of Arthur Miller''s powerful play about hysteria and persecution.'
-    WHEN show_images.show_title = 'Cabaret' THEN 'The musical set in 1930s Berlin explores morality, sexuality, and the rise of Nazi Germany.'
-    WHEN show_images.show_title = 'Chicago' THEN 'The cynical musical about crime, showbiz, and corruption in Jazz Age Chicago.'
-    WHEN show_images.show_title = 'Rent' THEN 'Jonathan Larson''s rock musical about struggling artists, love, loss, and the importance of community.'
-    WHEN show_images.show_title = 'Hamilton' THEN 'Lin-Manuel Miranda''s hip-hop musical about founding father Alexander Hamilton. A modern masterpiece.'
-    WHEN show_images.show_title = 'Dear Evan Hansen' THEN 'A contemporary musical about connection, grief, and the impact we have on others'' lives.'
+    WHEN show_images.show_title = 'Hamlet: A Tragedy Revisited' THEN 'Een gedurfde herinterpretatie van Shakespeares grootste tragedie, geplaatst in een moderne context. Onderzoekt waanzin, wraak en sterfelijkheid met avant-garde enscenering.'
+    WHEN show_images.show_title = 'The Glass Menagerie' THEN 'Tennessee Williams'' aangrijpende meesterwerk over de familie Wingfield, hun kwetsbare dromen en onvervulde verlangens na de oorlog.'
+    WHEN show_images.show_title = 'Ghosts' THEN 'Henrik Ibsens spookachtige verkenning van familiegeheimen, erfelijke zonden en het verleden dat ons achtervolgt.'
+    WHEN show_images.show_title = 'A Doll''s House' THEN 'Een revolutionair stuk over persoonlijke vrijheid, huwelijk en zelfontdekking. Nora''s reis daagt alles uit wat u weet over familie en identiteit.'
+    WHEN show_images.show_title = 'The Crucible' THEN 'Arthur Millers aangrijpende onderzoek naar de hekseprocessen van Salem als metafoor voor McCarthyisme en massahysterie.'
+    WHEN show_images.show_title = 'The Importance of Being Earnest' THEN 'Oscar Wildes briljante comedie vol spitsvondigheid, woordspel en absurde situaties die steeds voor lachsalvo''s zorgen.'
+    WHEN show_images.show_title = 'Much Ado About Nothing' THEN 'Een heerlijke Shakespeare-komedie over liefde, verstand en de spelletjes die mensen met elkaar spelen.'
+    WHEN show_images.show_title = 'Twelfth Night' THEN 'Shakespeares magische komedie over liefde in al haar vormen, met schipbreuk, verwarring en spot.'
+    WHEN show_images.show_title = 'Noises Off' THEN 'Een hilarische klucht die u achter de schermen meeneemt en de complete chaos van een mislukte productie toont.'
+    WHEN show_images.show_title = 'One-Liners and Laughter' THEN 'Een avond vol scherpe grappen, slimme observaties en luide lachmomenten van enkele van de beste comedians.'
+    WHEN show_images.show_title = 'Les Misérables' THEN 'De wereldberoemde musical brengt het Parijs van vroeger tot leven met onvergetelijke liederen en een hartverscheurend verhaal.'
+    WHEN show_images.show_title = 'The Phantom of the Opera' THEN 'Een meesterwerk over obsessie, schoonheid en de kracht van muziek. Een theatrale ervaring als geen ander.'
+    WHEN show_images.show_title = 'Evita' THEN 'Een dynamische musical over ambitie, macht en de opkomst van Eva Perón. Inclusief het iconische "Don''t Cry For Me Argentina."'
+    WHEN show_images.show_title = 'West Side Story' THEN 'De baanbrekende musical die Shakespeares liefdesverhaal in 1950s New York plaatst met adembenemende choreografie en muziek.'
+    WHEN show_images.show_title = 'Sweeney Todd' THEN 'Stephen Sondheims duistere muzikale meesterwerk over een barbier gedreven door wraak en de geheimen van Victoriaans Londen.'
+    WHEN show_images.show_title = 'Swan Lake' THEN 'Tchaikovsky''s prachtige ballet over liefde, bedrog en transformatie. Een visueel en muzikaal festijn.'
+    WHEN show_images.show_title = 'The Nutcracker' THEN 'Reis naar een magische wereld van dansende suikerpruimen, speelgoed soldaatjes en feestelijke verwondering. Perfect voor de feestdagen.'
+    WHEN show_images.show_title = 'Giselle' THEN 'De romantische balletvoorstelling over een boerenmeisje dat uit de dood herrijst om haar geliefde te beschermen.'
+    WHEN show_images.show_title = 'Contemporary Dance Fusion' THEN 'Een innovatieve verkenning van hedendaagse dans met invloeden uit verschillende culturen.'
+    WHEN show_images.show_title = 'Stomp' THEN 'Een unieke theatervoorstelling waarin alledaagse objecten als instrumenten dienen.'
+    WHEN show_images.show_title = 'Cinderella''s Magical Ball' THEN 'Een interactieve vertelling van Assepoester met meezingmomenten, dans en magie. Perfect voor kinderen en gezinnen.'
+    WHEN show_images.show_title = 'The Lion King Jr.' THEN 'Een indrukwekkende bewerking van de geliefde Disney-musical, uitgevoerd door getalenteerde jongeren.'
+    WHEN show_images.show_title = 'Frozen: A Musical Journey' THEN 'Volg Elsa en Anna in een theaterbewerking over liefde, macht en zusterband.'
+    WHEN show_images.show_title = 'Peter Pan: Never Grow Up' THEN 'Vlieg naar Nooitgedachtland met Peter Pan, zeemeerminnen, piraten en de Lost Boys in een betoverend avontuur.'
+    WHEN show_images.show_title = 'The Tale of Pinocchio' THEN 'Een charmante vertelling over een houten pop die ernaar verlangt een echte jongen te worden, met lessen over eerlijkheid en moed.'
+    WHEN show_images.show_title = 'Scenes from a Memory' THEN 'Een abstract en poëtisch stuk dat de aard van geheugen, identiteit en realiteit bevraagt.'
+    WHEN show_images.show_title = 'The Absurd Chronicles' THEN 'Een surrealistische reis door onlogische scenario''s en onmogelijke situaties. Verwacht het onverwachte.'
+    WHEN show_images.show_title = 'Metamorphosis: A Body Work' THEN 'Een verbluffend hedendaags stuk dat het lichaam als canvas gebruikt om transformatie, strijd en wedergeboorte te verbeelden.'
+    WHEN show_images.show_title = 'The Hour Glass' THEN 'Een experimentele meditatie over tijd, ouder worden en de vluchtigheid van het bestaan.'
+    WHEN show_images.show_title = 'The Merchant of Venice' THEN 'Shakespeares complexe stuk over liefde, geld, gerechtigheid en vooroordelen in renaissance Venetië.'
+    WHEN show_images.show_title = 'The Tempest' THEN 'Shakespeares laatste meesterwerk over schipbreuken, tovenarij en de kracht van vergeving.'
+    WHEN show_images.show_title = 'A Midsummer Night''s Dream' THEN 'Shakespeares betoverende komedie over jonge geliefden, magische feeën en hilarische verwarring.'
+    WHEN show_images.show_title = 'The Taming of the Shrew' THEN 'Shakespeares strijd-van-de-sexen komedie over koppige Katherine en de man die haar temt.'
+    WHEN show_images.show_title = 'Tartuffe' THEN 'Een Parijse huishouding in volledige chaos wanneer een sluwe bedrieger een rijke familie manipuleert.'
+    WHEN show_images.show_title = 'A Streetcar Named Desire' THEN 'Tennessee Williams'' aangrijpende drama over sociale status, mentale gezondheid en rauwe menselijke passie.'
+    WHEN show_images.show_title = 'Death of a Salesman' THEN 'Arthur Millers meesterwerk over Willy Lomans ondergang en de prijs van het najagen van de Amerikaanse droom.'
+    WHEN show_images.show_title = 'The Visit' THEN 'Een rijke vrouw keert terug naar haar geboortestad om wraak te nemen, en test daarmee de moraal van de inwoners.'
+    WHEN show_images.show_title = 'Blood Wedding' THEN 'Een duister Spaans drama over een bruiloft verstoord door verboden liefde en fatale gevolgen.'
+    WHEN show_images.show_title = 'Waiting for Godot' THEN 'Becketts raadselachtige voorstelling over twee mannen die wachten op iemand die nooit komt.'
+    WHEN show_images.show_title = 'The Birthday Party' THEN 'Pinter''s onheilspellende komedie-drama over de mysterieuze komst van twee mannen in een pension aan zee.'
+    WHEN show_images.show_title = 'Rosencrantz and Guildenstern Are Dead' THEN 'Tom Stoppards briljante metatheatrale komedie over twee bijfiguren uit Hamlet.'
+    WHEN show_images.show_title = 'An Inspector Calls' THEN 'J.B. Priestley''s thriller over een mysterieuze inspecteur die verborgen geheimen onthult.'
+    WHEN show_images.show_title = 'The Crucible: A New Vision' THEN 'Een frisse, hedendaagse enscenering van Millers krachtige stuk over hysterie en vervolging.'
+    WHEN show_images.show_title = 'Cabaret' THEN 'Een musical gesitueerd in het Berlijn van de jaren 30, over moraal, seksualiteit en de opkomst van het nazisme.'
+    WHEN show_images.show_title = 'Chicago' THEN 'De cynische musical over misdaad, showbizz en corruptie in het Jazz Age Chicago.'
+    WHEN show_images.show_title = 'Rent' THEN 'Jonathan Larsons rockmusical over worstelende artiesten, liefde, verlies en de kracht van gemeenschap.'
+    WHEN show_images.show_title = 'Hamilton' THEN 'Lin-Manuel Mirandas hiphopmusical over Alexander Hamilton en de Amerikaanse revolutie.'
+    WHEN show_images.show_title = 'Dear Evan Hansen' THEN 'Een hedendaagse musical over verbinding, rouw en de impact die we op elkaars leven hebben.'
   END as description,
   (SELECT id FROM image_map WHERE filename = show_images.main_filename) as image_id,
   (SELECT id FROM image_map WHERE filename = show_images.thumb_filename) as thumbnail_image_id,
@@ -325,13 +326,13 @@ SELECT
   NOW() as updated_at
 FROM show_images;
 
--- Get tag IDs for mapping (we''ll use a simpler approach with explicit tag assignments)
+-- Haal tag-IDs op voor mapping (we gebruiken een eenvoudige aanpak met expliciete tag-toewijzingen)
 -- ============================================
--- Insert Performances (Multiple per show, spread over next 3 months)
+-- Voeg voorstellingsdata toe (Meerdere per voorstelling, verspreid over de komende 3 maanden)
 -- ============================================
 
--- Helper: Get show ID for a given title and insert performances
--- For each show, we''ll insert 3-5 performances spread over the next 3 months
+-- Hulpfunctie: haal show-ID op voor een gegeven titel en voeg voorstellingen toe
+-- Voor elke voorstelling voegen we 3-5 voorstellingsdata toe, verspreid over de komende 3 maanden
 
 DO $$
 DECLARE
@@ -355,7 +356,7 @@ BEGIN
         NOW() + ((RANDOM() * 90)::INT || ' days')::INTERVAL + ((RANDOM() * 24)::INT || ' hours')::INTERVAL,
         (SELECT base_price FROM shows WHERE id = v_show_id),
         100,
-        FLOOR(RANDOM() * 50 + 30)::INT, -- 30-80 available seats for variety
+        FLOOR(RANDOM() * 50 + 30)::INT, -- 30-80 beschikbare plaatsen voor variatie
         'published',
         NOW(),
         NOW()
@@ -365,39 +366,39 @@ BEGIN
 END $$;
 
 -- ============================================
--- Assign Tags to Shows (Many-to-Many)
+-- Wijs tags toe aan voorstellingen (Many-to-Many)
 -- ============================================
 
--- Helper function to link shows to tags
+-- Hulpfunctie om voorstellingen aan tags te koppelen
 WITH tag_map AS (
   SELECT id, slug FROM tags
 ),
 show_tag_assignments AS (
-  -- Drama shows get 'drama' and optionally others
+  -- Dramashows krijgen 'drama' en eventueel extra tags
   SELECT s.id as show_id, t.id as tag_id FROM shows s, tag_map t
   WHERE (s.title LIKE '%Hamlet%' OR s.title LIKE '%Glass%' OR s.title LIKE '%Ghosts%' OR s.title LIKE '%Doll%' OR s.title LIKE '%Crucible%' OR s.title LIKE '%Merchant%' OR s.title LIKE '%Tempest%' OR s.title LIKE '%Midsummer%' OR s.title LIKE '%Shrew%' OR s.title LIKE '%Tartuffe%' OR s.title LIKE '%Streetcar%' OR s.title LIKE '%Death%' OR s.title LIKE '%Visit%' OR s.title LIKE '%Blood%' OR s.title LIKE '%Waiting%' OR s.title LIKE '%Birthday%' OR s.title LIKE '%Rosencrantz%' OR s.title LIKE '%Inspector%') AND t.slug = 'drama'
   UNION ALL
-  -- Shakespeare shows
+  -- Shakespeare-voorstellingen
   SELECT s.id, t.id FROM shows s, tag_map t
   WHERE (s.title LIKE '%Hamlet%' OR s.title LIKE '%Much Ado%' OR s.title LIKE '%Twelfth%' OR s.title LIKE '%Merchant%' OR s.title LIKE '%Tempest%' OR s.title LIKE '%Midsummer%' OR s.title LIKE '%Shrew%') AND t.slug = 'shakespeare'
   UNION ALL
-  -- Comedy shows
+  -- Komedie-voorstellingen
   SELECT s.id, t.id FROM shows s, tag_map t
   WHERE (s.title LIKE '%Importance%' OR s.title LIKE '%Much Ado%' OR s.title LIKE '%Twelfth%' OR s.title LIKE '%Noises%' OR s.title LIKE '%One-Liners%' OR s.title LIKE '%Tartuffe%') AND t.slug = 'comedy'
   UNION ALL
-  -- Musical shows
+  -- Musical-voorstellingen
   SELECT s.id, t.id FROM shows s, tag_map t
   WHERE (s.title LIKE '%Misérables%' OR s.title LIKE '%Phantom%' OR s.title LIKE '%Evita%' OR s.title LIKE '%West Side%' OR s.title LIKE '%Sweeney%' OR s.title LIKE '%Cabaret%' OR s.title LIKE '%Chicago%' OR s.title LIKE '%Rent%' OR s.title LIKE '%Hamilton%' OR s.title LIKE '%Dear%') AND t.slug = 'musical'
   UNION ALL
-  -- Dance shows
+  -- Dansvoorstellingen
   SELECT s.id, t.id FROM shows s, tag_map t
   WHERE (s.title LIKE '%Swan%' OR s.title LIKE '%Nutcracker%' OR s.title LIKE '%Giselle%' OR s.title LIKE '%Contemporary Dance%' OR s.title LIKE '%Stomp%') AND t.slug = 'dance'
   UNION ALL
-  -- Kids shows
+  -- Kindervoorstellingen
   SELECT s.id, t.id FROM shows s, tag_map t
   WHERE (s.title LIKE '%Cinderella%' OR s.title LIKE '%Lion King%' OR s.title LIKE '%Frozen%' OR s.title LIKE '%Peter Pan%' OR s.title LIKE '%Pinocchio%') AND t.slug = 'kids'
   UNION ALL
-  -- Contemporary shows
+  -- Hedendaagse voorstellingen
   SELECT s.id, t.id FROM shows s, tag_map t
   WHERE (s.title LIKE '%Scenes%' OR s.title LIKE '%Absurd%' OR s.title LIKE '%Metamorphosis%' OR s.title LIKE '%Hour%') AND t.slug = 'contemporary'
   UNION ALL
@@ -416,7 +417,8 @@ ON CONFLICT DO NOTHING;
 -- ============================================
 -- Summary
 -- ============================================
--- Total shows: 40+
--- Total tags: 10
--- Performances: 3-5 per show (120-200 total)
--- All shows are published and have performances in the next 90 days
+-- Samenvatting
+-- Totaal aantal voorstellingen: 40+
+-- Totaal aantal tags: 10
+-- Aantal voorstellingen per show: 3-5 (in totaal 120-200)
+-- Alle voorstellingen zijn gepubliceerd en hebben voorstellingsdata in de komende 90 dagen

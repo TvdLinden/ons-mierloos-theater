@@ -5,98 +5,114 @@ import { PruneImagesButton } from '@/components/PruneImagesButton';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/utils/auth';
 import { Session } from 'next-auth';
+import {
+  Zap,
+  Tag,
+  ShoppingCart,
+  Mail,
+  FileText,
+  Users,
+  Ticket,
+  UserCog,
+  Trash2,
+} from 'lucide-react';
+
+interface AdminFeature {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  description: string;
+  href: string;
+  adminOnly?: boolean;
+}
+
+const features: AdminFeature[] = [
+  {
+    icon: Zap,
+    label: 'Overzicht Voorstellingen',
+    description: 'Bekijk en beheer alle voorstellingen.',
+    href: '/admin/shows',
+  },
+  {
+    icon: Tag,
+    label: 'Tags Beheer',
+    description: 'Beheer categorieën en tags voor voorstellingen.',
+    href: '/admin/tags',
+  },
+  {
+    icon: ShoppingCart,
+    label: 'Verkopen & Bestellingen',
+    description: 'Bekijk verkoopcijfers en alle bestellingen.',
+    href: '/admin/sales',
+  },
+  {
+    icon: Mail,
+    label: 'Nieuwsbrief Versturen',
+    description: 'Verstuur e-mails naar alle nieuwsbrief abonnees.',
+    href: '/admin/mailing-list',
+  },
+  {
+    icon: FileText,
+    label: "Pagina's Beheer",
+    description: "Bekijk en beheer statische pagina's.",
+    href: '/admin/pages',
+  },
+  {
+    icon: Users,
+    label: 'Sponsors Beheer',
+    description: 'Beheer sponsors en partners van het theater.',
+    href: '/admin/sponsors',
+  },
+  {
+    icon: Ticket,
+    label: 'Coupons Beheer',
+    description: 'Beheer kortingscoupons en promoties.',
+    href: '/admin/coupons',
+    adminOnly: true,
+  },
+  {
+    icon: UserCog,
+    label: 'Gebruikers Beheer',
+    description: 'Beheer gebruikers en hun rollen.',
+    href: '/admin/users',
+    adminOnly: true,
+  },
+];
 
 export default async function AdminOverview() {
   await requireRole(['admin', 'contributor']);
 
   const session = (await getServerSession(authOptions)) as Session | null;
   const isAdmin = session?.user?.role === 'admin';
+
+  const visibleFeatures = features.filter((f) => !f.adminOnly || isAdmin);
+
   return (
-    <div className="max-w-2xl mx-auto py-12 px-6 bg-surface rounded-lg shadow-lg">
-      <h1 className="text-4xl font-bold mb-8 text-primary">Dashboard Beheer</h1>
-      <ul className="space-y-6">
-        <li>
-          <Link
-            href="/admin/shows"
-            className="block px-6 py-4 bg-primary text-surface rounded-lg shadow hover:bg-primary/90 font-semibold transition-colors"
-          >
-            Overzicht Voorstellingen
-          </Link>
-          <p className="mt-2 text-textSecondary">Bekijk en beheer alle voorstellingen.</p>
-        </li>
-        <li>
-          <Link
-            href="/admin/tags"
-            className="block px-6 py-4 bg-primary text-surface rounded-lg shadow hover:bg-primary/90 font-semibold transition-colors"
-          >
-            Tags Beheer
-          </Link>
-          <p className="mt-2 text-textSecondary">Beheer categorieën en tags voor voorstellingen.</p>
-        </li>
-        <li>
-          <Link
-            href="/admin/sales"
-            className="block px-6 py-4 bg-primary text-surface rounded-lg shadow hover:bg-primary/90 font-semibold transition-colors"
-          >
-            Verkopen & Bestellingen
-          </Link>
-          <p className="mt-2 text-textSecondary">Bekijk verkoopcijfers en alle bestellingen.</p>
-        </li>
-        <li>
-          <Link
-            href="/admin/mailing-list"
-            className="block px-6 py-4 bg-primary text-surface rounded-lg shadow hover:bg-primary/90 font-semibold transition-colors"
-          >
-            Nieuwsbrief Versturen
-          </Link>
-          <p className="mt-2 text-textSecondary">
-            Verstuur e-mails naar alle nieuwsbrief abonnees.
-          </p>
-        </li>
-        <li>
-          <Link
-            href="/admin/pages"
-            className="block px-6 py-4 bg-primary text-surface rounded-lg shadow hover:bg-primary/90 font-semibold transition-colors"
-          >
-            Pagina&apos;s Beheer
-          </Link>
-          <p className="mt-2 text-textSecondary">Bekijk en beheer statische pagina's.</p>
-        </li>
-        <li>
-          <Link
-            href="/admin/sponsors"
-            className="block px-6 py-4 bg-primary text-surface rounded-lg shadow hover:bg-primary/90 font-semibold transition-colors"
-          >
-            Sponsors Beheer
-          </Link>
-          <p className="mt-2 text-textSecondary">Beheer sponsors en partners van het theater.</p>
-        </li>
-        {isAdmin && (
-          <>
-            <li>
-              <Link
-                href="/admin/coupons"
-                className="block px-6 py-4 bg-primary text-surface rounded-lg shadow hover:bg-primary/90 font-semibold transition-colors"
-              >
-                Coupons Beheer
-              </Link>
-              <p className="mt-2 text-textSecondary">Beheer kortingscoupons en promoties.</p>
-            </li>
-            <li>
-              <Link
-                href="/admin/users"
-                className="block px-6 py-4 bg-primary text-surface rounded-lg shadow hover:bg-primary/90 font-semibold transition-colors"
-              >
-                Gebruikers Beheer
-              </Link>
-              <p className="mt-2 text-textSecondary">Beheer gebruikers en hun rollen.</p>
-            </li>
-          </>
-        )}
-        <li>
-          <PruneImagesButton />
-        </li>
-      </ul>
+    <div className="max-w-6xl mx-auto py-12 px-6">
+      <h1 className="text-4xl font-bold mb-2 text-foreground">Dashboard Beheer</h1>
+      <p className="text-muted-foreground mb-8">Beheer alle aspecten van het theater</p>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+        {visibleFeatures.map((feature) => {
+          const Icon = feature.icon;
+          return (
+            <Link
+              key={feature.label}
+              href={feature.href}
+              className="group relative rounded-lg border bg-card p-6 hover:shadow-lg hover:border-primary/50 transition-all"
+            >
+              <Icon className="h-8 w-8 mb-3 text-primary group-hover:scale-110 transition-transform" />
+              <h3 className="font-semibold text-foreground mb-1">{feature.label}</h3>
+              <p className="text-sm text-muted-foreground">{feature.description}</p>
+              <div className="absolute inset-0 rounded-lg bg-primary/0 group-hover:bg-primary/5 transition-colors pointer-events-none" />
+            </Link>
+          );
+        })}
+      </div>
+
+      <div className="border-t pt-8">
+        <h2 className="text-xl font-semibold mb-4 text-foreground">Onderhoud</h2>
+        <PruneImagesButton />
+      </div>
     </div>
   );
 }
