@@ -10,10 +10,14 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.join(__dirname, '../.env.local') });
 dotenv.config({ path: path.join(__dirname, '../.env') });
 
+const DATABASE_URL = process.env.DATABASE_URL;
+
+console.log('Using DATABASE_URL:', DATABASE_URL);
+
 const { Client } = pg;
 
 const client = new Client({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: DATABASE_URL,
 });
 
 async function seedDatabase() {
@@ -47,7 +51,7 @@ async function seedDatabase() {
     // Now run the SQL seed script for shows, performances, tags, etc.
     console.log('\nRunning SQL seed script for shows, performances, and tags...\n');
 
-    const seedSQL = fs.readFileSync(path.join(__dirname, '../seed.sql'), 'utf-8');
+    const seedSQL = fs.readFileSync(path.join(__dirname, './seed.sql'), 'utf-8');
 
     // Execute the entire SQL file as one transaction
     try {
