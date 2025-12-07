@@ -1,0 +1,10 @@
+# robots.txt for Ons Mierloos Theater
+# Allow all crawlers by default. Adjust rules for disallowing staging or private paths.
+User-agent: *
+Allow: /
+
+# Optional: specify crawl delay (seconds) for polite crawling
+# Crawl-delay: 10
+
+# Sitemap location (update domain when deploying)
+Sitemap: /sitemap.xml
