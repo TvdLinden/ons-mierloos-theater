@@ -12,12 +12,12 @@ import {
   PaginationPrevious,
 } from '@/components/ui/pagination';
 
-const ITEMS_PER_PAGE = 12;
+const ITEMS_PER_PAGE = 8;
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-export default async function HomePage({ searchParams }) {
+export default async function ShowsPage({ searchParams }) {
   const tags = await getAllTags();
   const search = await searchParams;
   const selectedTags = search?.tags ? search.tags.split(',') : [];
@@ -53,7 +53,7 @@ export default async function HomePage({ searchParams }) {
   // Generate page numbers to show
   const getPageNumbers = () => {
     const pages = [];
-    const showEllipsis = totalPages > 7;
+    const showEllipsis = totalPages > 6;
 
     if (!showEllipsis) {
       for (let i = 1; i <= totalPages; i++) pages.push(i);
