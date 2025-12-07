@@ -27,6 +27,7 @@ import {
   couponsRelations,
   couponPerformancesRelations,
   couponUsagesRelations,
+  pages,
 } from '@/lib/db/schema';
 
 export type User = typeof users.$inferSelect;
@@ -68,6 +69,8 @@ export type PerformanceWithShow = Performance & {
   show: Show | null;
 };
 
+export type Page = typeof pages.$inferSelect;
+
 if (!process.env.DATABASE_URL) {
   throw new Error('DATABASE_URL environment variable is required');
 }
@@ -104,6 +107,7 @@ const db = drizzle(pool, {
     couponsRelations,
     couponPerformancesRelations,
     couponUsagesRelations,
+    pages,
   },
 });
 

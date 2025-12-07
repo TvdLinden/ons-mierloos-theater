@@ -55,6 +55,15 @@ export default async function AdminOverview() {
         </li>
         <li>
           <Link
+            href="/admin/pages"
+            className="block px-6 py-4 bg-primary text-surface rounded-lg shadow hover:bg-primary/90 font-semibold transition-colors"
+          >
+            Pagina&apos;s Beheer
+          </Link>
+          <p className="mt-2 text-textSecondary">Bekijk en beheer statische pagina's.</p>
+        </li>
+        <li>
+          <Link
             href="/admin/sponsors"
             className="block px-6 py-4 bg-primary text-surface rounded-lg shadow hover:bg-primary/90 font-semibold transition-colors"
           >

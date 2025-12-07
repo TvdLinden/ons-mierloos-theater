@@ -55,7 +55,11 @@ export default function MarkdownEditor({
 
   const editor = useEditor({
     extensions: [
-      Markdown.configure(),
+      PasteMarkdown.configure(),
+
+      Markdown.configure({
+        indentation: { size: 2, style: 'space' },
+      }),
       StarterKit.configure({
         paragraph: {
           HTMLAttributes: {
@@ -334,10 +338,62 @@ export default function MarkdownEditor({
         </Popover>
       </ToggleGroup>
 
-      <EditorContent className="prose" editor={editor} />
+      <EditorContent className="prose prose-lg w-full" editor={editor} />
 
       {/* Hidden input to store the HTML content */}
       <input type="hidden" name={name} value={editor?.getHTML() || ''} />
     </div>
   );
+}
+
+import { Editor, Extension } from '@tiptap/core';
+import { Plugin } from '@tiptap/pm/state';
+
+const PasteMarkdown = Extension.create({
+  name: 'pasteMarkdown',
+
+  addProseMirrorPlugins() {
+    const editor = this.editor;
+    return [
+      new Plugin({
+        props: {
+          handlePaste(view, event, slice) {
+            const text = event.clipboardData?.getData('text/plain');
+
+            if (!text) {
+              return false;
+            }
+
+            // Check if text looks like Markdown
+            if (looksLikeMarkdown(text)) {
+              console.log('Pasting Markdown content');
+
+              if (editor?.markdown) {
+                // Parse the Markdown text to Tiptap JSON using the Markdown manager
+                const json = editor.markdown.parse(text);
+
+                // Insert the parsed JSON content at cursor position
+                editor.commands.insertContent(json);
+                return true;
+              }
+            } else {
+              console.log('not md');
+            }
+
+            return false;
+          },
+        },
+      }),
+    ];
+  },
+});
+
+function looksLikeMarkdown(text: string): boolean {
+  // Simple heuristic: check for Markdown syntax
+  return (
+    /^#{1,6}\s/.test(text) || // Headings
+    /\*\*[^*]+\*\*/.test(text) || // Bold
+    /\[.+\]\(.+\)/.test(text) || // Links
+    /^[-*+]\s/.test(text)
+  ); // Lists
 }

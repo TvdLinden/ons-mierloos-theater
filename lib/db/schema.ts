@@ -423,3 +423,25 @@ export const couponUsagesRelations = relations(couponUsages, ({ one }) => ({
   order: one(orders, { fields: [couponUsages.orderId], references: [orders.id] }),
   user: one(users, { fields: [couponUsages.userId], references: [users.id] }),
 }));
+
+const pageStatusValues = ['draft', 'published', 'archived'] as const;
+type PageStatus = (typeof pageStatusValues)[number];
+export const pageStatus = pgEnum(
+  'page_status',
+  pageStatusValues as unknown as [PageStatus, ...PageStatus[]],
+);
+
+// Pages
+export const pages = pgTable(
+  'pages',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    title: varchar('title', { length: 255 }).notNull(),
+    slug: varchar('slug', { length: 255 }).unique().notNull(),
+    content: text('content'),
+    status: pageStatus('status').notNull().default('draft'),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+  },
+  (table) => [index('pages_title_idx').on(table.title), index('pages_slug_idx').on(table.slug)],
+);

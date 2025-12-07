@@ -74,6 +74,12 @@ export default function Header() {
             Home
           </Link>
           <Link
+            href="/voorstellingen"
+            className="text-gray-800 hover:text-primary font-medium transition-colors"
+          >
+            Voorstellingen
+          </Link>
+          <Link
             href="/sponsors"
             className="text-gray-800 hover:text-primary font-medium transition-colors"
           >

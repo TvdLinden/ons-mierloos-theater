@@ -7,8 +7,8 @@ import {
   Performance,
   PerformanceWithShow,
 } from '@/lib/db';
-import { shows, performances } from '@/lib/db/schema';
-import { eq, and, desc, asc, or, lte, isNull, gte } from 'drizzle-orm';
+import { shows, performances, showTags, tags } from '@/lib/db/schema';
+import { eq, and, desc, asc, or, lte, isNull, gte, inArray } from 'drizzle-orm';
 import { getTagsForShow } from './tags';
 
 /**
@@ -167,16 +167,61 @@ export async function getShowBySlugWithTagsAndPerformances(
 /**
  * Get all published shows with upcoming performances
  */
-export async function getUpcomingShows(): Promise<ShowWithTagsAndPerformances[]> {
+export async function getUpcomingShows(
+  offset?: number,
+  limit?: number,
+  tagFilter?: string[],
+): Promise<ShowWithTagsAndPerformances[]> {
   const now = new Date();
   const nowUTC = new Date(now.toISOString());
 
-  const result = await db.query.shows.findMany({
-    where: and(
-      eq(shows.status, 'published'),
-      or(isNull(shows.publicationDate), lte(shows.publicationDate, nowUTC)),
-      or(isNull(shows.depublicationDate), gte(shows.depublicationDate, nowUTC)),
-    ),
+  // Build base where conditions for published shows
+  let whereConditions = and(
+    eq(shows.status, 'published'),
+    or(isNull(shows.publicationDate), lte(shows.publicationDate, nowUTC)),
+    or(isNull(shows.depublicationDate), gte(shows.depublicationDate, nowUTC)),
+  );
+
+  // Apply tag filtering if provided
+  if (tagFilter && tagFilter.length > 0) {
+    // Separate ids from slugs
+    const ids: string[] = [];
+    const slugs: string[] = [];
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    for (const t of tagFilter) {
+      if (uuidRegex.test(t)) ids.push(t);
+      else slugs.push(t.toLowerCase());
+    }
+
+    // Resolve slugs to tag ids
+    const tagIds = [...ids];
+    if (slugs.length > 0) {
+      const matchedTags = await db.select().from(tags).where(inArray(tags.slug, slugs));
+      for (const mt of matchedTags) {
+        if (mt.id) tagIds.push(String(mt.id));
+      }
+    }
+
+    if (tagIds.length === 0) {
+      return [];
+    }
+
+    // Find show IDs that have any of the tagIds
+    const matched = await db
+      .select({ showId: showTags.showId })
+      .from(showTags)
+      .where(inArray(showTags.tagId, tagIds));
+
+    const showIds = Array.from(new Set(matched.map((m) => String(m.showId))));
+    if (showIds.length === 0) return [];
+
+    // Add show ID filter to where conditions
+    whereConditions = and(whereConditions, inArray(shows.id, showIds));
+  }
+
+  // Build the query with conditional limit and offset
+  const queryConfig = {
+    where: whereConditions,
     with: {
       performances: {
         where: and(gte(performances.date, nowUTC), eq(performances.status, 'published')),
@@ -187,15 +232,20 @@ export async function getUpcomingShows(): Promise<ShowWithTagsAndPerformances[]>
       },
     },
     orderBy: [asc(shows.title)],
-  });
+    ...(offset && offset > 0 ? { offset } : {}),
+    ...(limit && limit > 0 ? { limit } : {}),
+  } as const;
 
-  // Filter out shows with no upcoming performances
+  // Execute query
+  const result = await db.query.shows.findMany(queryConfig as any);
+
+  // Filter out shows with no upcoming performances and map tags
   return result
-    .filter((show) => show.performances.length > 0)
-    .map((show) => ({
+    .filter((show: any) => show.performances.length > 0)
+    .map((show: any) => ({
       ...show,
-      tags: show.showTags.map((st) => st.tag).filter(Boolean),
-    }));
+      tags: show.showTags.map((st: any) => st.tag).filter(Boolean),
+    })) as ShowWithTagsAndPerformances[];
 }
 
 /**
