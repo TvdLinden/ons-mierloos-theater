@@ -7,6 +7,7 @@ import { Button } from '@/components/ui';
 import DateDisplay from '@/components/DateDisplay';
 import CurrencyDisplay from '@/components/CurrencyDisplay';
 import { useCart } from '@/components/CartContext';
+import { NumberInput } from './ui/number-input';
 
 export type TimeslotPickerProps = {
   performances: Performance[];
@@ -138,14 +139,12 @@ export default function TimeslotPicker({
             <label htmlFor="quantity" className="text-primary font-medium">
               Aantal kaartjes:
             </label>
-            <input
-              type="number"
-              id="quantity"
-              min="1"
-              max={selectedPerformance.availableSeats}
+            <NumberInput
               value={quantity}
-              onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-              className="w-20 px-3 py-2 border border-primary rounded-lg text-center focus:outline-none focus:ring-2 focus:ring-secondary"
+              onChange={(value) => setQuantity(Math.max(1, parseInt(value.target.value) || 1))}
+              max={selectedPerformance.availableSeats}
+              min={1}
+              className="w-20"
             />
             <span className="text-sm text-text-secondary dark:text-gray-400">
               Totaal:{' '}

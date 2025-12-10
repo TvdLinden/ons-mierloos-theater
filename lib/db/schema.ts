@@ -429,7 +429,7 @@ type PageStatus = (typeof pageStatusValues)[number];
 export const pageStatus = pgEnum(
   'page_status',
   pageStatusValues as unknown as [PageStatus, ...PageStatus[]],
-); 
+);
 
 // Pages
 export const pages = pgTable(

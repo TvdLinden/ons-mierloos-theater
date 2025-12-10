@@ -6,8 +6,9 @@ import Link from 'next/link';
 import { ShowWithTagsAndPerformances, Tag } from '@/lib/db';
 import { getShowThumbnailUrl } from '@/lib/utils/performanceImages';
 import TagsContainer from './TagsContainer';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { ChevronDown } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export type PerformanceCardProps = {
   show: ShowWithTagsAndPerformances;
@@ -17,6 +18,7 @@ export type PerformanceCardProps = {
 
 export default function PerformanceCard({ show, href }: PerformanceCardProps) {
   const [infoVisible, setInfoVisible] = useState(false);
+  const [maxHeight, setMaxHeight] = useState(0);
   const contentRef = useRef<HTMLDivElement>(null);
   const { title, subtitle, slug, tags, performances, basePrice } = show;
   const imageUrl = getShowThumbnailUrl(show);
@@ -32,16 +34,23 @@ export default function PerformanceCard({ show, href }: PerformanceCardProps) {
         ? new Date(availablePerformances[0].date)
         : `${availablePerformances.length} beschikbare voorstellingen`
       : null;
-
   const toggleInfo = (e: React.MouseEvent | React.KeyboardEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setInfoVisible(!infoVisible);
   };
 
+  useEffect(() => {
+    if (infoVisible && contentRef.current) {
+      setMaxHeight(contentRef.current.scrollHeight);
+    } else {
+      setMaxHeight(0);
+    }
+  }, [infoVisible]);
+
   return (
     <Link href={href || `/performances/${slug}`} className="group w-full max-w-lg cursor-pointer">
-      <div className="relative">
+      <div className="relative flex flex-col">
         <div className="relative w-full aspect-4/3 rounded-lg overflow-hidden">
           <Image
             src={imageUrl}
@@ -54,15 +63,21 @@ export default function PerformanceCard({ show, href }: PerformanceCardProps) {
 
         {/* Info Panel */}
         <div
-          className={`absolute inset-x-2 bottom-2 rounded-md backdrop-blur-sm transition-all duration-300 ${
-            infoVisible ? 'bg-surface/90 dark:bg-accent/90' : 'bg-surface/50 dark:bg-accent/50'
-          }`}
+          className={cn(
+            'absolute inset-x-2 bottom-2 rounded-md backdrop-blur-sm transition-all duration-300 flex flex-col',
+            infoVisible ? 'bg-surface/90 dark:bg-accent/90' : 'bg-surface/50 dark:bg-accent/50',
+          )}
+          style={{
+            maxHeight: 'calc(100% - 1rem)',
+          }}
         >
           {/* Header / Toggle */}
           <div
-            className={`flex items-start justify-between transition-all duration-300 ${
-              infoVisible ? 'rounded-t-md px-3 py-2' : 'rounded-md px-3 py-2'
-            } hover:bg-surface/70 dark:hover:bg-accent/70`}
+            className={cn(
+              'flex items-start justify-between transition-all duration-300',
+              infoVisible ? 'rounded-t-md px-3 py-2' : 'rounded-md px-3 py-2',
+              'hover:bg-surface/70 dark:hover:bg-accent/70',
+            )}
             role="button"
             tabIndex={0}
             onClick={toggleInfo}
@@ -89,6 +104,7 @@ export default function PerformanceCard({ show, href }: PerformanceCardProps) {
                 </span>
               </p>
             </div>
+
             <div className="bg-background dark:bg-primary mt-1 rounded-full p-1">
               <ChevronDown
                 className={`text-muted-foreground size-4 transition-transform duration-300 ${
@@ -101,16 +117,14 @@ export default function PerformanceCard({ show, href }: PerformanceCardProps) {
           {/* Expandable Content */}
           <div
             ref={contentRef}
-            className="overflow-hidden transition-all duration-300"
-            // eslint-disable-next-line react-hooks/refs
+            className="overflow-hidden transition-all duration-300 flex-1 min-h-0"
             style={{
-              // eslint-disable-next-line react-hooks/refs
-              maxHeight: infoVisible ? contentRef.current?.scrollHeight : 0,
+              maxHeight: infoVisible ? maxHeight : 0,
               opacity: infoVisible ? 1 : 0,
               visibility: infoVisible ? 'visible' : 'hidden',
             }}
           >
-            <div className="p-3 pt-2 border-t border-border dark:border-primary/20">
+            <div className="p-3 pt-2 border-t border-border dark:border-primary/20 overflow-y-auto h-full">
               {subtitle && (
                 <div className="mb-3">
                   <p className="text-sm text-muted-foreground">{subtitle}</p>
@@ -136,7 +150,7 @@ export default function PerformanceCard({ show, href }: PerformanceCardProps) {
 
               {/* Tags */}
               {tags && tags.length > 0 && (
-                <div className="mb-3">
+                <div className="mb-3 hidden sm:block">
                   <p className="text-xs font-semibold text-foreground mb-1.5">Categorieën</p>
                   <div className="flex flex-wrap gap-1.5">
                     <TagsContainer tags={tags} />
@@ -158,7 +172,7 @@ export default function PerformanceCard({ show, href }: PerformanceCardProps) {
                   }}
                   className="bg-primary text-primary-foreground flex items-center gap-2 rounded-md px-2.5 py-1.5 text-xs font-semibold hover:bg-primary/90 transition-colors"
                 >
-                  Details
+                  Naar voorstelling
                 </button>
               </div>
             </div>

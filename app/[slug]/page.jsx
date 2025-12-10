@@ -41,8 +41,10 @@ export default async function Page({ params }) {
   }
 
   return (
-    <article className="prose prose-lg">
-      <div dangerouslySetInnerHTML={{ __html: page.content }} />
-    </article>
+    <main className="container items-center flex flex-col mx-auto px-4 py-8">
+      <article className="prose prose-lg text-center">
+        <div dangerouslySetInnerHTML={{ __html: page.content }} />
+      </article>
+    </main>
   );
 }
