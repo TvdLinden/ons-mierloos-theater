@@ -31,7 +31,7 @@ export default function CheckoutForm({ userName, userEmail }: CheckoutFormProps)
   const total = subtotal - discount;
 
   return (
-    <div className="max-w-xl mx-auto py-12 px-6 bg-surface rounded-lg shadow-lg">
+    <div className="w-full max-w-xl mx-auto py-12 px-6">
       <h1 className="text-3xl font-bold mb-8 text-primary">Afrekenen</h1>
       <p className="mb-6 text-zinc-700">Rond je bestelling af en betaal je kaartjes.</p>
       <ShoppingCart

@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { ReactNode } from 'react';
+import { Button } from '../ui';
 
 type AdminPageHeaderProps = {
   title: string;
@@ -28,9 +29,9 @@ export function AdminPageHeader({ title, backHref = '/admin', action }: AdminPag
             {typeof action === 'object' && 'href' in action ? (
               <Link
                 href={action.href}
-                className="px-4 py-2 bg-accent text-surface rounded font-semibold hover:bg-secondary shadow transition-colors"
+                // className="px-4 py-2 bg-accent text-surface rounded font-semibold hover:bg-secondary shadow transition-colors"
               >
-                {action.label}
+                <Button variant="secondary">{action.label}</Button>
               </Link>
             ) : (
               action

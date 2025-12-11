@@ -1,3 +1,4 @@
+import { Button, Input, Label, Textarea } from '@/components/ui';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -79,10 +80,10 @@ export default function ContactPage() {
           <h2 className="text-2xl font-semibold mb-4 text-text-primary">Stuur ons een bericht</h2>
           <form className="space-y-4">
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-text-primary mb-1">
+              <Label htmlFor="name" className="block text-sm font-medium text-text-primary mb-1">
                 Naam *
-              </label>
-              <input
+              </Label>
+              <Input
                 type="text"
                 id="name"
                 name="name"
@@ -92,10 +93,10 @@ export default function ContactPage() {
             </div>
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-text-primary mb-1">
+              <Label htmlFor="email" className="block text-sm font-medium text-text-primary mb-1">
                 Email *
-              </label>
-              <input
+              </Label>
+              <Input
                 type="email"
                 id="email"
                 name="email"
@@ -105,10 +106,10 @@ export default function ContactPage() {
             </div>
 
             <div>
-              <label htmlFor="subject" className="block text-sm font-medium text-text-primary mb-1">
+              <Label htmlFor="subject" className="block text-sm font-medium text-text-primary mb-1">
                 Onderwerp *
-              </label>
-              <input
+              </Label>
+              <Input
                 type="text"
                 id="subject"
                 name="subject"
@@ -118,24 +119,26 @@ export default function ContactPage() {
             </div>
 
             <div>
-              <label htmlFor="message" className="block text-sm font-medium text-text-primary mb-1">
+              <Label htmlFor="message" className="block text-sm font-medium text-text-primary mb-1">
                 Bericht *
-              </label>
-              <textarea
+              </Label>
+              <Textarea
                 id="message"
                 name="message"
                 rows={5}
                 required
-                className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
+                // className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
               />
             </div>
 
-            <button
+            <Button
               type="submit"
-              className="w-full bg-primary text-white py-3 px-6 rounded-lg hover:bg-opacity-90 transition-colors font-medium"
+              variant="default"
+              className="w-full"
+              // className="w-full bg-primary text-white py-3 px-6 rounded-lg hover:bg-opacity-90 transition-colors font-medium"
             >
               Verstuur bericht
-            </button>
+            </Button>
           </form>
         </div>
       </div>

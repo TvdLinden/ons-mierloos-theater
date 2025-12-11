@@ -43,7 +43,7 @@ export default async function AdminPerformanceOverview() {
 import type { Show, ShowWithTagsAndPerformances } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 import { invalidatePerformancePaths } from '@/lib/utils/invalidatePerformancePaths';
-import { Button, Empty, EmptyContent, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui';
+import { Button } from '@/components/ui';
 
 function Table({ shows }: { shows: ShowWithTagsAndPerformances[] }) {
   async function handleStatusChange(id: string, targetStatus: 'published' | 'draft') {
