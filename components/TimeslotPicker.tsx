@@ -131,7 +131,7 @@ export default function TimeslotPicker({
               </p>
             </div>
             <p className="text-lg font-bold text-primary dark:text-secondary">
-              <CurrencyDisplay value={selectedPerformance.price} />
+              <CurrencyDisplay value={parseFloat(selectedPerformance.price) * quantity} />
             </p>
           </div>
 

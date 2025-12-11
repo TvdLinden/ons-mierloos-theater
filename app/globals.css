@@ -2,6 +2,7 @@
 @plugin 'tailwindcss-animate';
 @plugin "@tailwindcss/typography";
 
+
 @custom-variant dark (&:is(.dark *));
 
 @theme {
@@ -79,8 +80,10 @@ body {
   --primary: oklch(0.21 0.006 285.885);
   --primary-foreground: oklch(0.985 0 0);
   /* Improved secondary color for better contrast */
-  --secondary: oklch(0.75 0.06 260); /* darker bluish tone */
-  --secondary-foreground: oklch(0.04 0.02 280); /* near-black for readable text */
+  --secondary: oklch(0.75 0.06 260);
+  /* darker bluish tone */
+  --secondary-foreground: oklch(0.04 0.02 280);
+  /* near-black for readable text */
   --muted: oklch(0.967 0.001 286.375);
   --muted-foreground: oklch(0.552 0.016 285.938);
   --accent: oklch(0.967 0.001 286.375);
@@ -143,6 +146,7 @@ body {
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
@@ -181,7 +185,7 @@ body {
   & h4:not(.not-prose h4),
   & h5:not(.not-prose h5),
   & h6:not(.not-prose h6) {
-    & + p {
+    &+p {
       @apply mt-0;
     }
   }
@@ -268,7 +272,7 @@ body {
     @apply my-6;
   }
 
-  & picture > img:not(.not-prose picture > img) {
+  & picture>img:not(.not-prose picture > img) {
     @apply my-0;
   }
 
