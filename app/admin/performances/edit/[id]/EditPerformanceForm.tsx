@@ -55,7 +55,7 @@ export default function EditPerformanceForm({ performance }: { performance: Perf
               name="price"
               step={0.01}
               min={0}
-              defaultValue={performance.price || ''}
+              defaultValue={parseFloat(performance.price) || 0}
               placeholder={performance.show?.basePrice || ''}
             />
           </SimpleFormField>

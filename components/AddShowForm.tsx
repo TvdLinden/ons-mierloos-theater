@@ -72,7 +72,7 @@ export default function AddShowForm({ action, initialData, availableTags }: Show
           name="basePrice"
           step={0.01}
           min={0}
-          defaultValue={initialData?.basePrice}
+          defaultValue={Number(initialData?.basePrice) || 0}
           placeholder="25.00"
           required
           disabled={isPending}

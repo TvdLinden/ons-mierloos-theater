@@ -91,7 +91,7 @@ export default function CouponForm({ initialData, action, submitLabel }: CouponF
             <NumberInput
               id="discountValue"
               name="discountValue"
-              defaultValue={initialData?.discountValue || ''}
+              defaultValue={Number(initialData?.discountValue) || 0}
               required
               step={discountType === 'percentage' ? 1 : 0.01}
               min={0}
@@ -111,7 +111,7 @@ export default function CouponForm({ initialData, action, submitLabel }: CouponF
           <NumberInput
             id="minOrderAmount"
             name="minOrderAmount"
-            defaultValue={initialData?.minOrderAmount || ''}
+            defaultValue={Number(initialData?.minOrderAmount) || 0}
             step={0.01}
             min={0}
             className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
@@ -128,7 +128,7 @@ export default function CouponForm({ initialData, action, submitLabel }: CouponF
             <NumberInput
               id="maxUses"
               name="maxUses"
-              defaultValue={initialData?.maxUses || ''}
+              defaultValue={Number(initialData?.maxUses) || 0}
               min={1}
               className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
               placeholder="Onbeperkt"
@@ -145,7 +145,7 @@ export default function CouponForm({ initialData, action, submitLabel }: CouponF
             <NumberInput
               id="maxUsesPerUser"
               name="maxUsesPerUser"
-              defaultValue={initialData?.maxUsesPerUser || ''}
+              defaultValue={Number(initialData?.maxUsesPerUser) || 0}
               min={1}
               className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
               placeholder="Onbeperkt"

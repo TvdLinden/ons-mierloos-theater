@@ -182,7 +182,13 @@ export default function ShowForm({
           />
         </SimpleFormField>
         <SimpleFormField label="Prijs (€)" htmlFor="price" required>
-          <NumberInput id="price" name="price" step={0.01} defaultValue={initial?.price} required />
+          <NumberInput
+            id="price"
+            name="price"
+            step={0.01}
+            defaultValue={Number(initial?.price)}
+            required
+          />
           <p className="text-xs text-zinc-600 mt-1">
             Standaard prijs voor voorstellingen (kan per voorstelling overschreven worden).
           </p>
@@ -406,7 +412,7 @@ function PerformanceDialogContent({
           <NumberInput
             id="perf-total"
             min={1}
-            value={parseInt(formData.totalSeats) || 0}
+            value={formData.totalSeats || 0}
             onChange={(value) => handleChange('totalSeats', value)}
           />
         </SimpleFormField>
