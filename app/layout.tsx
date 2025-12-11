@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import { Playfair_Display, Crimson_Pro } from 'next/font/google';
 import './globals.css';
 import ClientLayout from './client-layout';
+import { getNavigationLinks } from '@/lib/queries/content';
+import { getActiveSocialMediaLinks } from '@/lib/queries/socialMedia';
 
 const playfairDisplay = Playfair_Display({
   variable: '--font-display',
@@ -20,15 +22,27 @@ export const metadata: Metadata = {
   description: 'Cultuur en theater in Mierlo',
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const [headerLinks, footerLinks, socialMediaLinks] = await Promise.all([
+    getNavigationLinks('header'),
+    getNavigationLinks('footer'),
+    getActiveSocialMediaLinks(),
+  ]);
+
   return (
     <html lang="nl">
       <body className={`${playfairDisplay.variable} ${crimsonPro.variable} antialiased`}>
-        <ClientLayout>{children}</ClientLayout>
+        <ClientLayout
+          headerLinks={headerLinks}
+          footerLinks={footerLinks}
+          socialMediaLinks={socialMediaLinks}
+        >
+          {children}
+        </ClientLayout>
       </body>
     </html>
   );

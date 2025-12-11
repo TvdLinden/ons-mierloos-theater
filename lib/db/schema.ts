@@ -445,3 +445,77 @@ export const pages = pgTable(
   },
   (table) => [index('pages_title_idx').on(table.title), index('pages_slug_idx').on(table.slug)],
 );
+
+// Navigation Links - for header and footer
+const linkLocationValues = ['header', 'footer'] as const;
+type LinkLocation = (typeof linkLocationValues)[number];
+export const linkLocation = pgEnum(
+  'link_location',
+  linkLocationValues as unknown as [LinkLocation, ...LinkLocation[]],
+);
+
+export const navigationLinks = pgTable(
+  'navigation_links',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    label: varchar('label', { length: 100 }).notNull(),
+    href: varchar('href', { length: 500 }).notNull(),
+    location: linkLocation('location').notNull(), // 'header' or 'footer'
+    displayOrder: integer('display_order').default(0).notNull(),
+    active: integer('active').default(1).notNull(), // 1 = active, 0 = inactive
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+  },
+  (table) => [
+    index('navigation_links_location_idx').on(table.location),
+    index('navigation_links_display_order_idx').on(table.displayOrder),
+    index('navigation_links_active_idx').on(table.active),
+  ],
+);
+
+// Homepage Content
+export const homepageContent = pgTable('homepage_content', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  introTitle: varchar('intro_title', { length: 255 }),
+  introText: text('intro_text'),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+});
+
+// News Articles for homepage
+export const newsArticles = pgTable(
+  'news_articles',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    title: varchar('title', { length: 255 }).notNull(),
+    content: text('content').notNull(),
+    imageId: uuid('image_id').references(() => images.id, { onDelete: 'set null' }),
+    publishedAt: timestamp('published_at', { withTimezone: true }),
+    active: integer('active').default(1).notNull(), // 1 = active, 0 = inactive
+    displayOrder: integer('display_order').default(0).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+  },
+  (table) => [
+    index('news_articles_published_at_idx').on(table.publishedAt),
+    index('news_articles_active_idx').on(table.active),
+    index('news_articles_display_order_idx').on(table.displayOrder),
+  ],
+);
+
+// Social Media Links
+export const socialMediaLinks = pgTable(
+  'social_media_links',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    platform: varchar('platform', { length: 50 }).notNull(), // e.g., 'facebook', 'instagram', 'youtube'
+    url: varchar('url', { length: 500 }).notNull(),
+    displayOrder: integer('display_order').default(0).notNull(),
+    active: integer('active').default(1).notNull(), // 1 = active, 0 = inactive
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+  },
+  (table) => [
+    index('social_media_links_display_order_idx').on(table.displayOrder),
+    index('social_media_links_active_idx').on(table.active),
+  ],
+);

@@ -7,9 +7,13 @@ import { useCart } from './CartContext';
 import { useState, useEffect, useRef } from 'react';
 import AccountMenu from '@/components/AccountMenu';
 import { useSession, signOut } from 'next-auth/react';
-import { useDebounce } from '@/hooks/useDebounce';
+import type { NavigationLink } from '@/lib/db';
 
-export default function Header() {
+type HeaderProps = {
+  navigationLinks?: NavigationLink[];
+};
+
+export default function Header({ navigationLinks = [] }: HeaderProps) {
   const { items, removeFromCart, updateQuantity } = useCart();
   const [cartOpen, setCartOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -114,6 +118,15 @@ export default function Header() {
           >
             Contact
           </Link>
+          {navigationLinks.map((link) => (
+            <Link
+              key={link.id}
+              href={link.href}
+              className="text-gray-800 hover:text-primary font-medium transition-colors"
+            >
+              {link.label}
+            </Link>
+          ))}
           {isAdmin && (
             <Link
               href="/admin"
@@ -219,6 +232,16 @@ export default function Header() {
             >
               Contact
             </Link>
+            {navigationLinks.map((link) => (
+              <Link
+                key={link.id}
+                href={link.href}
+                className="text-gray-800 hover:text-primary px-6 py-3 font-medium"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                {link.label}
+              </Link>
+            ))}
             {isAdmin && (
               <Link
                 href="/admin"

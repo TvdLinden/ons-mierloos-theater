@@ -267,8 +267,8 @@ export default function MarkdownEditor({
   ];
 
   return (
-    <div className="space-y-2">
-      <ToggleGroup type="single">
+    <div className="space-y-2 w-full">
+      <ToggleGroup type="single" className="flex-wrap">
         {toggleItems.map((item) => (
           <Toggle
             key={item.value}
@@ -338,7 +338,7 @@ export default function MarkdownEditor({
         </Popover>
       </ToggleGroup>
 
-      <EditorContent className="prose prose-lg w-full" editor={editor} />
+      <EditorContent className="prose prose-lg max-w-none w-full" editor={editor} />
 
       {/* Hidden input to store the HTML content */}
       <input type="hidden" name={name} value={editor?.getHTML() || ''} />

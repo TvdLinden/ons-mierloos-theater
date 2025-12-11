@@ -1,17 +1,33 @@
-import { FacebookIcon, InstagramIcon, TwitterIcon, YoutubeIcon } from 'lucide-react';
+import { FacebookIcon, InstagramIcon, TwitterIcon, YoutubeIcon, LinkedinIcon } from 'lucide-react';
 import { Separator } from './ui';
+import Link from 'next/link';
+import type { NavigationLink, SocialMediaLink } from '@/lib/db';
 
-const links = [
-  { name: 'Algemene informatie', href: '#' },
-  { name: 'Contact', href: '#' },
-  { name: 'OMT en AVG', href: '#' },
-  { name: 'Voorstellingen', href: '#' },
-  { name: 'Programma', href: '#' },
-  { name: 'Over ons', href: '#' },
-  { name: 'Techniek', href: '#' },
-];
+type FooterProps = {
+  navigationLinks?: NavigationLink[];
+  socialMediaLinks?: SocialMediaLink[];
+};
 
-export default function Footer() {
+const getPlatformIcon = (platform: string) => {
+  const className = 'size-5';
+  switch (platform.toLowerCase()) {
+    case 'facebook':
+      return <FacebookIcon className={className} />;
+    case 'instagram':
+      return <InstagramIcon className={className} />;
+    case 'twitter':
+    case 'x':
+      return <TwitterIcon className={className} />;
+    case 'youtube':
+      return <YoutubeIcon className={className} />;
+    case 'linkedin':
+      return <LinkedinIcon className={className} />;
+    default:
+      return null;
+  }
+};
+
+export default function Footer({ navigationLinks = [], socialMediaLinks = [] }: FooterProps) {
   return (
     <footer>
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-4 max-md:flex-col sm:px-6 sm:py-6 md:gap-6 md:py-8">
@@ -20,26 +36,19 @@ export default function Footer() {
         </a>
 
         <div className="flex items-center gap-5 flex-wrap justify-center">
-          {links.map((link) => (
-            <a key={link.name} href={link.href}>
-              {link.name}
-            </a>
+          {navigationLinks.map((link) => (
+            <Link key={link.id} href={link.href}>
+              {link.label}
+            </Link>
           ))}
         </div>
 
         <div className="flex items-center gap-4">
-          <a href="#">
-            <FacebookIcon className="size-5" />
-          </a>
-          <a href="#">
-            <InstagramIcon className="size-5" />
-          </a>
-          <a href="#">
-            <TwitterIcon className="size-5" />
-          </a>
-          <a href="#">
-            <YoutubeIcon className="size-5" />
-          </a>
+          {socialMediaLinks.map((link) => (
+            <a key={link.id} href={link.url} target="_blank" rel="noopener noreferrer">
+              {getPlatformIcon(link.platform)}
+            </a>
+          ))}
         </div>
       </div>
 

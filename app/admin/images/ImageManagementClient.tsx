@@ -11,6 +11,15 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Trash2, Upload, AlertCircle, Eraser } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationEllipsis,
+} from '@/components/ui/pagination';
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -223,25 +232,126 @@ export default function ImageManagementClient({
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex justify-center gap-2 mt-6">
-          <Button
-            variant="outline"
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage <= 1 || isPending}
-          >
-            Vorige
-          </Button>
-          <span className="flex items-center px-4">
-            Pagina {currentPage} van {totalPages}
-          </span>
-          <Button
-            variant="outline"
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage >= totalPages || isPending}
-          >
-            Volgende
-          </Button>
-        </div>
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                href={`/admin/images?page=${currentPage - 1}`}
+                onClick={(e) => {
+                  if (currentPage <= 1 || isPending) {
+                    e.preventDefault();
+                    return;
+                  }
+                  e.preventDefault();
+                  handlePageChange(currentPage - 1);
+                }}
+                className={currentPage <= 1 || isPending ? 'pointer-events-none opacity-50' : ''}
+              />
+            </PaginationItem>
+
+            {/* First page */}
+            {currentPage > 2 && (
+              <PaginationItem>
+                <PaginationLink
+                  href={`/admin/images?page=1`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handlePageChange(1);
+                  }}
+                >
+                  1
+                </PaginationLink>
+              </PaginationItem>
+            )}
+
+            {/* Ellipsis before */}
+            {currentPage > 3 && (
+              <PaginationItem>
+                <PaginationEllipsis />
+              </PaginationItem>
+            )}
+
+            {/* Previous page */}
+            {currentPage > 1 && (
+              <PaginationItem>
+                <PaginationLink
+                  href={`/admin/images?page=${currentPage - 1}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handlePageChange(currentPage - 1);
+                  }}
+                >
+                  {currentPage - 1}
+                </PaginationLink>
+              </PaginationItem>
+            )}
+
+            {/* Current page */}
+            <PaginationItem>
+              <PaginationLink
+                href={`/admin/images?page=${currentPage}`}
+                isActive
+                onClick={(e) => e.preventDefault()}
+              >
+                {currentPage}
+              </PaginationLink>
+            </PaginationItem>
+
+            {/* Next page */}
+            {currentPage < totalPages && (
+              <PaginationItem>
+                <PaginationLink
+                  href={`/admin/images?page=${currentPage + 1}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handlePageChange(currentPage + 1);
+                  }}
+                >
+                  {currentPage + 1}
+                </PaginationLink>
+              </PaginationItem>
+            )}
+
+            {/* Ellipsis after */}
+            {currentPage < totalPages - 2 && (
+              <PaginationItem>
+                <PaginationEllipsis />
+              </PaginationItem>
+            )}
+
+            {/* Last page */}
+            {currentPage < totalPages - 1 && (
+              <PaginationItem>
+                <PaginationLink
+                  href={`/admin/images?page=${totalPages}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handlePageChange(totalPages);
+                  }}
+                >
+                  {totalPages}
+                </PaginationLink>
+              </PaginationItem>
+            )}
+
+            <PaginationItem>
+              <PaginationNext
+                href={`/admin/images?page=${currentPage + 1}`}
+                onClick={(e) => {
+                  if (currentPage >= totalPages || isPending) {
+                    e.preventDefault();
+                    return;
+                  }
+                  e.preventDefault();
+                  handlePageChange(currentPage + 1);
+                }}
+                className={
+                  currentPage >= totalPages || isPending ? 'pointer-events-none opacity-50' : ''
+                }
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
       )}
 
       {/* Delete Confirmation Dialog */}

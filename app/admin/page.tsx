@@ -14,6 +14,7 @@ import {
   Ticket,
   UserCog,
   Image,
+  Layout,
 } from 'lucide-react';
 
 interface AdminFeature {
@@ -60,6 +61,12 @@ const features: AdminFeature[] = [
     label: "Pagina's Beheer",
     description: "Bekijk en beheer statische pagina's.",
     href: '/admin/pages',
+  },
+  {
+    icon: Layout,
+    label: 'Content Beheer',
+    description: 'Beheer header, footer en homepage inhoud.',
+    href: '/admin/content',
   },
   {
     icon: Users,

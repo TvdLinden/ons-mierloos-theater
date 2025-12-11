@@ -28,6 +28,10 @@ import {
   couponPerformancesRelations,
   couponUsagesRelations,
   pages,
+  navigationLinks,
+  homepageContent,
+  newsArticles,
+  socialMediaLinks,
 } from '@/lib/db/schema';
 
 export type User = typeof users.$inferSelect;
@@ -70,6 +74,11 @@ export type PerformanceWithShow = Performance & {
 };
 
 export type Page = typeof pages.$inferSelect;
+export type NavigationLink = typeof navigationLinks.$inferSelect;
+export type LinkLocation = NavigationLink['location'];
+export type HomepageContent = typeof homepageContent.$inferSelect;
+export type NewsArticle = typeof newsArticles.$inferSelect;
+export type SocialMediaLink = typeof socialMediaLinks.$inferSelect;
 
 if (!process.env.DATABASE_URL) {
   throw new Error('DATABASE_URL environment variable is required');
@@ -108,6 +117,10 @@ const db = drizzle(pool, {
     couponPerformancesRelations,
     couponUsagesRelations,
     pages,
+    navigationLinks,
+    homepageContent,
+    newsArticles,
+    socialMediaLinks,
   },
 });
 
