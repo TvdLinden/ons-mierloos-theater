@@ -1,7 +1,6 @@
 'use server';
 import { requireRole } from '@/lib/utils/auth';
 import Link from 'next/link';
-import { PruneImagesButton } from '@/components/PruneImagesButton';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/utils/auth';
 import { Session } from 'next-auth';
@@ -14,7 +13,7 @@ import {
   Users,
   Ticket,
   UserCog,
-  Trash2,
+  Image,
 } from 'lucide-react';
 
 interface AdminFeature {
@@ -37,6 +36,12 @@ const features: AdminFeature[] = [
     label: 'Tags Beheer',
     description: 'Beheer categorieën en tags voor voorstellingen.',
     href: '/admin/tags',
+  },
+  {
+    icon: Image,
+    label: 'Afbeeldingen Beheer',
+    description: 'Beheer alle afbeeldingen in het systeem.',
+    href: '/admin/images',
   },
   {
     icon: ShoppingCart,
@@ -107,11 +112,6 @@ export default async function AdminOverview() {
             </Link>
           );
         })}
-      </div>
-
-      <div className="border-t pt-8">
-        <h2 className="text-xl font-semibold mb-4 text-foreground">Onderhoud</h2>
-        <PruneImagesButton />
       </div>
     </div>
   );
