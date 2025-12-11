@@ -6,6 +6,7 @@ import FormError from './FormError';
 import StatusSelector from './StatusSelector';
 import DateTimeInput from './DateTimeInput';
 import Textarea from './Textarea';
+import { NumberInput } from './ui/number-input';
 
 type PerformanceFormProps = {
   action: (prevState: { error?: string }, formData: FormData) => Promise<{ error?: string }>;
@@ -25,18 +26,17 @@ export default function AddPerformanceToShowForm({ action, showBasePrice }: Perf
         label="Prijs"
         helperText={`Laat leeg om de basisprijs (€${showBasePrice}) te gebruiken`}
       >
-        <Input
+        <NumberInput
           name="price"
-          type="number"
-          step="0.01"
-          min="0"
+          step={0.01}
+          min={0}
           placeholder={showBasePrice}
           disabled={isPending}
         />
       </FormField>
 
       <FormField label="Aantal plaatsen" helperText="Totaal aantal beschikbare plaatsen">
-        <Input name="totalSeats" type="number" min="1" defaultValue="100" disabled={isPending} />
+        <NumberInput name="totalSeats" min={1} defaultValue={100} disabled={isPending} />
       </FormField>
 
       <FormField label="Publicatiedatum" helperText="Wanneer wordt deze speeltijd zichtbaar?">

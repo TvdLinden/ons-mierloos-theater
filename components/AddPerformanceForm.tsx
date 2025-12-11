@@ -9,6 +9,7 @@ import Image from 'next/image';
 import { useState } from 'react';
 import { DataTable, Row } from './admin/DataTable';
 import StatusSelector from './StatusSelector';
+import { NumberInput } from './ui/number-input';
 
 export type PerformanceFormState = {
   title: string;
@@ -172,12 +173,11 @@ export default function AddPerformanceForm({
           />
         </SimpleFormField>
         <SimpleFormField label="Prijs (€)" htmlFor="price" required>
-          <Input
+          <NumberInput
             id="price"
             name="price"
-            type="number"
-            step="0.01"
-            defaultValue={initial?.price}
+            step={0.01}
+            defaultValue={parseFloat(initial?.price)}
             required
           />
           <p className="text-xs text-zinc-600 mt-1">
@@ -360,25 +360,23 @@ function PerformanceDialog({ performance, onSave, onCancel, isEdit }: Performanc
           </SimpleFormField>
 
           <SimpleFormField label="Prijs (€)" htmlFor="perf-price" required>
-            <Input
+            <NumberInput
               id="perf-price"
-              type="number"
-              step="0.01"
-              value={formData.price}
-              onChange={(e) => handleChange('price', e.target.value)}
+              step={0.01}
+              value={parseFloat(formData.price)}
+              onChange={(value) => handleChange('price', value)}
               required
             />
           </SimpleFormField>
 
           <div className="grid grid-cols-2 gap-4">
             <SimpleFormField label="Totaal aantal stoelen" htmlFor="perf-total" required>
-              <Input
+              <NumberInput
                 id="perf-total"
-                type="number"
-                min="1"
+                min={1}
                 value={formData.totalSeats}
-                onChange={(e) => {
-                  const total = parseInt(e.target.value);
+                onChange={(value) => {
+                  const total = value;
                   handleChange('totalSeats', total);
                   // Keep available seats in sync if it was equal before
                   if (formData.availableSeats === formData.totalSeats) {
@@ -390,13 +388,12 @@ function PerformanceDialog({ performance, onSave, onCancel, isEdit }: Performanc
             </SimpleFormField>
 
             <SimpleFormField label="Beschikbare stoelen" htmlFor="perf-available" required>
-              <Input
+              <NumberInput
                 id="perf-available"
-                type="number"
-                min="0"
+                min={0}
                 max={formData.totalSeats}
                 value={formData.availableSeats}
-                onChange={(e) => handleChange('availableSeats', parseInt(e.target.value))}
+                onChange={(value) => handleChange('availableSeats', value)}
                 required
               />
             </SimpleFormField>

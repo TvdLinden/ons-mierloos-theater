@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import { NumberInput } from './ui/number-input';
 
 export type CartItem = {
   id: string;
@@ -40,14 +41,10 @@ export default function ShoppingCart({
                 <span className="ml-2 text-gray-600">€{item.price.toFixed(2)}</span>
               </div>
               <div className="flex items-center gap-2">
-                <input
-                  type="number"
-                  min={1}
+                <NumberInput
                   value={item.quantity}
-                  onChange={(e) =>
-                    onChangeQuantity && onChangeQuantity(item.id, Number(e.target.value))
-                  }
-                  className="w-16 p-1 border border-gray-300 rounded text-center"
+                  onChange={(value) => onChangeQuantity && onChangeQuantity(item.id, value ?? 1)}
+                  min={1}
                 />
                 {onRemove && (
                   <button

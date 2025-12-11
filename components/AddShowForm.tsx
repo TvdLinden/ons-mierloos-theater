@@ -8,6 +8,7 @@ import StatusSelector from './StatusSelector';
 import TagSelector from './TagSelector';
 import MarkdownEditor from './MarkdownEditor';
 import { Tag } from '@/lib/db';
+import { NumberInput } from './ui/number-input';
 
 type ShowFormProps = {
   action: (prevState: { error?: string }, formData: FormData) => Promise<{ error?: string }>;
@@ -67,11 +68,10 @@ export default function AddShowForm({ action, initialData, availableTags }: Show
       </FormField>
 
       <FormField label="Basisprijs" required helperText="Standaardprijs per ticket in euro's">
-        <Input
+        <NumberInput
           name="basePrice"
-          type="number"
-          step="0.01"
-          min="0"
+          step={0.01}
+          min={0}
           defaultValue={initialData?.basePrice}
           placeholder="25.00"
           required

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCart } from './CartContext';
 import { Button } from '@/components/ui';
+import { NumberInput } from './ui/number-input';
 
 export type BuyTicketButtonProps = {
   performanceId: string;
@@ -45,13 +46,12 @@ export default function BuyTicketButton({
         <label htmlFor="quantity" className="text-primary font-medium">
           Aantal:
         </label>
-        <input
-          type="number"
+        <NumberInput
           id="quantity"
-          min="1"
-          max="10"
+          min={1}
+          max={10}
           value={quantity}
-          onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+          onChange={(value) => setQuantity(Math.max(1, value || 1))}
           className="w-20 px-3 py-2 border border-primary rounded-lg text-center focus:outline-none focus:ring-2 focus:ring-secondary"
         />
       </div>

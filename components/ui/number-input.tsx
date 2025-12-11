@@ -1,153 +1,125 @@
-import { ChevronDown, ChevronUp } from 'lucide-react';
-import { forwardRef, useCallback, useEffect, useState } from 'react';
-import { NumericFormat, NumericFormatProps } from 'react-number-format';
+'use client';
+
+import * as React from 'react';
+import { ChevronUp, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { InputGroup, InputGroupAddon, InputGroupInput, InputGroupText } from './input-group';
+import { cn } from '@/lib/utils';
 
-export interface NumberInputProps extends Omit<NumericFormatProps, 'value' | 'onValueChange'> {
-  stepper?: number;
-  thousandSeparator?: string;
-  placeholder?: string;
+export interface NumberInputProps extends Omit<
+  React.InputHTMLAttributes<HTMLInputElement>,
+  'type' | 'onChange'
+> {
+  value?: number;
+  onChange?: (value: number) => void;
   defaultValue?: number;
   min?: number;
   max?: number;
-  value?: number; // Controlled value
-  suffix?: string;
-  prefix?: string;
-  onValueChange?: (value: number | undefined) => void;
-  fixedDecimalScale?: boolean;
-  decimalScale?: number;
+  step?: number;
 }
 
-export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
+const NumberInput = React.forwardRef<HTMLInputElement, NumberInputProps>(
   (
-    {
-      stepper,
-      thousandSeparator,
-      placeholder,
-      defaultValue,
-      min = -Infinity,
-      max = Infinity,
-      onValueChange,
-      fixedDecimalScale = false,
-      decimalScale = 0,
-      suffix,
-      prefix,
-      value: controlledValue,
-      ...props
-    },
+    { className, value, onChange, defaultValue = 0, min, max, step = 1, disabled, ...props },
     ref,
   ) => {
-    const [value, setValue] = useState<number | undefined>(controlledValue ?? defaultValue);
+    const [internalValue, setInternalValue] = React.useState(defaultValue);
+    const decimals = step.toString().split('.')[1]?.length ?? 0;
 
-    const handleIncrement = useCallback(() => {
-      setValue((prev) =>
-        prev === undefined ? (stepper ?? 1) : Math.min(prev + (stepper ?? 1), max),
-      );
-    }, [stepper, max]);
+    const isControlled = value !== undefined;
+    const currentValue = isControlled ? value : internalValue;
 
-    const handleDecrement = useCallback(() => {
-      setValue((prev) =>
-        prev === undefined ? -(stepper ?? 1) : Math.max(prev - (stepper ?? 1), min),
-      );
-    }, [stepper, min]);
+    const handleValueChange = (newValue: number) => {
+      if (isNaN(newValue)) return;
 
-    useEffect(() => {
-      const handleKeyDown = (e: KeyboardEvent) => {
-        if (document.activeElement === (ref as React.RefObject<HTMLInputElement>).current) {
-          if (e.key === 'ArrowUp') {
-            handleIncrement();
-          } else if (e.key === 'ArrowDown') {
-            handleDecrement();
-          }
-        }
-      };
+      const rounded = Math.round(newValue / step) * step;
+      const fixedValue = Number(rounded.toFixed(decimals));
 
-      window.addEventListener('keydown', handleKeyDown);
+      if (!isControlled) {
+        // new value should be fixed to step precision
 
-      return () => {
-        window.removeEventListener('keydown', handleKeyDown);
-      };
-    }, [handleIncrement, handleDecrement, ref]);
-
-    useEffect(() => {
-      if (controlledValue !== undefined) {
-        setValue(controlledValue);
+        // new value should be fixed to step precision
+        // 34.160000000000004 issue fix - step size 0.01
+        setInternalValue(fixedValue);
       }
-    }, [controlledValue]);
+      onChange?.(fixedValue);
+    };
 
-    const handleChange = (values: { value: string; floatValue: number | undefined }) => {
-      const newValue = values.floatValue === undefined ? undefined : values.floatValue;
-      setValue(newValue);
-      if (onValueChange) {
-        onValueChange(newValue);
+    const handleIncrement = () => {
+      const newValue = Number(currentValue) + step;
+      if (max === undefined || newValue <= max) {
+        handleValueChange(newValue);
       }
     };
 
-    const handleBlur = () => {
-      if (value !== undefined) {
-        if (value < min) {
-          setValue(min);
-          (ref as React.RefObject<HTMLInputElement>).current!.value = String(min);
-        } else if (value > max) {
-          setValue(max);
-          (ref as React.RefObject<HTMLInputElement>).current!.value = String(max);
+    const handleDecrement = () => {
+      const newValue = Number(currentValue) - step;
+      if (min === undefined || newValue >= min) {
+        handleValueChange(newValue);
+      }
+    };
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const inputValue = e.target.value;
+      if (inputValue === '' || inputValue === '-') {
+        handleValueChange(0);
+        return;
+      }
+
+      const numValue = Number.parseFloat(inputValue);
+      if (!isNaN(numValue)) {
+        if ((min === undefined || numValue >= min) && (max === undefined || numValue <= max)) {
+          handleValueChange(numValue);
         }
       }
     };
+
+    const isDecrementDisabled = disabled || (min !== undefined && currentValue <= min);
+    const isIncrementDisabled = disabled || (max !== undefined && currentValue >= max);
 
     return (
-      <div className="flex items-center">
-        <InputGroup>
-          <InputGroupInput type="text">
-            {/* <NumericFormat
-              value={value}
-              onValueChange={handleChange}
-              thousandSeparator={thousandSeparator}
-              decimalScale={decimalScale}
-              fixedDecimalScale={fixedDecimalScale}
-              allowNegative={min < 0}
-              valueIsNumericString
-              onBlur={handleBlur}
-              max={max}
-              min={min}
-              suffix={suffix}
-              prefix={prefix}
-              customInput={Input}
-              placeholder={placeholder}
-              getInputRef={ref}
-              {...props}
-            /> */}
-          </InputGroupInput>
-          <InputGroupAddon>
-            <div className="flex flex-col">
-              <Button
-                aria-label="Increase value"
-                className="px-2 h-5 rounded-l-none rounded-br-none border-input border-l-0 border-b-[0.5px] focus-visible:relative"
-                variant="outline"
-                size="sm"
-                onClick={handleIncrement}
-                disabled={value === max}
-              >
-                <ChevronUp size={15} />
-              </Button>
-              <Button
-                aria-label="Decrease value"
-                className="px-2 h-5 rounded-l-none rounded-tr-none border-input border-l-0 border-t-[0.5px] focus-visible:relative"
-                variant="outline"
-                size="sm"
-                onClick={handleDecrement}
-                disabled={value === min}
-              >
-                <ChevronDown size={15} />
-              </Button>
-            </div>
-          </InputGroupAddon>
-        </InputGroup>
+      <div className={cn('relative inline-flex', className)}>
+        <Input
+          ref={ref}
+          type="number"
+          value={currentValue}
+          onChange={handleInputChange}
+          disabled={disabled}
+          min={min}
+          max={max}
+          step={step}
+          className="pr-8 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+          {...props}
+        />
+        <div className="absolute right-0 top-0 bottom-0 flex flex-col border-l">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={handleIncrement}
+            disabled={isIncrementDisabled}
+            className="h-1/2 w-7 rounded-none rounded-tr hover:bg-accent"
+          >
+            <ChevronUp className="h-3 w-3" />
+            <span className="sr-only">Increase</span>
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={handleDecrement}
+            disabled={isDecrementDisabled}
+            className="h-1/2 w-7 rounded-none rounded-br border-t hover:bg-accent"
+          >
+            <ChevronDown className="h-3 w-3" />
+            <span className="sr-only">Decrease</span>
+          </Button>
+        </div>
       </div>
     );
   },
 );
 
 NumberInput.displayName = 'NumberInput';
+
+export { NumberInput };

@@ -4,6 +4,7 @@ import { useActionState } from 'react';
 import { useState } from 'react';
 import FormError from './FormError';
 import type { Coupon } from '@/lib/db';
+import { NumberInput } from './ui/number-input';
 
 interface CouponFormProps {
   initialData?: Partial<Coupon>;
@@ -87,15 +88,14 @@ export default function CouponForm({ initialData, action, submitLabel }: CouponF
                   ? 'Bedrag (€) *'
                   : 'Aantal kaartjes *'}
             </label>
-            <input
-              type="number"
+            <NumberInput
               id="discountValue"
               name="discountValue"
               defaultValue={initialData?.discountValue || ''}
               required
-              step={discountType === 'percentage' ? '1' : '0.01'}
-              min="0"
-              max={discountType === 'percentage' ? '100' : undefined}
+              step={discountType === 'percentage' ? 1 : 0.01}
+              min={0}
+              max={discountType === 'percentage' ? 100 : undefined}
               className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
             />
           </div>
@@ -108,13 +108,12 @@ export default function CouponForm({ initialData, action, submitLabel }: CouponF
           >
             Minimum orderbedrag (€)
           </label>
-          <input
-            type="number"
+          <NumberInput
             id="minOrderAmount"
             name="minOrderAmount"
             defaultValue={initialData?.minOrderAmount || ''}
-            step="0.01"
-            min="0"
+            step={0.01}
+            min={0}
             className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
             placeholder="0.00"
           />
@@ -126,12 +125,11 @@ export default function CouponForm({ initialData, action, submitLabel }: CouponF
             <label htmlFor="maxUses" className="block text-sm font-medium text-text-primary mb-2">
               Max aantal keer te gebruiken
             </label>
-            <input
-              type="number"
+            <NumberInput
               id="maxUses"
               name="maxUses"
               defaultValue={initialData?.maxUses || ''}
-              min="1"
+              min={1}
               className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
               placeholder="Onbeperkt"
             />
@@ -144,12 +142,11 @@ export default function CouponForm({ initialData, action, submitLabel }: CouponF
             >
               Max per gebruiker
             </label>
-            <input
-              type="number"
+            <NumberInput
               id="maxUsesPerUser"
               name="maxUsesPerUser"
               defaultValue={initialData?.maxUsesPerUser || ''}
-              min="1"
+              min={1}
               className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
               placeholder="Onbeperkt"
             />

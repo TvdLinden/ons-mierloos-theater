@@ -7,6 +7,7 @@ import { useCart } from './CartContext';
 import { useState, useEffect, useRef } from 'react';
 import AccountMenu from '@/components/AccountMenu';
 import { useSession, signOut } from 'next-auth/react';
+import { useDebounce } from '@/hooks/useDebounce';
 
 export default function Header() {
   const { items, removeFromCart, updateQuantity } = useCart();
@@ -20,6 +21,28 @@ export default function Header() {
   const cartRef = useRef<HTMLDivElement>(null);
   const mobileMenuContainerRef = useRef<HTMLDivElement>(null);
   const hamburgerButtonRef = useRef<HTMLButtonElement>(null);
+
+  const toggleMobileMenu = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+
+    // Keep a reference to the button so outside click logic can detect it
+    hamburgerButtonRef.current = e.currentTarget;
+
+    // Temporarily capture the next document mousedown and stop it so the
+    // document-level "click outside" handler doesn't immediately close the menu.
+    const stopNextDocMouseDown = (ev: MouseEvent) => {
+      ev.stopPropagation();
+      document.removeEventListener('mousedown', stopNextDocMouseDown, true);
+    };
+    document.addEventListener('mousedown', stopNextDocMouseDown, true);
+
+    // Toggle on the next tick to avoid races with other handlers.
+    setTimeout(() => {
+      setMobileMenuOpen((prev) => !prev);
+      // Clean up in case the captured mousedown never fired.
+      document.removeEventListener('mousedown', stopNextDocMouseDown, true);
+    }, 0);
+  };
 
   // Close cart when clicking outside
   useEffect(() => {
@@ -139,12 +162,7 @@ export default function Header() {
         <div className="flex md:hidden items-center gap-2">
           <button
             className="p-2 text-gray-800 hover:text-primary transition-colors"
-            onClick={(e) => {
-              if (mobileMenuOpen) {
-                e.stopPropagation();
-              }
-              setMobileMenuOpen(!mobileMenuOpen);
-            }}
+            onClick={toggleMobileMenu}
             aria-label="Toggle menu"
           >
             <svg

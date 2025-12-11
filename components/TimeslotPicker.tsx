@@ -141,7 +141,7 @@ export default function TimeslotPicker({
             </label>
             <NumberInput
               value={quantity}
-              onChange={(value) => setQuantity(Math.max(1, parseInt(value.target.value) || 1))}
+              onChange={(value) => setQuantity(Math.max(1, value || 1))}
               max={selectedPerformance.availableSeats}
               min={1}
               className="w-20"

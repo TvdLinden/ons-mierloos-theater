@@ -8,6 +8,7 @@ import Textarea from '@/components/Textarea';
 import Link from 'next/link';
 import { updatePerformanceAction } from './actions';
 import type { PerformanceWithShow } from '@/lib/db';
+import { NumberInput } from '@/components/ui/number-input';
 
 export default function EditPerformanceForm({ performance }: { performance: PerformanceWithShow }) {
   const [state, formAction, isPending] = useActionState(updatePerformanceAction, {
@@ -50,30 +51,23 @@ export default function EditPerformanceForm({ performance }: { performance: Perf
             label="Prijs"
             helperText={`Laat leeg om de basisprijs (€${performance.show?.basePrice}) te gebruiken`}
           >
-            <Input
+            <NumberInput
               name="price"
-              type="number"
-              step="0.01"
-              min="0"
+              step={0.01}
+              min={0}
               defaultValue={performance.price || ''}
               placeholder={performance.show?.basePrice || ''}
             />
           </SimpleFormField>
 
           <SimpleFormField label="Totaal aantal plaatsen">
-            <Input
-              name="totalSeats"
-              type="number"
-              min="1"
-              defaultValue={performance.totalSeats || 100}
-            />
+            <NumberInput name="totalSeats" min={1} defaultValue={performance.totalSeats || 100} />
           </SimpleFormField>
 
           <SimpleFormField label="Beschikbare plaatsen">
-            <Input
+            <NumberInput
               name="availableSeats"
-              type="number"
-              min="0"
+              min={0}
               defaultValue={performance.availableSeats || 100}
             />
           </SimpleFormField>

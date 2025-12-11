@@ -4,6 +4,7 @@ import { useActionState } from 'react';
 import { useState } from 'react';
 import FormError from './FormError';
 import Image from 'next/image';
+import { NumberInput } from './ui/number-input';
 
 interface SponsorFormProps {
   initialData?: {
@@ -116,12 +117,11 @@ export default function SponsorForm({ initialData, action, submitLabel }: Sponso
           >
             Volgorde
           </label>
-          <input
-            type="number"
+          <NumberInput
             id="displayOrder"
             name="displayOrder"
             defaultValue={initialData?.displayOrder ?? 0}
-            min="0"
+            min={0}
             className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
           />
           <p className="text-sm text-text-secondary mt-1">Lagere nummers worden eerst getoond</p>

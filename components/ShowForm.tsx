@@ -21,6 +21,7 @@ import { useState } from 'react';
 import { DataTable, Row } from './admin/DataTable';
 import StatusSelector from './StatusSelector';
 import { Textarea } from '@/components/ui/textarea';
+import { NumberInput } from './ui/number-input';
 
 export type ShowFormState = {
   title: string;
@@ -181,14 +182,7 @@ export default function ShowForm({
           />
         </SimpleFormField>
         <SimpleFormField label="Prijs (€)" htmlFor="price" required>
-          <Input
-            id="price"
-            name="price"
-            type="number"
-            step="0.01"
-            defaultValue={initial?.price}
-            required
-          />
+          <NumberInput id="price" name="price" step={0.01} defaultValue={initial?.price} required />
           <p className="text-xs text-zinc-600 mt-1">
             Standaard prijs voor voorstellingen (kan per voorstelling overschreven worden).
           </p>
@@ -400,25 +394,35 @@ function PerformanceDialogContent({
         </SimpleFormField>
 
         <SimpleFormField label="Prijs (€)" htmlFor="perf-price">
-          <Input
+          <NumberInput
             id="perf-price"
-            type="number"
-            step="0.01"
-            value={formData.price || ''}
-            onChange={(e) => handleChange('price', e.target.value)}
+            step={0.01}
+            value={parseFloat(formData.price) || 0}
+            onChange={(value) => handleChange('price', value)}
           />
         </SimpleFormField>
 
         <SimpleFormField label="Totaal aantal stoelen" htmlFor="perf-total">
-          <Input
+          <NumberInput
             id="perf-total"
-            type="number"
-            min="1"
-            value={formData.totalSeats || ''}
-            onChange={(e) => {
-              const total = e.target.value ? parseInt(e.target.value) : undefined;
-              handleChange('totalSeats', total || 0);
-            }}
+            min={1}
+            value={parseInt(formData.totalSeats) || 0}
+            onChange={(value) => handleChange('totalSeats', value)}
+          />
+        </SimpleFormField>
+
+        <SimpleFormField label="Status" htmlFor="perf-status" required>
+          <StatusSelector
+            name="perf-status"
+            value={formData.status}
+            onChange={(e) => handleChange('status', e.target.value as PerformanceStatus)}
+            options={[
+              { value: 'draft', label: 'Concept' },
+              { value: 'published', label: 'Gepubliceerd' },
+              { value: 'sold_out', label: 'Uitverkocht' },
+              { value: 'cancelled', label: 'Geannuleerd' },
+              { value: 'archived', label: 'Gearchiveerd' },
+            ]}
           />
         </SimpleFormField>
 
