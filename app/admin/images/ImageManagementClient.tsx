@@ -198,6 +198,7 @@ export default function ImageManagementClient({
                       fill
                       className="object-cover"
                       sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                      loading="lazy"
                     />
                   </div>
                   <div className="p-3 space-y-2">

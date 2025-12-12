@@ -338,7 +338,7 @@ export default function MarkdownEditor({
         </Popover>
       </ToggleGroup>
 
-      <EditorContent className="prose prose-lg max-w-none w-full" editor={editor} />
+      <EditorContent className="prose prose-lg max-w-none! w-full" editor={editor} />
 
       {/* Hidden input to store the HTML content */}
       <input type="hidden" name={name} value={editor?.getHTML() || ''} />

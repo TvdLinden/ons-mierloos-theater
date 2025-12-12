@@ -88,6 +88,13 @@ const features: AdminFeature[] = [
     href: '/admin/users',
     adminOnly: true,
   },
+  {
+    icon: UserCog,
+    label: 'Site Instellingen',
+    description: 'Beheer SEO instellingen voor betere vindbaarheid.',
+    href: '/admin/settings',
+    adminOnly: true,
+  },
 ];
 
 export default async function AdminOverview() {

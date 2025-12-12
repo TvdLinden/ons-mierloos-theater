@@ -4,6 +4,7 @@ import './globals.css';
 import ClientLayout from './client-layout';
 import { getNavigationLinks } from '@/lib/queries/content';
 import { getActiveSocialMediaLinks } from '@/lib/queries/socialMedia';
+import { cacheTag } from 'next/cache';
 
 const playfairDisplay = Playfair_Display({
   variable: '--font-display',
@@ -27,6 +28,9 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  'use cache';
+  cacheTag('navigation');
+  cacheTag('social-media-links');
   const [headerLinks, footerLinks, socialMediaLinks] = await Promise.all([
     getNavigationLinks('header'),
     getNavigationLinks('footer'),

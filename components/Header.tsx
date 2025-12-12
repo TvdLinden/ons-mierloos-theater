@@ -100,24 +100,6 @@ export default function Header({ navigationLinks = [] }: HeaderProps) {
           <Link href="/" className="text-gray-800 hover:text-primary font-medium transition-colors">
             Home
           </Link>
-          <Link
-            href="/voorstellingen"
-            className="text-gray-800 hover:text-primary font-medium transition-colors"
-          >
-            Voorstellingen
-          </Link>
-          <Link
-            href="/sponsors"
-            className="text-gray-800 hover:text-primary font-medium transition-colors"
-          >
-            Sponsors
-          </Link>
-          <Link
-            href="/contact"
-            className="text-gray-800 hover:text-primary font-medium transition-colors"
-          >
-            Contact
-          </Link>
           {navigationLinks.map((link) => (
             <Link
               key={link.id}

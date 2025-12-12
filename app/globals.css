@@ -2,7 +2,6 @@
 @plugin 'tailwindcss-animate';
 @plugin "@tailwindcss/typography";
 
-
 @custom-variant dark (&:is(.dark *));
 
 @theme {
@@ -185,7 +184,7 @@ body {
   & h4:not(.not-prose h4),
   & h5:not(.not-prose h5),
   & h6:not(.not-prose h6) {
-    &+p {
+    & + p {
       @apply mt-0;
     }
   }
@@ -272,7 +271,7 @@ body {
     @apply my-6;
   }
 
-  & picture>img:not(.not-prose picture > img) {
+  & picture > img:not(.not-prose picture > img) {
     @apply my-0;
   }
 

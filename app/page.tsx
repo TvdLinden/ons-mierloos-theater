@@ -3,6 +3,7 @@ import { Button } from '@/components/ui';
 import { getUpcomingShows } from '@/lib/queries/shows';
 import { getHomepageContent, getActiveNewsArticles } from '@/lib/queries/content';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Markdown from '@/components/ui/markdown';
 
@@ -13,6 +14,13 @@ export default async function HomePage() {
     getHomepageContent(),
     getActiveNewsArticles(3),
   ]);
+
+  // Truncate helper: returns a shortened string with an ellipsis if longer than max
+  const truncate = (text: string | undefined | null, max = 140) => {
+    if (!text) return '';
+    const t = String(text).trim();
+    return t.length > max ? `${t.slice(0, max - 1)}…` : t;
+  };
 
   return (
     <div className="flex min-h-screen flex-col bg-surface font-sans">
@@ -66,25 +74,65 @@ export default async function HomePage() {
           <section className="w-full mb-12">
             <h2 className="text-4xl font-bold text-center text-primary mb-8 font-serif">Nieuws</h2>
             <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 mb-12">
-              {newsArticles.map((article) => (
-                <Card key={article.id}>
-                  <CardHeader>
-                    <CardTitle>{article.title}</CardTitle>
-                    <p className="text-sm text-muted-foreground">
-                      {article.publishedAt
-                        ? new Date(article.publishedAt).toLocaleDateString('nl-NL', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                          })
-                        : ''}
-                    </p>
-                  </CardHeader>
-                  <CardContent>
-                    <Markdown content={article.content} />
-                  </CardContent>
-                </Card>
-              ))}
+              {newsArticles.map((article) => {
+                // create a short plain-text excerpt from markdown/html
+                const plain = (article.content || '')
+                  .replace(/!\[.*?\]\(.*?\)/g, '') // remove markdown images
+                  .replace(/\[(.*?)\]\(.*?\)/g, '$1') // keep link text
+                  .replace(/[#>*_`~\-]{1,}/g, '') // remove markdown punctuation
+                  .replace(/<\/?[^>]+(>|$)/g, '') // strip html tags
+                  .replace(/\s+/g, ' ')
+                  .trim();
+
+                // Use truncate helper for consistent truncation
+                const titleTruncated = truncate(article.title, 80);
+                const excerpt = truncate(plain, 80);
+
+                return (
+                  <Card
+                    key={article.id}
+                    className="overflow-hidden hover:shadow-lg transition-shadow duration-200"
+                  >
+                    {article.imageId ? (
+                      <div className="relative w-full h-48 bg-muted">
+                        <Image
+                          src={`/api/images/${article.imageId}`}
+                          alt={article.title || 'Afbeelding'}
+                          fill
+                          className="object-cover"
+                          sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                        />
+                      </div>
+                    ) : null}
+                    <CardHeader className="p-4">
+                      <CardTitle className="text-lg truncate" title={article.title}>
+                        {titleTruncated}
+                      </CardTitle>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {article.publishedAt
+                          ? new Date(article.publishedAt).toLocaleDateString('nl-NL', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric',
+                            })
+                          : ''}
+                      </p>
+                    </CardHeader>
+                    <CardContent className="p-4 pt-0">
+                      <div className="text-sm text-muted-foreground mb-4 text-wrap">
+                        {excerpt ? <span>{excerpt}</span> : <Markdown content={article.content} />}
+                      </div>
+                      <div className="flex justify-end">
+                        <Link href={`/nieuws/${article.id}`}>
+                          <Button type="button" variant="link" size="sm">
+                            Lees meer
+                          </Button>
+                        </Link>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           </section>
         )}

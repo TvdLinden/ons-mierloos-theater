@@ -209,7 +209,10 @@ export function SocialMediaLinksList({ links }: SocialMediaLinksListProps) {
             </div>
           </div>
           <div className="flex gap-2">
-            <Button onClick={handleSubmit} disabled={isPending || !formData.platform || !formData.url}>
+            <Button
+              onClick={handleSubmit}
+              disabled={isPending || !formData.platform || !formData.url}
+            >
               Toevoegen
             </Button>
             <Button onClick={() => setShowAddForm(false)} variant="outline">
@@ -296,9 +299,7 @@ export function SocialMediaLinksList({ links }: SocialMediaLinksListProps) {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Link Bewerken</DialogTitle>
-            <DialogDescription>
-              Wijzig de gegevens van deze social media link
-            </DialogDescription>
+            <DialogDescription>Wijzig de gegevens van deze social media link</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>

@@ -1,7 +1,9 @@
 'use server';
 
 import { getPageBySlug } from '@/lib/queries/pages';
+import { getSeoSettings } from '@/lib/queries/settings';
 import { notFound } from 'next/navigation';
+import Prose from '@/components/Prose';
 
 // Simple in-process cache to avoid fetching the same page twice
 // generateMetadata runs before the page component in the same server process,
@@ -18,16 +20,32 @@ async function getCachedPage(slug) {
 export async function generateMetadata({ params }) {
   const { slug } = await params;
 
-  const page = await getCachedPage(slug);
+  const [page, seoSettings] = await Promise.all([getCachedPage(slug), getSeoSettings()]);
 
   if (!page) {
-    // Let Next.js render the not-found page
     notFound();
   }
 
+  const title = `${page.title} — ${seoSettings.defaultTitle || 'Ons Mierloos Theater'}`;
+  const description = page.excerpt || page.description || seoSettings.defaultDescription || '';
+
   return {
-    title: `${page.title} — Ons Mierloos Theater`,
-    description: page.excerpt || (page.description || '').slice(0, 160) || 'Ons Mierloos Theater',
+    title,
+    description: description.slice(0, 160),
+    keywords: seoSettings.defaultKeywords,
+    openGraph: {
+      title,
+      description,
+      type: seoSettings.ogType || 'website',
+      images: seoSettings.ogImage ? [seoSettings.ogImage] : [],
+    },
+    twitter: {
+      card: seoSettings.twitterCard || 'summary_large_image',
+      site: seoSettings.twitterSite,
+      title,
+      description,
+      images: seoSettings.ogImage ? [seoSettings.ogImage] : [],
+    },
   };
 }
 
@@ -42,9 +60,7 @@ export default async function Page({ params }) {
 
   return (
     <main className="container items-center flex flex-col mx-auto px-4 py-8">
-      <article className="prose prose-lg text-center">
-        <div dangerouslySetInnerHTML={{ __html: page.content }} />
-      </article>
+      <Prose content={page.content} />
     </main>
   );
 }

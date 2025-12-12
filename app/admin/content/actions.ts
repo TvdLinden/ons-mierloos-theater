@@ -14,7 +14,7 @@ import {
   updateSocialMediaLink,
   deleteSocialMediaLink,
 } from '@/lib/commands/socialMedia';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import type { LinkLocation, NewsArticle, SocialMediaLink } from '@/lib/db';
 
 export async function createNavigationLinkAction(data: {
@@ -26,8 +26,7 @@ export async function createNavigationLinkAction(data: {
 }): Promise<{ success: boolean; error?: string }> {
   try {
     await createNavigationLink(data);
-    revalidatePath('/admin/content');
-    revalidatePath('/');
+    revalidateTag('navigation', 'max');
     return { success: true };
   } catch (error) {
     console.error('Error creating navigation link:', error);
@@ -46,8 +45,7 @@ export async function updateNavigationLinkAction(
 ): Promise<{ success: boolean; error?: string }> {
   try {
     await updateNavigationLink(id, data);
-    revalidatePath('/admin/content');
-    revalidatePath('/');
+    revalidateTag('navigation', 'max');
     return { success: true };
   } catch (error) {
     console.error('Error updating navigation link:', error);
@@ -60,8 +58,7 @@ export async function deleteNavigationLinkAction(
 ): Promise<{ success: boolean; error?: string }> {
   try {
     await deleteNavigationLink(id);
-    revalidatePath('/admin/content');
-    revalidatePath('/');
+    revalidateTag('navigation', 'max');
     return { success: true };
   } catch (error) {
     console.error('Error deleting navigation link:', error);
@@ -162,8 +159,7 @@ export async function createSocialMediaLinkAction(data: {
 }): Promise<{ success: boolean; link?: SocialMediaLink; error?: string }> {
   try {
     const link = await createSocialMediaLink(data);
-    revalidatePath('/admin/content');
-    revalidatePath('/');
+    revalidateTag('social-media-links', 'max');
     return { success: true, link };
   } catch (error) {
     console.error('Error creating social media link:', error);
@@ -182,8 +178,7 @@ export async function updateSocialMediaLinkAction(
 ): Promise<{ success: boolean; error?: string }> {
   try {
     await updateSocialMediaLink(id, data);
-    revalidatePath('/admin/content');
-    revalidatePath('/');
+    revalidateTag('social-media-links', 'max');
     return { success: true };
   } catch (error) {
     console.error('Error updating social media link:', error);
@@ -196,8 +191,7 @@ export async function deleteSocialMediaLinkAction(
 ): Promise<{ success: boolean; error?: string }> {
   try {
     await deleteSocialMediaLink(id);
-    revalidatePath('/admin/content');
-    revalidatePath('/');
+    revalidateTag('social-media-links', 'max');
     return { success: true };
   } catch (error) {
     console.error('Error deleting social media link:', error);
@@ -211,8 +205,7 @@ export async function toggleSocialMediaLinkActiveAction(
 ): Promise<{ success: boolean; error?: string }> {
   try {
     await updateSocialMediaLink(id, { active });
-    revalidatePath('/admin/content');
-    revalidatePath('/');
+    revalidateTag('social-media-links', 'max');
     return { success: true };
   } catch (error) {
     console.error('Error toggling link active status:', error);
