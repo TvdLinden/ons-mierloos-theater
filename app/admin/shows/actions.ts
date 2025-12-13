@@ -94,7 +94,6 @@ export async function handleUpsertShow(
       // Create image in database with all variants
       const { createImage } = await import('@/lib/commands/images');
       const createdImage = await createImage({
-        id: crypto.randomUUID(),
         filename: image.name,
         mimetype: image.type,
         imageLg: variants.lg,
