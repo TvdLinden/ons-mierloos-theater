@@ -6,6 +6,7 @@ import { generateTicketPDF, getTicketFilename } from '@/lib/utils/ticketGenerato
 import { db } from '@/lib/db';
 import { eq } from 'drizzle-orm';
 import { lineItems, tickets } from '@/lib/db/schema';
+import { getSubscriberByEmail } from '@/lib/commands/mailingList';
 
 // Email configuration
 const SMTP_HOST = process.env.SMTP_HOST || 'smtp.gmail.com';
@@ -250,11 +251,27 @@ export async function sendOrderConfirmationEmail(
 
     console.log(`✓ Generated ${attachments.length} PDF attachments`);
 
+    // Build optional List-Unsubscribe headers if the recipient is a mailing list subscriber
+    let headers: Record<string, string> | undefined;
+    try {
+      const sub = await getSubscriberByEmail(order.customerEmail.toLowerCase());
+      if (sub && sub.unsubscribeToken) {
+        const url = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/mailing-list/unsubscribe?token=${sub.unsubscribeToken}`;
+        headers = {
+          'List-Unsubscribe': `<mailto:${FROM_EMAIL}?subject=unsubscribe>, <${url}>`,
+          'List-Unsubscribe-Post': `<${url}>; method=POST`,
+        };
+      }
+    } catch (e) {
+      console.warn('Failed to build List-Unsubscribe header', e);
+    }
+
     await transporter.sendMail({
       from: `"${FROM_NAME}" <${FROM_EMAIL}>`,
       to: order.customerEmail,
       subject: `Je tickets voor ${FROM_NAME} - Bestelling ${order.id.substring(0, 8)}`,
       html: htmlContent,
+      ...(headers ? { headers } : {}),
       attachments,
     });
 
@@ -349,11 +366,19 @@ export async function sendMailingListEmail(
 
     for (const subscriber of subscribers) {
       try {
+        const headers: Record<string, string> | undefined = subscriber.unsubscribeToken
+          ? {
+              'List-Unsubscribe': `<mailto:${FROM_EMAIL}?subject=unsubscribe>, <${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/mailing-list/unsubscribe?token=${subscriber.unsubscribeToken}>`,
+              'List-Unsubscribe-Post': `<${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/mailing-list/unsubscribe?token=${subscriber.unsubscribeToken}>; method=POST`,
+            }
+          : undefined;
+
         await transporter.sendMail({
           from: `"${FROM_NAME}" <${FROM_EMAIL}>`,
           to: subscriber.email,
           subject,
           html: htmlContent,
+          ...(headers ? { headers } : {}),
         });
         sent++;
         console.log(`✓ Email sent to ${subscriber.email}`);

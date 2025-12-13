@@ -75,6 +75,15 @@ export async function unsubscribeByToken(token: string): Promise<void> {
     .where(eq(mailingListSubscribers.unsubscribeToken, token));
 }
 
+export async function getSubscriberByEmail(email: string): Promise<MailingListSubscriber | null> {
+  const rows = await db
+    .select()
+    .from(mailingListSubscribers)
+    .where(eq(mailingListSubscribers.email, email))
+    .limit(1);
+  return rows.length ? rows[0] : null;
+}
+
 export async function getAllActiveSubscribers(): Promise<MailingListSubscriber[]> {
   return db
     .select()
