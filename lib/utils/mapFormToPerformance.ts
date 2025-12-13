@@ -10,7 +10,6 @@ export function mapFormToPerformance(
     slug: form.slug,
     description: form.description,
     imageId: form.imageId ?? null,
-    thumbnailImageId: form.thumbnailImageId ?? null,
     basePrice: form.price,
     status: form.status as 'draft' | 'published' | 'archived',
     publicationDate: form.publicationDate ? new Date(form.publicationDate) : null,

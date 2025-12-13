@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import path from 'path';
-import fs from 'fs/promises';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/utils/auth';
-import crypto from 'crypto';
 import { Session } from 'next-auth';
+import { generateImageVariants } from '@/lib/utils/imageProcessor';
+import { createImage } from '@/lib/commands/images';
 
 export async function POST(req: NextRequest) {
   // 1. Check authentication
@@ -34,26 +33,36 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // 4. Enforce size limit (5MB)
-  const maxSizeInBytes = 5 * 1024 * 1024;
+  // 4. Enforce size limit (10MB for original, we'll compress it)
+  const maxSizeInBytes = 10 * 1024 * 1024;
   if (file.size > maxSizeInBytes) {
-    return NextResponse.json({ error: 'File size exceeds 5MB limit' }, { status: 400 });
+    return NextResponse.json({ error: 'File size exceeds 10MB limit' }, { status: 400 });
   }
 
-  // 5. Generate secure filename (UUID to prevent path traversal and collisions)
-  const ext = path.extname(file.name).toLowerCase();
-  const secureFilename = `${crypto.randomUUID()}${ext}`;
-  const uploadDir = path.join(process.cwd(), 'public', 'uploads');
-  const filePath = path.join(uploadDir, secureFilename);
+  try {
+    // 5. Convert file to buffer
+    const buffer = Buffer.from(await file.arrayBuffer());
 
-  // Ensure uploads directory exists
-  await fs.mkdir(uploadDir, { recursive: true });
+    // 6. Generate image variants (lg, md, sm)
+    const variants = await generateImageVariants(buffer);
 
-  // Save file to disk
-  const buffer = Buffer.from(await file.arrayBuffer());
-  await fs.writeFile(filePath, buffer);
+    // 7. Save to database with all variants
+    const image = await createImage({
+      filename: file.name,
+      mimetype: file.type,
+      imageLg: variants.lg,
+      imageMd: variants.md,
+      imageSm: variants.sm,
+    });
 
-  // Return public URL
-  const url = `/uploads/${secureFilename}`;
-  return NextResponse.json({ url });
+    // 8. Return image ID
+    return NextResponse.json({
+      id: image.id,
+      filename: image.filename,
+      uploadedAt: image.uploadedAt,
+    });
+  } catch (error) {
+    console.error('Image upload error:', error);
+    return NextResponse.json({ error: 'Failed to process and save image' }, { status: 500 });
+  }
 }

@@ -8,7 +8,6 @@ export function mapPerformanceToForm(show: Show): ShowFormState {
     slug: show.slug ?? '',
     description: show.description ?? '',
     imageId: show.imageId ?? '',
-    thumbnailImageId: show.thumbnailImageId ?? '',
     price: '',
     status: show.status,
     publicationDate: show.publicationDate

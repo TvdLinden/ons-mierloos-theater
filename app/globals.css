@@ -79,7 +79,7 @@ body {
   --primary: oklch(0.21 0.006 285.885);
   --primary-foreground: oklch(0.985 0 0);
   /* Improved secondary color for better contrast */
-  --secondary: oklch(0.75 0.06 260);
+  --secondary: oklch(64.14% 0.106956 189.22);
   /* darker bluish tone */
   --secondary-foreground: oklch(0.04 0.02 280);
   /* near-black for readable text */

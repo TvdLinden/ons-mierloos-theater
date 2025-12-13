@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="172" height="280" viewBox="0 0 172 280">
+    <title>Ons Mierloos Theater – refined trace</title>
+
+    <!-- White background -->
+    <rect width="100%" height="100%" fill="#ffffff"/>
+
+    <!-- Left teal curtain (elliptical arc, top portion; bottom is cut by the white sweep) -->
+    <path d="M 0 0 H 86.0 A 86.0 280.0 0 0 1 0 202.8 Z" fill="#00A098"/>
+
+    <!-- Right red curtain (elliptical arc, mirrored) -->
+    <path d="M 172 0 H 86.0 A 86.0 280.0 0 0 0 172 202.6 Z" fill="#E5332A"/>
+
+    <!-- Overlap/lens (brown) — traced polygon from the PNG -->
+    <!-- NOTE: This is a dense polyline for pixel-accurate fitting -->
+    <path d="M 52 63 L 51 61 L 50 59 L 49 57 L 49 55 L 48 53 L 47 51 L 47 49 L 46 47 L 46 45 L 45 43 L 44 41 L 44 39 L 43 37 L 43 35 L 43 33 L 42 31 L 42 29 L 41 27 L 41 25 L 41 23 L 40 21 L 40 19 L 40 17 L 40 16 L 40 14 L 40 12 L 40 10 L 41 8 L 41 6 L 41 4 L 42 3 L 44 2 L 46 1 L 49 1 L 51 0 L 54 0 L 56 0 L 59 0 L 61 0 L 64 0 L 66 0 L 69 0 L 71 0 L 74 0 L 76 0 L 79 0 L 81 0 L 84 0 L 86 0 L 89 0 L 91 0 L 94 0 L 96 0 L 99 0 L 101 0 L 104 0 L 106 0 L 109 0 L 111 0 L 114 0 L 116 0 L 119 0 L 121 0 L 124 0 L 126 1 L 129 1 L 131 2 L 133 3 L 134 4 L 134 6 L 134 8 L 135 10 L 135 12 L 135 14 L 135 16 L 135 18 L 135 20 L 135 22 L 134 24 L 134 26 L 133 28 L 133 30 L 132 32 L 131 34 L 130 36 L 129 38 L 129 40 L 128 42 L 127 44 L 126 46 L 125 48 L 124 50 L 123 52 L 121 53 L 120 55 L 118 56 L 116 58 L 114 59 L 112 60 L 110 61 L 108 62 L 106 62 L 104 63 L 102 64 L 100 64 L 98 65 L 96 65 L 94 65 L 92 66 L 90 66 L 88 66 L 86 66 L 84 66 L 82 66 L 80 66 L 78 66 L 76 66 L 74 66 L 72 66 L 70 66 L 68 66 L 66 66 L 64 66 L 62 65 L 61 65 L 59 64 L 57 64 L 55 63 Z" fill="#4D3034"/>
+
+    <!-- White sweep separating graphics from text (traced from PNG pixels) -->
+    <path d="M 0 202.8 L 4.0 202.4 L 8.0 202.1 L 12.0 201.8 L 16.0 201.4 L 20.0 201.0 L 24.0 200.3 L 28.0 199.5 L 32.0 198.6 L 36.0 197.7 L 40.0 196.8 L 44.0 195.9 L 48.0 194.9 L 52.0 193.8 L 56.0 192.7 L 60.0 191.7 L 64.0 190.6 L 68.0 189.6 L 72.0 188.7 L 76.0 187.9 L 80.0 187.1 L 84.0 186.4 L 88.0 185.8 L 92.0 185.3 L 96.0 184.9 L 100.0 184.6 L 104.0 184.3 L 108.0 184.1 L 112.0 184.0 L 116.0 184.0 L 120.0 184.2 L 124.0 184.4 L 128.0 184.7 L 132.0 185.1 L 136.0 185.6 L 140.0 186.2 L 144.0 186.9 L 148.0 187.7 L 152.0 188.6 L 156.0 189.6 L 160.0 190.6 L 164.0 191.6 L 168.0 192.6 L 172 193.6 L 172 280 L 0 280 Z" fill="#ffffff"/>
+
+    <!-- Stacked text, right-aligned -->
+    <g font-family="Helvetica, Arial, sans-serif" font-weight="700" text-anchor="end">
+        <text x="164" y="220" font-size="28" fill="#00A098">ONS</text>
+        <text x="164" y="250" font-size="28" fill="#E5332A">MIERLOOS</text>
+        <text x="164" y="280" font-size="28" fill="#00A098">THEATER</text>
+    </g>
+</svg>

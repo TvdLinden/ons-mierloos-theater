@@ -113,6 +113,20 @@
       "when": 1765485068411,
       "tag": "0015_jazzy_the_renegades",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1765533463200,
+      "tag": "0016_violet_sasquatch",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1765580988829,
+      "tag": "0017_jazzy_caretaker",
+      "breakpoints": true
     }
   ]
 }

@@ -5,6 +5,15 @@ import { useState } from 'react';
 import FormError from './FormError';
 import type { Coupon } from '@/lib/db';
 import { NumberInput } from './ui/number-input';
+import {
+  Select,
+  SelectGroup,
+  SelectTrigger,
+  Textarea,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+} from './ui';
 
 interface CouponFormProps {
   initialData?: Partial<Coupon>;
@@ -45,12 +54,12 @@ export default function CouponForm({ initialData, action, submitLabel }: CouponF
           <label htmlFor="description" className="block text-sm font-medium text-text-primary mb-2">
             Beschrijving
           </label>
-          <textarea
+          <Textarea
             id="description"
             name="description"
             defaultValue={initialData?.description || ''}
             rows={3}
-            className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+            className="w-full"
             placeholder="10% korting op alle voorstellingen"
           />
         </div>
@@ -63,18 +72,22 @@ export default function CouponForm({ initialData, action, submitLabel }: CouponF
             >
               Kortingstype *
             </label>
-            <select
-              id="discountType"
+            <Select
               name="discountType"
               value={discountType}
-              onChange={(e) => setDiscountType(e.target.value)}
+              onValueChange={(value) => setDiscountType(value)}
               required
-              className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+              defaultValue="percentage"
             >
-              <option value="percentage">Percentage</option>
-              <option value="fixed">Vast bedrag</option>
-              <option value="free_tickets">Gratis kaartjes</option>
-            </select>
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent position="popper">
+                <SelectItem value="percentage">Percentage</SelectItem>
+                <SelectItem value="fixed">Vast bedrag</SelectItem>
+                <SelectItem value="free_tickets">Gratis kaartjes</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div>
@@ -96,7 +109,7 @@ export default function CouponForm({ initialData, action, submitLabel }: CouponF
               step={discountType === 'percentage' ? 1 : 0.01}
               min={0}
               max={discountType === 'percentage' ? 100 : undefined}
-              className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+              className="w-full"
             />
           </div>
         </div>
@@ -114,7 +127,7 @@ export default function CouponForm({ initialData, action, submitLabel }: CouponF
             defaultValue={Number(initialData?.minOrderAmount) || 0}
             step={0.01}
             min={0}
-            className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+            className="w-full"
             placeholder="0.00"
           />
           <p className="text-sm text-text-secondary mt-1">Optioneel: laat leeg voor geen minimum</p>
@@ -130,7 +143,7 @@ export default function CouponForm({ initialData, action, submitLabel }: CouponF
               name="maxUses"
               defaultValue={Number(initialData?.maxUses) || 0}
               min={1}
-              className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+              className="w-full"
               placeholder="Onbeperkt"
             />
           </div>
@@ -147,7 +160,7 @@ export default function CouponForm({ initialData, action, submitLabel }: CouponF
               name="maxUsesPerUser"
               defaultValue={Number(initialData?.maxUsesPerUser) || 0}
               min={1}
-              className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+              className="w-full"
               placeholder="Onbeperkt"
             />
           </div>

@@ -15,6 +15,7 @@ import {
   UserCog,
   Image,
   Layout,
+  Settings,
 } from 'lucide-react';
 
 interface AdminFeature {
@@ -89,7 +90,7 @@ const features: AdminFeature[] = [
     adminOnly: true,
   },
   {
-    icon: UserCog,
+    icon: Settings,
     label: 'Site Instellingen',
     description: 'Beheer SEO instellingen voor betere vindbaarheid.',
     href: '/admin/settings',

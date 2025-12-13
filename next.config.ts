@@ -10,6 +10,15 @@ const nextConfig: NextConfig = {
     useCache: true,
   },
   images: {
+    localPatterns: [
+      {
+        pathname: '/**',
+      },
+      {
+        pathname: '/api/images/:path*',
+        search: '{size}',
+      },
+    ],
     remotePatterns: [
       {
         protocol: 'https',

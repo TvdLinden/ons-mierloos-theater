@@ -34,9 +34,6 @@ export const shows = pgTable(
     slug: varchar('slug', { length: 255 }).unique().notNull(),
     description: text('description'),
     imageId: uuid('image_id').references(() => images.id, { onDelete: 'set null' }),
-    thumbnailImageId: uuid('thumbnail_image_id').references(() => images.id, {
-      onDelete: 'set null',
-    }),
     basePrice: decimal('base_price', { precision: 8, scale: 2 }),
     status: showStatus('status').default('draft').notNull(),
     publicationDate: timestamp('publication_date', { withTimezone: true }),
@@ -127,7 +124,9 @@ export const images = pgTable('images', {
   id: uuid('id').primaryKey().defaultRandom(),
   filename: varchar('filename', { length: 255 }),
   mimetype: varchar('mimetype', { length: 100 }),
-  data: bytea('data'),
+  imageLg: bytea('image_lg'), // Nullable during migration
+  imageMd: bytea('image_md'), // Nullable during migration
+  imageSm: bytea('image_sm'), // Nullable during migration
   uploadedAt: timestamp('uploaded_at', { withTimezone: true }).defaultNow(),
 });
 
@@ -350,10 +349,6 @@ export const couponUsages = pgTable(
 // Relations
 export const showsRelations = relations(shows, ({ many, one }) => ({
   image: one(images, { fields: [shows.imageId], references: [images.id] }),
-  thumbnailImage: one(images, {
-    fields: [shows.thumbnailImageId],
-    references: [images.id],
-  }),
   performances: many(performances),
   showTags: many(showTags),
 }));

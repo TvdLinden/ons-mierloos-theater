@@ -10,7 +10,6 @@ import {
 import { redirect } from 'next/navigation';
 import { setShowTags } from '@/lib/commands/tags';
 import { validateImageFile } from '@/lib/utils/performanceFormHelpers';
-import { handleImageUpload } from '@/lib/utils/imageUpload';
 import { isValidSlug } from '@/lib/utils/slug';
 import { invalidateShowPaths } from '@/lib/utils/invalidateShowPaths';
 import type { PerformanceStatus, ShowStatus } from '@/lib/db';
@@ -76,7 +75,6 @@ export async function handleUpsertShow(
   }
 
   let imageId: string | null | undefined = undefined;
-  let thumbnailId: string | null | undefined = undefined;
 
   // Handle image upload if provided
   if (image && image.size > 0) {
@@ -85,13 +83,29 @@ export async function handleUpsertShow(
       return { error: imageValidation.error };
     }
 
-    const uploadResult = await handleImageUpload(image);
-    if (!uploadResult.success) {
-      return { error: uploadResult.error };
-    }
+    try {
+      // Convert file to buffer
+      const buffer = Buffer.from(await image.arrayBuffer());
 
-    imageId = uploadResult.imageId;
-    thumbnailId = uploadResult.thumbnailId;
+      // Generate image variants using Sharp
+      const { generateImageVariants } = await import('@/lib/utils/imageProcessor');
+      const variants = await generateImageVariants(buffer);
+
+      // Create image in database with all variants
+      const { createImage } = await import('@/lib/commands/images');
+      const createdImage = await createImage({
+        filename: image.name,
+        mimetype: image.type,
+        imageLg: variants.lg,
+        imageMd: variants.md,
+        imageSm: variants.sm,
+      });
+
+      imageId = createdImage.id;
+    } catch (error) {
+      console.error('Error processing image:', error);
+      return { error: 'Fout bij het verwerken van de afbeelding.' };
+    }
   }
 
   let finalShowId: string;
@@ -109,10 +123,9 @@ export async function handleUpsertShow(
         depublicationDate: depublicationDate?.trim() ? new Date(depublicationDate) : null,
       };
 
-      // Only add image fields if a new image was uploaded
+      // Only add imageId if a new image was uploaded
       if (imageId !== undefined) {
         updateFields.imageId = imageId;
-        updateFields.thumbnailImageId = thumbnailId;
       }
 
       await updateShow(showId, updateFields);
@@ -141,7 +154,6 @@ export async function handleUpsertShow(
         imageId: imageId || undefined,
         publicationDate: publicationDate?.trim() ? new Date(publicationDate) : null,
         depublicationDate: depublicationDate?.trim() ? new Date(depublicationDate) : null,
-        thumbnailImageId: thumbnailId || undefined,
       });
 
       finalShowId = show.id;

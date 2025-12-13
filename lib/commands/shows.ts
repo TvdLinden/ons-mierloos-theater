@@ -17,7 +17,7 @@ export async function insertShow(
   });
 
   const cleaned = filterDefinedFields({ ...show, slug } as Partial<Show>, {
-    stripEmptyStringsFor: ['id', 'imageId', 'thumbnailImageId'],
+    stripEmptyStringsFor: ['id', 'imageId'],
   });
 
   const result = await db
@@ -47,7 +47,7 @@ export async function updateShow(id: string, fields: Partial<Show>): Promise<voi
   }
 
   const cleaned = filterDefinedFields(updateFields, {
-    stripEmptyStringsFor: ['imageId', 'thumbnailImageId'],
+    stripEmptyStringsFor: ['imageId'],
   });
 
   await db.update(shows).set(cleaned).where(eq(shows.id, id));

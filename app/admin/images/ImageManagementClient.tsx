@@ -29,10 +29,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import type { Image as ImageType } from '@/lib/queries/images';
+import { Image as ImageType } from '@/lib/db';
 
 type ImageManagementClientProps = {
-  images: ImageType[];
+  images: Omit<ImageType, 'imageLg' | 'imageMd' | 'imageSm'>[];
   currentPage: number;
   totalPages: number;
   totalCount: number;
@@ -193,7 +193,7 @@ export default function ImageManagementClient({
                 <CardContent className="p-0">
                   <div className="relative aspect-square bg-muted">
                     <Image
-                      src={`/api/images/${image.id}`}
+                      src={`/api/images/${image.id}?size=sm`}
                       alt={image.filename || 'Afbeelding'}
                       fill
                       className="object-cover"

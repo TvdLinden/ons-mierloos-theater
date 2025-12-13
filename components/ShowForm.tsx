@@ -29,7 +29,6 @@ export type ShowFormState = {
   description: string;
   slug: string;
   imageId?: string;
-  thumbnailImageId?: string;
   price: string;
   status: PerformanceStatus;
   publicationDate?: string;
@@ -318,7 +317,7 @@ export default function ShowForm({
           {(previewUrl || initial?.imageId) && (
             <div className="mt-4 relative w-full max-w-md">
               <Image
-                src={previewUrl || `/api/images/${initial?.imageId}`}
+                src={previewUrl || `/api/images/${initial?.imageId}?size=md`}
                 alt="Preview"
                 width={400}
                 height={225}
@@ -326,7 +325,7 @@ export default function ShowForm({
               />
             </div>
           )}
-          <p className="text-xs text-zinc-600 mt-1">Maximaal 5MB, JPEG of PNG formaat</p>
+          <p className="text-xs text-zinc-600 mt-1">Maximaal 10MB, JPEG, PNG of WebP formaat</p>
         </SimpleFormField>
         {availableTags.length > 0 && (
           <SimpleFormField label="Tags" htmlFor="tags">

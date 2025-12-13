@@ -80,6 +80,10 @@ export type HomepageContent = typeof homepageContent.$inferSelect;
 export type NewsArticle = typeof newsArticles.$inferSelect;
 export type SocialMediaLink = typeof socialMediaLinks.$inferSelect;
 
+export type Image = typeof images.$inferSelect;
+export type ImageContent = Pick<Image, 'imageLg' | 'imageMd' | 'imageSm'>;
+export type ImageMetadata = Omit<Image, keyof ImageContent>;
+
 if (!process.env.DATABASE_URL) {
   throw new Error('DATABASE_URL environment variable is required');
 }

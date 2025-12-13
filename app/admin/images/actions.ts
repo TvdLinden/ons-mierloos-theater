@@ -1,6 +1,6 @@
 'use server';
 
-import { deleteImage, pruneDanglingImages } from '@/lib/commands/images';
+import { deleteImage, removeUnusedImages } from '@/lib/commands/images';
 import { getImageUsage } from '@/lib/queries/images';
 import { handleImageUpload } from '@/lib/utils/imageUpload';
 import { validateImageFile } from '@/lib/utils/performanceFormHelpers';
@@ -70,7 +70,7 @@ export async function pruneImagesAction(): Promise<{
   deletedCount?: number;
 }> {
   try {
-    const deletedCount = await pruneDanglingImages();
+    const deletedCount = await removeUnusedImages();
     revalidatePath('/admin/images');
 
     return {

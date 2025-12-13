@@ -1,8 +1,7 @@
-import { db } from '@/lib/db';
-import { images, performances, shows, sponsors } from '@/lib/db/schema';
+import { db, Image, ImageMetadata } from '@/lib/db';
+import { images, shows, sponsors } from '@/lib/db/schema';
 import { eq, notInArray, sql, desc } from 'drizzle-orm';
-
-export type Image = typeof images.$inferSelect;
+import { mime } from 'zod';
 
 export async function getImageById(id: string): Promise<Image | null> {
   const result = await db.select().from(images).where(eq(images.id, id)).limit(1);
@@ -15,6 +14,23 @@ export async function getImageById(id: string): Promise<Image | null> {
 export async function getAllImages(offset = 0, limit = 20): Promise<Image[]> {
   return await db
     .select()
+    .from(images)
+    .orderBy(desc(images.uploadedAt))
+    .limit(limit)
+    .offset(offset);
+}
+
+/**
+ * Get all images with pagination
+ */
+export async function getAllImageMetadata(offset = 0, limit = 20): Promise<ImageMetadata[]> {
+  return await db
+    .select({
+      id: images.id,
+      filename: images.filename,
+      mimetype: images.mimetype,
+      uploadedAt: images.uploadedAt,
+    })
     .from(images)
     .orderBy(desc(images.uploadedAt))
     .limit(limit)
@@ -42,7 +58,7 @@ export async function getImageUsage(imageId: string): Promise<{
   const showsUsingImage = await db
     .select({ id: shows.id, title: shows.title })
     .from(shows)
-    .where(sql`${shows.imageId} = ${imageId} OR ${shows.thumbnailImageId} = ${imageId}`);
+    .where(sql`${shows.imageId} = ${imageId}`);
 
   usedBy.push(
     ...showsUsingImage.map((show) => ({
@@ -76,35 +92,29 @@ export async function getImageUsage(imageId: string): Promise<{
  * Find images that are not referenced by any performance or sponsor
  * (not used as imageId, thumbnailImageId, or logoId)
  */
-export async function findDanglingImages(): Promise<Image[]> {
-  // Get all image IDs referenced by performances
-  const performanceImages = await db
+import { newsArticles } from '@/lib/db/schema';
+
+export async function findUnusedImages(
+  offset = 0,
+  limit = 50,
+): Promise<Array<Omit<Image, 'imageLg' | 'imageMd' | 'imageSm' | 'data'>>> {
+  // Single SQL: NOT EXISTS subqueries for each referencing table/column.
+  const rows = await db
     .select({
-      id: sql<string>`COALESCE(${shows.imageId}, ${shows.thumbnailImageId})`,
+      id: images.id,
+      filename: images.filename,
+      mimetype: images.mimetype,
+      uploadedAt: images.uploadedAt,
     })
-    .from(shows)
-    .where(sql`${shows.imageId} IS NOT NULL OR ${shows.thumbnailImageId} IS NOT NULL`);
+    .from(images)
+    .where(
+      sql`NOT EXISTS (SELECT 1 FROM ${shows} WHERE ${shows.imageId} = ${images.id})
+        AND NOT EXISTS (SELECT 1 FROM ${sponsors} WHERE ${sponsors.logoId} = ${images.id})
+        AND NOT EXISTS (SELECT 1 FROM ${newsArticles} WHERE ${newsArticles.imageId} = ${images.id})`,
+    )
+    .orderBy(desc(images.uploadedAt))
+    .limit(limit)
+    .offset(offset);
 
-  // Get all image IDs referenced by sponsors
-  const sponsorImages = await db
-    .select({
-      id: sponsors.logoId,
-    })
-    .from(sponsors)
-    .where(sql`${sponsors.logoId} IS NOT NULL`);
-
-  const referencedIds = [
-    ...performanceImages.map((row) => row.id),
-    ...sponsorImages.map((row) => row.id),
-  ].filter((id): id is string => id != null);
-
-  if (referencedIds.length === 0) {
-    // All images are dangling
-    return await db.select().from(images);
-  }
-
-  // Find images not in the referenced set
-  const dangling = await db.select().from(images).where(notInArray(images.id, referencedIds));
-
-  return dangling;
+  return rows;
 }

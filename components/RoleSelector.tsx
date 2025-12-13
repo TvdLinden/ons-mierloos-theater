@@ -3,6 +3,7 @@
 import { UserRole } from '@/lib/db';
 import { updateUserRole } from '@/lib/actions/users';
 import { useState } from 'react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui';
 
 export type RoleSelectorProps = {
   userId: string;
@@ -11,9 +12,9 @@ export type RoleSelectorProps = {
 };
 
 const ROLES: { value: UserRole; label: string }[] = [
-  { value: 'user', label: 'User' },
-  { value: 'contributor', label: 'Contributor' },
-  { value: 'admin', label: 'Admin' },
+  { value: 'user', label: 'Gebruiker' },
+  { value: 'contributor', label: 'Medewerker' },
+  { value: 'admin', label: 'Beheerder' },
 ];
 
 export default function RoleSelector({ userId, currentRole, disabled }: RoleSelectorProps) {
@@ -42,21 +43,22 @@ export default function RoleSelector({ userId, currentRole, disabled }: RoleSele
 
   return (
     <div className="flex flex-col gap-1">
-      <select
+      <Select
         value={role}
-        onChange={(e) => handleRoleChange(e.target.value as UserRole)}
+        onValueChange={(value) => handleRoleChange(value as UserRole)}
         disabled={disabled || isUpdating}
-        className="px-3 py-1.5 text-sm rounded-lg border border-border bg-surface text-primary
-          focus:outline-none focus:ring-2 focus:ring-primary/50
-          disabled:opacity-50 disabled:cursor-not-allowed
-          dark:bg-zinc-800 dark:border-zinc-700 dark:text-surface"
       >
-        {ROLES.map((r) => (
-          <option key={r.value} value={r.value}>
-            {r.label}
-          </option>
-        ))}
-      </select>
+        <SelectTrigger className="">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {ROLES.map((r) => (
+            <SelectItem key={r.value} value={r.value}>
+              {r.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
       {error && <span className="text-xs text-error">{error}</span>}
     </div>
   );

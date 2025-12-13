@@ -1,5 +1,5 @@
 import { Suspense } from 'react';
-import { getAllImages, getImagesCount } from '@/lib/queries/images';
+import { getAllImageMetadata, getImagesCount } from '@/lib/queries/images';
 import ImageManagementClient from './ImageManagementClient';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -14,7 +14,7 @@ export default async function ImagesPage({
   const offset = (page - 1) * ITEMS_PER_PAGE;
 
   const [images, totalCount] = await Promise.all([
-    getAllImages(offset, ITEMS_PER_PAGE),
+    getAllImageMetadata(offset, ITEMS_PER_PAGE),
     getImagesCount(),
   ]);
 

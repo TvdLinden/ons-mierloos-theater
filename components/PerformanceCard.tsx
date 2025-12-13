@@ -4,7 +4,7 @@ import Image from 'next/image';
 import DateDisplay from '@/components/DateDisplay';
 import Link from 'next/link';
 import { ShowWithTagsAndPerformances, Tag } from '@/lib/db';
-import { getShowThumbnailUrl } from '@/lib/utils/performanceImages';
+import { getShowImageUrl } from '@/lib/utils/performanceImages';
 import TagsContainer from './TagsContainer';
 import { useState, useRef, useEffect } from 'react';
 import { ChevronDown } from 'lucide-react';
@@ -21,7 +21,7 @@ export default function PerformanceCard({ show, href }: PerformanceCardProps) {
   const [maxHeight, setMaxHeight] = useState(0);
   const contentRef = useRef<HTMLDivElement>(null);
   const { title, subtitle, slug, tags, performances, basePrice } = show;
-  const imageUrl = getShowThumbnailUrl(show);
+  const imageUrl = getShowImageUrl(show, 'md');
 
   // Get available (published) performances sorted by date
   const availablePerformances = performances

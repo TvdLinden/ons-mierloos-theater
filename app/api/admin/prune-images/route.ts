@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { pruneDanglingImages } from '@/lib/commands/images';
+import { removeUnusedImages } from '@/lib/commands/images';
 import { getServerSession } from 'next-auth/next';
 import type { Session } from 'next-auth';
 import { authOptions } from '@/lib/utils/auth';
@@ -13,7 +13,7 @@ export async function POST() {
   }
 
   try {
-    const deletedCount = await pruneDanglingImages();
+    const deletedCount = await removeUnusedImages();
 
     return NextResponse.json({
       success: true,

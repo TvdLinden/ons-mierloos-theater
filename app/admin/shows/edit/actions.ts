@@ -11,8 +11,6 @@ import { redirect } from 'next/navigation';
 import { setShowTags } from '@/lib/commands/tags';
 import { validateImageFile } from '@/lib/utils/performanceFormHelpers';
 import { handleImageUpload } from '@/lib/utils/imageUpload';
-import { uploadFile } from '@/lib/commands/files';
-import { readFormFile, createThumbnail } from '@/lib/utils/image';
 import { isValidSlug } from '@/lib/utils/slug';
 import { invalidateShowPaths } from '@/lib/utils/invalidateShowPaths';
 import type { PerformanceStatus, ShowStatus } from '@/lib/db';
@@ -78,7 +76,6 @@ export async function handleUpdateShowAction(
   }
 
   let imageId: string | undefined = undefined;
-  let thumbnailId: string | undefined = undefined;
 
   // Handle image upload if provided
   if (image && image.size > 0) {
@@ -93,7 +90,6 @@ export async function handleUpdateShowAction(
     }
 
     imageId = uploadResult.imageId;
-    thumbnailId = uploadResult.thumbnailId;
   }
 
   try {
@@ -105,7 +101,6 @@ export async function handleUpdateShowAction(
       slug,
       basePrice,
       imageId: imageId || null,
-      thumbnailImageId: thumbnailId || null,
       publicationDate: publicationDate ? new Date(publicationDate) : null,
       depublicationDate: depublicationDate ? new Date(depublicationDate) : null,
     });
@@ -187,7 +182,6 @@ export async function handleAddShowAction(prevState: { error?: string }, formDat
   }
 
   let imageId: string | undefined = undefined;
-  let thumbnailId: string | undefined = undefined;
 
   if (image && image.size > 0) {
     const imageValidation = validateImageFile(image);
@@ -201,7 +195,6 @@ export async function handleAddShowAction(prevState: { error?: string }, formDat
     }
 
     imageId = uploadResult.imageId;
-    thumbnailId = uploadResult.thumbnailId;
   }
 
   try {
@@ -215,7 +208,6 @@ export async function handleAddShowAction(prevState: { error?: string }, formDat
       imageId: imageId || undefined,
       publicationDate: publicationDate?.trim() ? new Date(publicationDate) : null,
       depublicationDate: depublicationDate?.trim() ? new Date(depublicationDate) : null,
-      thumbnailImageId: thumbnailId || undefined,
     });
 
     // Link tags if provided
