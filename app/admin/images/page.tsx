@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import { getAllImageMetadata, getImagesCount } from '@/lib/queries/images';
 import ImageManagementClient from './ImageManagementClient';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 
 export default async function ImagesPage({
   searchParams,
@@ -22,6 +23,7 @@ export default async function ImagesPage({
 
   return (
     <div className="container mx-auto py-8 px-4">
+      <AdminPageHeader title="" />
       <Card>
         <CardHeader>
           <CardTitle>Afbeeldingenbeheer</CardTitle>

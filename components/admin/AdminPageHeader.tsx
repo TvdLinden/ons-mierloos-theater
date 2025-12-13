@@ -4,6 +4,7 @@ import { Button } from '../ui';
 
 type AdminPageHeaderProps = {
   title: string;
+  subtitle?: string;
   backHref?: string;
   action?:
     | {
@@ -13,7 +14,12 @@ type AdminPageHeaderProps = {
     | ReactNode;
 };
 
-export function AdminPageHeader({ title, backHref = '/admin', action }: AdminPageHeaderProps) {
+export function AdminPageHeader({
+  title,
+  subtitle,
+  backHref = '/admin',
+  action,
+}: AdminPageHeaderProps) {
   return (
     <div className="mb-8">
       <Link
@@ -23,7 +29,10 @@ export function AdminPageHeader({ title, backHref = '/admin', action }: AdminPag
         ← Terug naar dashboard
       </Link>
       <div className="flex items-center justify-between">
-        <h1 className="text-4xl font-bold text-primary">{title}</h1>
+        <div>
+          <h1 className="text-4xl font-bold text-primary">{title}</h1>
+          {subtitle && <p className="text-muted-foreground">{subtitle}</p>}
+        </div>
         {action && (
           <>
             {typeof action === 'object' && 'href' in action ? (

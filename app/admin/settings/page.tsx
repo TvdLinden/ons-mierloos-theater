@@ -2,9 +2,10 @@ import { requireRole } from '@/lib/utils/auth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getSiteSettings, getSeoSettings } from '@/lib/queries/settings';
-import { getAllImages } from '@/lib/queries/images';
+import { getAllImageMetadata, getAllImages } from '@/lib/queries/images';
 import { SiteSettingsForm } from './SiteSettingsForm';
 import { SeoSettingsForm } from './SeoSettingsForm';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 
 export default async function SettingsPage() {
   await requireRole(['admin']);
@@ -12,15 +13,15 @@ export default async function SettingsPage() {
   const [siteSettings, seoSettings, images] = await Promise.all([
     getSiteSettings(),
     getSeoSettings(),
-    getAllImages(),
+    getAllImageMetadata(0, 1000),
   ]);
 
   return (
     <div className="container mx-auto py-8 px-4">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Site Instellingen</h1>
-        <p className="text-muted-foreground">Beheer algemene site instellingen, SEO en metadata</p>
-      </div>
+      <AdminPageHeader
+        title="Site Instellingen"
+        subtitle="Beheer algemene site instellingen, SEO en metadata"
+      />
 
       <Tabs defaultValue="general" className="w-full">
         <TabsList className="grid w-full grid-cols-2 max-w-md">

@@ -19,7 +19,8 @@ type NewPerformance = {
   id?: string;
   date: string;
   price: string;
-  totalSeats: number;
+  rows: number;
+  seatsPerRow: number;
   availableSeats: number;
   status: PerformanceStatus;
   notes?: string;
@@ -123,11 +124,14 @@ export async function handleUpdateShowAction(
     const newPerformances = performances.filter((p) => !p.id);
     if (newPerformances.length > 0) {
       for (const perf of newPerformances) {
+        const totalSeats = perf.rows * perf.seatsPerRow;
         await insertPerformance({
           showId: showId,
           date: new Date(perf.date),
           price: perf.price,
-          totalSeats: perf.totalSeats,
+          rows: perf.rows,
+          seatsPerRow: perf.seatsPerRow,
+          totalSeats: totalSeats,
           availableSeats: perf.availableSeats,
           status: perf.status,
           notes: perf.notes || null,
@@ -218,11 +222,14 @@ export async function handleAddShowAction(prevState: { error?: string }, formDat
     // Insert initial performances (all new performances without IDs)
     if (performances.length > 0) {
       for (const perf of performances) {
+        const totalSeats = perf.rows * perf.seatsPerRow;
         await insertPerformance({
           showId: show.id,
           date: new Date(perf.date),
           price: perf.price,
-          totalSeats: perf.totalSeats,
+          rows: perf.rows,
+          seatsPerRow: perf.seatsPerRow,
+          totalSeats: totalSeats,
           availableSeats: perf.availableSeats,
           status: perf.status,
           notes: perf.notes || null,

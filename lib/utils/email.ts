@@ -1,6 +1,11 @@
 import nodemailer from 'nodemailer';
 import { Order, LineItem, Performance, CouponUsage, Coupon, PerformanceWithShow } from '@/lib/db';
 import crypto from 'crypto';
+import { getTicketsByOrderId } from '@/lib/commands/tickets';
+import { generateTicketPDF, getTicketFilename } from '@/lib/utils/ticketGenerator';
+import { db } from '@/lib/db';
+import { eq } from 'drizzle-orm';
+import { lineItems, tickets } from '@/lib/db/schema';
 
 // Email configuration
 const SMTP_HOST = process.env.SMTP_HOST || 'smtp.gmail.com';
@@ -214,11 +219,43 @@ export async function sendOrderConfirmationEmail(
     console.log('Sending email from:', `"${FROM_NAME}" <${FROM_EMAIL}>`);
     console.log('Sending email to:', order.customerEmail);
 
+    // Fetch tickets for this order
+    const orderTickets = await db.query.tickets.findMany({
+      where: eq(tickets.orderId, order.id),
+      with: {
+        performance: {
+          with: {
+            show: true,
+          },
+        },
+        order: true,
+      },
+    });
+
+    console.log(`Generating ${orderTickets.length} PDF tickets...`);
+
+    // Generate PDF attachments for each ticket
+    const attachments = await Promise.all(
+      orderTickets.map(async (ticket) => {
+        const pdfBuffer = await generateTicketPDF(ticket as any);
+        const filename = getTicketFilename(ticket, ticket.performance.show);
+
+        return {
+          filename,
+          content: pdfBuffer,
+          contentType: 'application/pdf',
+        };
+      }),
+    );
+
+    console.log(`✓ Generated ${attachments.length} PDF attachments`);
+
     await transporter.sendMail({
       from: `"${FROM_NAME}" <${FROM_EMAIL}>`,
       to: order.customerEmail,
       subject: `Je tickets voor ${FROM_NAME} - Bestelling ${order.id.substring(0, 8)}`,
       html: htmlContent,
+      attachments,
     });
 
     console.log(`✅ Order confirmation email sent successfully to ${order.customerEmail}`);

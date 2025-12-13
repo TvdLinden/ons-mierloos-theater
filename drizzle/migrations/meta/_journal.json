@@ -127,6 +127,13 @@
       "when": 1765580988829,
       "tag": "0017_jazzy_caretaker",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1765657652264,
+      "tag": "0018_tense_power_man",
+      "breakpoints": true
     }
   ]
 }

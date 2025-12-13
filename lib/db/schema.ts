@@ -59,7 +59,9 @@ export const performances = pgTable(
       .notNull(),
     date: timestamp('date', { withTimezone: true }).notNull(),
     price: decimal('price', { precision: 8, scale: 2 }), // Can override show base price
-    totalSeats: integer('total_seats').default(100),
+    rows: integer('rows').default(5), // Number of rows in venue
+    seatsPerRow: integer('seats_per_row').default(20), // Seats per row
+    totalSeats: integer('total_seats').default(100), // Computed: rows × seatsPerRow
     availableSeats: integer('available_seats').default(100),
     status: performanceStatus('status').default('draft').notNull(),
     notes: text('notes'),
@@ -110,6 +112,36 @@ export const lineItems = pgTable(
     index('line_items_performance_id_idx').on(table.performanceId),
     index('line_items_user_id_idx').on(table.userId),
     index('line_items_purchase_date_idx').on(table.purchaseDate),
+  ],
+);
+
+// Tickets table - individual tickets with seat assignments
+export const tickets = pgTable(
+  'tickets',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    lineItemId: uuid('line_item_id')
+      .references(() => lineItems.id, { onDelete: 'cascade' })
+      .notNull(),
+    performanceId: uuid('performance_id')
+      .references(() => performances.id, { onDelete: 'cascade' })
+      .notNull(),
+    orderId: uuid('order_id')
+      .references(() => orders.id, { onDelete: 'cascade' })
+      .notNull(),
+    ticketNumber: varchar('ticket_number', { length: 50 }).notNull().unique(),
+    rowLetter: varchar('row_letter', { length: 2 }).notNull(), // "A", "B", etc.
+    seatNumber: integer('seat_number').notNull(), // 1, 2, 3, etc.
+    qrToken: uuid('qr_token').notNull().unique().defaultRandom(),
+    scannedAt: timestamp('scanned_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  },
+  (table) => [
+    index('tickets_line_item_id_idx').on(table.lineItemId),
+    index('tickets_performance_id_idx').on(table.performanceId),
+    index('tickets_order_id_idx').on(table.orderId),
+    index('tickets_qr_token_idx').on(table.qrToken),
+    index('tickets_ticket_number_idx').on(table.ticketNumber),
   ],
 );
 
@@ -364,13 +396,14 @@ export const usersRelations = relations(users, ({ many }) => ({
   orders: many(orders),
 }));
 
-export const lineItemsRelations = relations(lineItems, ({ one }) => ({
+export const lineItemsRelations = relations(lineItems, ({ one, many }) => ({
   performance: one(performances, {
     fields: [lineItems.performanceId],
     references: [performances.id],
   }),
   user: one(users, { fields: [lineItems.userId], references: [users.id] }),
   order: one(orders, { fields: [lineItems.orderId], references: [orders.id] }),
+  tickets: many(tickets),
 }));
 
 export const ordersRelations = relations(orders, ({ one, many }) => ({
@@ -553,4 +586,14 @@ export const seoSettings = pgTable('seo_settings', {
 export const siteSettingsRelations = relations(siteSettings, ({ one }) => ({
   logo: one(images, { fields: [siteSettings.logoImageId], references: [images.id] }),
   favicon: one(images, { fields: [siteSettings.faviconImageId], references: [images.id] }),
+}));
+
+// Ticket relations
+export const ticketsRelations = relations(tickets, ({ one }) => ({
+  lineItem: one(lineItems, { fields: [tickets.lineItemId], references: [lineItems.id] }),
+  performance: one(performances, {
+    fields: [tickets.performanceId],
+    references: [performances.id],
+  }),
+  order: one(orders, { fields: [tickets.orderId], references: [orders.id] }),
 }));

@@ -5,6 +5,15 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { ImageIcon, X } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationPrevious,
+  PaginationNext,
+} from '@/components/ui/pagination';
 
 interface ImageSelectorProps {
   label: string;
@@ -12,6 +21,7 @@ interface ImageSelectorProps {
   availableImages: Array<{ id: string; filename: string | null }>;
   onSelect: (imageId: string | null) => void;
   imageSize?: 'small' | 'medium' | 'large';
+  imagesPerPage?: number;
 }
 
 export function ImageSelector({
@@ -20,8 +30,10 @@ export function ImageSelector({
   availableImages,
   onSelect,
   imageSize = 'medium',
+  imagesPerPage = 12,
 }: ImageSelectorProps) {
   const [showPicker, setShowPicker] = useState(false);
+  const [currentPage, setCurrentPage] = useState(0);
 
   const sizeMap = {
     small: { container: 'w-16 h-16', grid: 'grid-cols-3' },
@@ -30,6 +42,28 @@ export function ImageSelector({
   };
 
   const { container, grid } = sizeMap[imageSize];
+
+  const totalPages = Math.ceil(availableImages.length / imagesPerPage);
+  const startIndex = currentPage * imagesPerPage;
+  const endIndex = startIndex + imagesPerPage;
+  const displayedImages = availableImages.slice(startIndex, endIndex);
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages - 1) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 0) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleOpenPicker = () => {
+    setCurrentPage(0);
+    setShowPicker(true);
+  };
 
   return (
     <div className="space-y-2">
@@ -55,51 +89,109 @@ export function ImageSelector({
           >
             <X className="h-4 w-4" />
           </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="mt-2 w-full"
+            onClick={handleOpenPicker}
+          >
+            Wijzigen
+          </Button>
         </div>
       ) : (
-        <>
-          <Button type="button" variant="outline" onClick={() => setShowPicker(!showPicker)}>
-            <ImageIcon className="mr-2 h-4 w-4" />
-            Selecteer Afbeelding
-          </Button>
-
-          {showPicker && (
-            <div className="mt-4 border rounded-lg p-4 max-h-64 overflow-y-auto bg-card">
-              <div className={`grid ${grid} gap-2`}>
-                {availableImages.map((img) => (
-                  <button
-                    key={img.id}
-                    type="button"
-                    className="relative aspect-square border rounded hover:border-primary transition-colors"
-                    onClick={() => {
-                      onSelect(img.id);
-                      setShowPicker(false);
-                    }}
-                  >
-                    <Image
-                      src={`/api/images/${img.id}`}
-                      alt={img.filename || 'Afbeelding'}
-                      fill
-                      className="object-cover rounded"
-                      sizes="100px"
-                      loading="lazy"
-                    />
-                  </button>
-                ))}
-              </div>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="mt-3 w-full"
-                onClick={() => setShowPicker(false)}
-              >
-                Sluiten
-              </Button>
-            </div>
-          )}
-        </>
+        <Button type="button" variant="outline" onClick={handleOpenPicker}>
+          <ImageIcon className="mr-2 h-4 w-4" />
+          Selecteer Afbeelding
+        </Button>
       )}
+
+      <Dialog open={showPicker} onOpenChange={setShowPicker}>
+        <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Selecteer een afbeelding</DialogTitle>
+          </DialogHeader>
+
+          <div className="flex-1 overflow-y-auto">
+            <div className={`grid ${grid} gap-2 pb-4`}>
+              {displayedImages.map((img) => (
+                <button
+                  key={img.id}
+                  type="button"
+                  className={`relative aspect-square border-2 rounded transition-colors ${
+                    selectedImageId === img.id
+                      ? 'border-primary'
+                      : 'border-border hover:border-primary'
+                  }`}
+                  onClick={() => {
+                    onSelect(img.id);
+                  }}
+                >
+                  <Image
+                    src={`/api/images/${img.id}`}
+                    alt={img.filename || 'Afbeelding'}
+                    fill
+                    className="object-cover rounded"
+                    sizes="100px"
+                    loading="lazy"
+                  />
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {totalPages > 1 && (
+            <Pagination className="mt-4 justify-center">
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handlePrevPage();
+                    }}
+                    className={currentPage === 0 ? 'pointer-events-none opacity-50' : ''}
+                  />
+                </PaginationItem>
+
+                {Array.from({ length: totalPages }).map((_, i) => (
+                  <PaginationItem key={i}>
+                    <PaginationLink
+                      href="#"
+                      isActive={currentPage === i}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setCurrentPage(i);
+                      }}
+                    >
+                      {i + 1}
+                    </PaginationLink>
+                  </PaginationItem>
+                ))}
+
+                <PaginationItem>
+                  <PaginationNext
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleNextPage();
+                    }}
+                    className={
+                      currentPage === totalPages - 1 ? 'pointer-events-none opacity-50' : ''
+                    }
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          )}
+
+          <DialogFooter>
+            <Button type="button" variant="ghost" onClick={() => setShowPicker(false)}>
+              Sluiten
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

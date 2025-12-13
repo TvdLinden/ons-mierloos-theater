@@ -15,6 +15,7 @@ import {
 import TagSelector from './TagSelector';
 import MarkdownEditor, { type MarkdownEditorRef } from './MarkdownEditor';
 import { PerformanceStatus, Tag, Performance } from '@/lib/db';
+import { ImageSelector } from './ImageSelector';
 import { generateSlug } from '@/lib/utils/slug';
 import Image from 'next/image';
 import { useState } from 'react';
@@ -41,7 +42,8 @@ type NewPerformance = {
   id?: string;
   date: string;
   price?: string;
-  totalSeats?: number;
+  rows: number;
+  seatsPerRow: number;
   availableSeats: number;
   status: PerformanceStatus;
   notes?: string;
@@ -55,47 +57,34 @@ export default function ShowForm({
   action,
   initial,
   availableTags = [],
+  availableImages = [],
 }: {
   action: (prevState: FormState, formData: FormData) => Promise<FormState>;
   initial?: ShowFormState;
   availableTags?: Tag[];
+  availableImages?: Array<{ id: string; filename: string | null }>;
 }) {
   const [state, formAction, isPending] = useActionState(action, { error: undefined });
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [selectedImageId, setSelectedImageId] = useState<string | null>(initial?.imageId || null);
   const [performances, setPerformances] = useState<NewPerformance[]>(
-    initial?.performances?.map((p) => ({
-      id: p.id,
-      date: typeof p.date === 'string' ? p.date : new Date(p.date).toISOString().slice(0, 16),
-      price: p.price?.toString() || '',
-      totalSeats: p.totalSeats || 100,
-      availableSeats: p.availableSeats || 100,
-      status: p.status || 'draft',
-      notes: p.notes || '',
-    })) || [],
+    initial?.performances?.map((p) => {
+      const rows = p.rows || 5;
+      const seatsPerRow = p.seatsPerRow || 20;
+      return {
+        id: p.id,
+        date: typeof p.date === 'string' ? p.date : new Date(p.date).toISOString().slice(0, 16),
+        price: p.price?.toString() || '',
+        rows,
+        seatsPerRow,
+        availableSeats: p.availableSeats || rows * seatsPerRow,
+        status: p.status || 'draft',
+        notes: p.notes || '',
+      };
+    }) || [],
   );
   const [editingPerformance, setEditingPerformance] = useState<NewPerformance | null>(null);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const descriptionEditorRef = useRef<MarkdownEditorRef>(null);
-
-  // const handleFormSubmit = async (formData: FormData) => {
-  //   // Get markdown content from editor and include it in form submission
-  //   if (descriptionEditorRef.current) {
-  //     const markdown = descriptionEditorRef.current.getMarkdown();
-  //     if (markdown) {
-  //       formData.set('description', markdown);
-  //     }
-  //   }
-  //   // Use formAction from useActionState to properly handle submission
-  //   return formAction(formData);
-  // };
-
-  const handleImageChange = (file: File | null) => {
-    if (file) {
-      setPreviewUrl(URL.createObjectURL(file));
-    } else {
-      setPreviewUrl(null);
-    }
-  };
 
   const handleGenerateSlug = () => {
     const titleInput = document.querySelector<HTMLInputElement>('input[name="title"]');
@@ -106,11 +95,15 @@ export default function ShowForm({
   };
 
   const handleAddPerformance = () => {
+    const rows = 5;
+    const seatsPerRow = 20;
+    const totalCapacity = rows * seatsPerRow;
     setEditingPerformance({
       date: '',
       price: initial?.price || '',
-      totalSeats: 100,
-      availableSeats: 100,
+      rows,
+      seatsPerRow,
+      availableSeats: totalCapacity,
       status: 'draft',
       notes: '',
     });
@@ -244,55 +237,61 @@ export default function ShowForm({
         <DataTable
           title={'Voorstellingen'}
           emptyMessage="Nog geen voorstellingen toegevoegd"
-          headers={['Datum & Tijd', 'Prijs', 'Beschikbaar', 'Status', 'Acties']}
+          headers={['Datum & Tijd', 'Prijs', 'Zitplaatsen', 'Beschikbaar', 'Status', 'Acties']}
           onAddClicked={handleAddPerformance}
         >
           <>
-            {performances.map((performance, index) => (
-              <Row key={index}>
-                <td className="px-6 py-4">
-                  {new Date(performance.date).toLocaleString('nl-NL', {
-                    dateStyle: 'medium',
-                    timeStyle: 'short',
-                  })}
-                </td>
-                <td className="px-6 py-4">€{performance.price}</td>
-                <td className="px-6 py-4">
-                  {performance.availableSeats} / {performance.totalSeats}
-                </td>
-                <td className="px-6 py-4">
-                  <span
-                    className={`px-2 py-1 rounded text-xs ${
-                      performance.status === 'published'
-                        ? 'bg-green-100 text-green-800'
-                        : performance.status === 'sold_out'
-                          ? 'bg-orange-100 text-orange-800'
-                          : performance.status === 'cancelled'
-                            ? 'bg-red-100 text-red-800'
-                            : 'bg-gray-100 text-gray-800'
-                    }`}
-                  >
-                    {performance.status}
-                  </span>
-                </td>
-                <td className="px-6 py-4 text-right space-x-2">
-                  <button
-                    type="button"
-                    onClick={() => handleEditPerformance(index)}
-                    className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                  >
-                    Bewerk
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDeletePerformance(index)}
-                    className="text-red-600 hover:text-red-800 text-sm font-medium"
-                  >
-                    Verwijder
-                  </button>
-                </td>
-              </Row>
-            ))}
+            {performances.map((performance, index) => {
+              const totalSeats = performance.rows * performance.seatsPerRow;
+              return (
+                <Row key={index}>
+                  <td className="px-6 py-4">
+                    {new Date(performance.date).toLocaleString('nl-NL', {
+                      dateStyle: 'medium',
+                      timeStyle: 'short',
+                    })}
+                  </td>
+                  <td className="px-6 py-4">€{performance.price}</td>
+                  <td className="px-6 py-4">
+                    {performance.rows} rijen × {performance.seatsPerRow} stoelen
+                  </td>
+                  <td className="px-6 py-4">
+                    {performance.availableSeats} / {totalSeats}
+                  </td>
+                  <td className="px-6 py-4">
+                    <span
+                      className={`px-2 py-1 rounded text-xs ${
+                        performance.status === 'published'
+                          ? 'bg-green-100 text-green-800'
+                          : performance.status === 'sold_out'
+                            ? 'bg-orange-100 text-orange-800'
+                            : performance.status === 'cancelled'
+                              ? 'bg-red-100 text-red-800'
+                              : 'bg-gray-100 text-gray-800'
+                      }`}
+                    >
+                      {performance.status}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-right space-x-2">
+                    <button
+                      type="button"
+                      onClick={() => handleEditPerformance(index)}
+                      className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                    >
+                      Bewerk
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDeletePerformance(index)}
+                      className="text-red-600 hover:text-red-800 text-sm font-medium"
+                    >
+                      Verwijder
+                    </button>
+                  </td>
+                </Row>
+              );
+            })}
           </>
         </DataTable>
 
@@ -306,27 +305,22 @@ export default function ShowForm({
           />
         ))}
 
-        <SimpleFormField label="Afbeelding" htmlFor="image">
-          <Input
-            id="image"
-            name="image"
-            type="file"
-            accept="image/*"
-            onChange={(e) => handleImageChange(e.target.files?.[0] || null)}
-          />
-          {(previewUrl || initial?.imageId) && (
-            <div className="mt-4 relative w-full max-w-md">
-              <Image
-                src={previewUrl || `/api/images/${initial?.imageId}?size=md`}
-                alt="Preview"
-                width={400}
-                height={225}
-                className="rounded-lg border border-border object-cover"
-              />
-            </div>
-          )}
-          <p className="text-xs text-zinc-600 mt-1">Maximaal 10MB, JPEG, PNG of WebP formaat</p>
-        </SimpleFormField>
+        <ImageSelector
+          label="Afbeelding"
+          selectedImageId={selectedImageId}
+          availableImages={availableImages}
+          onSelect={(imageId) => {
+            setSelectedImageId(imageId);
+            if (imageId) {
+              const hiddenInput = document.querySelector<HTMLInputElement>('input[name="imageId"]');
+              if (hiddenInput) {
+                hiddenInput.value = imageId;
+              }
+            }
+          }}
+          imageSize="medium"
+        />
+        <input type="hidden" name="imageId" value={selectedImageId || ''} />
         {availableTags.length > 0 && (
           <SimpleFormField label="Tags" htmlFor="tags">
             <TagSelector
@@ -344,7 +338,7 @@ export default function ShowForm({
       </form>
 
       <Dialog open={!!editingPerformance} onOpenChange={(open) => !open && handleCancelEdit()}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
           <PerformanceDialogContent
             performance={editingPerformance!}
             onSave={handleSavePerformance}
@@ -374,12 +368,26 @@ function PerformanceDialogContent({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
+    const totalCapacity = formData.rows * formData.seatsPerRow;
+    onSave({
+      ...formData,
+      availableSeats: Math.min(formData.availableSeats, totalCapacity),
+    });
   };
 
   const handleChange = (field: keyof NewPerformance, value: string | number) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    setFormData((prev) => {
+      const updated = { ...prev, [field]: value };
+      // When rows or seatsPerRow changes, update available seats to match new capacity
+      if ((field === 'rows' || field === 'seatsPerRow') && isEdit === false) {
+        const newCapacity = updated.rows * updated.seatsPerRow;
+        updated.availableSeats = newCapacity;
+      }
+      return updated;
+    });
   };
+
+  const totalSeats = formData.rows * formData.seatsPerRow;
 
   return (
     <>
@@ -387,74 +395,93 @@ function PerformanceDialogContent({
         <DialogTitle>{isEdit ? 'Voorstelling Bewerken' : 'Nieuwe Voorstelling'}</DialogTitle>
       </DialogHeader>
 
-      <form id="perf-form" onSubmit={handleSubmit} className="space-y-4">
-        <SimpleFormField label="Datum & Tijd" htmlFor="perf-date" required>
-          <Input
-            id="perf-date"
-            type="datetime-local"
-            value={formData.date}
-            onChange={(e) => handleChange('date', e.target.value)}
-            required
-          />
-        </SimpleFormField>
+      <div className="max-h-[calc(100vh-240px)] overflow-y-auto pr-4">
+        <form id="perf-form" onSubmit={handleSubmit} className="space-y-4">
+          <SimpleFormField label="Datum & Tijd" htmlFor="perf-date" required>
+            <Input
+              id="perf-date"
+              type="datetime-local"
+              value={formData.date}
+              onChange={(e) => handleChange('date', e.target.value)}
+              required
+            />
+          </SimpleFormField>
 
-        <SimpleFormField label="Prijs (€)" htmlFor="perf-price">
-          <NumberInput
-            id="perf-price"
-            step={0.01}
-            value={parseFloat(formData.price) || 0}
-            onChange={(value) => handleChange('price', value)}
-          />
-        </SimpleFormField>
+          <SimpleFormField label="Prijs (€)" htmlFor="perf-price">
+            <NumberInput
+              id="perf-price"
+              step={0.01}
+              value={parseFloat(formData.price) || 0}
+              onChange={(value) => handleChange('price', value)}
+            />
+          </SimpleFormField>
 
-        <SimpleFormField label="Totaal aantal stoelen" htmlFor="perf-total">
-          <NumberInput
-            id="perf-total"
-            min={1}
-            value={formData.totalSeats || 0}
-            onChange={(value) => handleChange('totalSeats', value)}
-          />
-        </SimpleFormField>
+          <div className="grid grid-cols-2 gap-4">
+            <SimpleFormField label="Aantal rijen" htmlFor="perf-rows" required>
+              <NumberInput
+                id="perf-rows"
+                min={1}
+                max={26}
+                value={formData.rows}
+                onChange={(value) => handleChange('rows', value)}
+                required
+              />
+              <p className="text-xs text-zinc-600 mt-1">Rijen A-Z</p>
+            </SimpleFormField>
 
-        <SimpleFormField label="Status" htmlFor="perf-status" required>
-          <StatusSelector
-            name="perf-status"
-            value={formData.status}
-            onChange={(e) => handleChange('status', e.target.value as PerformanceStatus)}
-            options={[
-              { value: 'draft', label: 'Concept' },
-              { value: 'published', label: 'Gepubliceerd' },
-              { value: 'sold_out', label: 'Uitverkocht' },
-              { value: 'cancelled', label: 'Geannuleerd' },
-              { value: 'archived', label: 'Gearchiveerd' },
-            ]}
-          />
-        </SimpleFormField>
+            <SimpleFormField label="Stoelen per rij" htmlFor="perf-seatsPerRow" required>
+              <NumberInput
+                id="perf-seatsPerRow"
+                min={1}
+                value={formData.seatsPerRow}
+                onChange={(value) => handleChange('seatsPerRow', value)}
+                required
+              />
+            </SimpleFormField>
+          </div>
 
-        <SimpleFormField label="Status" htmlFor="perf-status" required>
-          <StatusSelector
-            name="perf-status"
-            value={formData.status}
-            onChange={(e) => handleChange('status', e.target.value as PerformanceStatus)}
-            options={[
-              { value: 'draft', label: 'Concept' },
-              { value: 'published', label: 'Gepubliceerd' },
-              { value: 'sold_out', label: 'Uitverkocht' },
-              { value: 'cancelled', label: 'Geannuleerd' },
-              { value: 'archived', label: 'Gearchiveerd' },
-            ]}
-          />
-        </SimpleFormField>
+          <div className="bg-blue-50 border border-blue-200 rounded p-3">
+            <p className="text-sm text-blue-900">
+              <strong>Totaal zitplaatsen:</strong> {totalSeats} ({formData.rows}
+              {' \u00d7 '}
+              {formData.seatsPerRow})
+            </p>
+          </div>
 
-        <SimpleFormField label="Notities" htmlFor="perf-notes">
-          <Textarea
-            id="perf-notes"
-            value={formData.notes || ''}
-            onChange={(e) => handleChange('notes', e.target.value)}
-            rows={3}
-          />
-        </SimpleFormField>
-      </form>
+          <SimpleFormField label="Beschikbare stoelen" htmlFor="perf-available">
+            <div className="bg-zinc-100 border border-zinc-300 rounded px-3 py-2 text-sm">
+              {formData.availableSeats}
+            </div>
+            <p className="text-xs text-zinc-600 mt-1">
+              Verkocht: {totalSeats - formData.availableSeats}
+            </p>
+          </SimpleFormField>
+
+          <SimpleFormField label="Status" htmlFor="perf-status" required>
+            <StatusSelector
+              name="perf-status"
+              value={formData.status}
+              onChange={(e) => handleChange('status', e.target.value as PerformanceStatus)}
+              options={[
+                { value: 'draft', label: 'Concept' },
+                { value: 'published', label: 'Gepubliceerd' },
+                { value: 'sold_out', label: 'Uitverkocht' },
+                { value: 'cancelled', label: 'Geannuleerd' },
+                { value: 'archived', label: 'Gearchiveerd' },
+              ]}
+            />
+          </SimpleFormField>
+
+          <SimpleFormField label="Notities" htmlFor="perf-notes">
+            <Textarea
+              id="perf-notes"
+              value={formData.notes || ''}
+              onChange={(e) => handleChange('notes', e.target.value)}
+              rows={3}
+            />
+          </SimpleFormField>
+        </form>
+      </div>
 
       <DialogFooter className="mt-4">
         <Button type="button" onClick={onCancel} variant="outline">

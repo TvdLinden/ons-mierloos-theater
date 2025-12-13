@@ -4,6 +4,7 @@ import { payments, orders, lineItems, couponUsages } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { updatePaymentStatus, updateOrderStatus } from '@/lib/commands/payments';
 import { sendOrderConfirmationEmail } from '@/lib/utils/email';
+import { createTicketsForLineItem } from '@/lib/commands/tickets';
 
 export async function POST(request: NextRequest) {
   try {
@@ -92,6 +93,23 @@ export async function POST(request: NextRequest) {
         console.log('Coupons applied:', orderCouponUsages.length);
 
         if (order && orderLineItems.length > 0) {
+          // Generate tickets for each line item
+          console.log('Generating tickets for order:', payment.orderId);
+          for (const lineItem of orderLineItems) {
+            if (lineItem.performance && lineItem.quantity) {
+              const createdTickets = await createTicketsForLineItem(
+                lineItem.id,
+                lineItem.performanceId!,
+                payment.orderId,
+                lineItem.quantity,
+                lineItem.performance,
+              );
+              console.log(
+                `✓ Generated ${createdTickets.length} tickets for line item ${lineItem.id}`,
+              );
+            }
+          }
+
           console.log('Sending confirmation email to:', order.customerEmail);
           const emailResult = await sendOrderConfirmationEmail(
             order,

@@ -10,6 +10,7 @@ import { PreviewMode } from './PreviewMode';
 import { getHomepageContent, getAllNewsArticles } from '@/lib/queries/content';
 import { getAllImages } from '@/lib/queries/images';
 import { getAllSocialMediaLinks } from '@/lib/queries/socialMedia';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 
 export default async function ContentManagementPage() {
   await requireRole(['admin', 'contributor']);
@@ -28,7 +29,7 @@ export default async function ContentManagementPage() {
     <div className="container mx-auto py-8 px-4 space-y-8">
       <div className="flex justify-between items-start">
         <div>
-          <h1 className="text-3xl font-bold mb-2">Content Beheer</h1>
+          <AdminPageHeader title="Content Beheer" />
           <p className="text-muted-foreground">Beheer de inhoud van header, footer en homepagina</p>
         </div>
         <PreviewMode homepageContent={homepageContent} newsArticles={newsArticles} />

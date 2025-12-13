@@ -24,7 +24,8 @@ export default async function ShowPerformancesPage({ params }: Props) {
 
     const date = formData.get('date') as string;
     const price = formData.get('price') as string;
-    const totalSeats = formData.get('totalSeats') as string;
+    const rows = formData.get('rows') as string;
+    const seatsPerRow = formData.get('seatsPerRow') as string;
     const status = formData.get('status') as string;
     const publicationDate = formData.get('publicationDate') as string;
     const depublicationDate = formData.get('depublicationDate') as string;
@@ -38,13 +39,19 @@ export default async function ShowPerformancesPage({ params }: Props) {
       return { error: 'Prijs moet een geldig decimaal getal zijn (max 2 decimalen).' };
     }
 
+    const rowsNum = rows ? parseInt(rows) : 5;
+    const seatsPerRowNum = seatsPerRow ? parseInt(seatsPerRow) : 20;
+    const totalSeats = rowsNum * seatsPerRowNum;
+
     try {
       await insertPerformance({
         showId: id,
         date: new Date(date),
         price: price || show.basePrice,
-        totalSeats: totalSeats ? parseInt(totalSeats) : 100,
-        availableSeats: totalSeats ? parseInt(totalSeats) : 100,
+        rows: rowsNum,
+        seatsPerRow: seatsPerRowNum,
+        totalSeats: totalSeats,
+        availableSeats: totalSeats,
         status:
           (status as 'draft' | 'published' | 'sold_out' | 'cancelled' | 'archived') || 'draft',
         notes: notes || null,

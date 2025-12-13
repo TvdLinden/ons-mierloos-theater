@@ -34,7 +34,7 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* {newsArticles.length > 0 && <HomeNews articles={newsArticles} />} */}
+        {newsArticles.length > 0 && <HomeNews articles={newsArticles} />}
 
         <HomeShows shows={schows} />
       </main>

@@ -9,7 +9,6 @@ import {
 } from '@/lib/commands/shows';
 import { redirect } from 'next/navigation';
 import { setShowTags } from '@/lib/commands/tags';
-import { validateImageFile } from '@/lib/utils/performanceFormHelpers';
 import { isValidSlug } from '@/lib/utils/slug';
 import { invalidateShowPaths } from '@/lib/utils/invalidateShowPaths';
 import type { PerformanceStatus, ShowStatus } from '@/lib/db';
@@ -18,7 +17,8 @@ type NewPerformance = {
   id?: string;
   date: string;
   price: string;
-  totalSeats: number;
+  rows: number;
+  seatsPerRow: number;
   availableSeats: number;
   status: PerformanceStatus;
   notes?: string;
@@ -50,7 +50,7 @@ export async function handleUpsertShow(
   const basePrice = formData.get('price') as string;
   const publicationDate = formData.get('publicationDate') as string;
   const depublicationDate = formData.get('depublicationDate') as string;
-  const image = formData.get('image') as File;
+  const imageId = formData.get('imageId') as string | null;
   const tagIds = formData.getAll('tagIds') as string[];
 
   // Parse performances array from hidden inputs
@@ -74,41 +74,10 @@ export async function handleUpsertShow(
     };
   }
 
-  let imageId: string | null | undefined = undefined;
-
-  // Handle image upload if provided
-  if (image && image.size > 0) {
-    const imageValidation = validateImageFile(image);
-    if (!imageValidation.valid) {
-      return { error: imageValidation.error };
-    }
-
-    try {
-      // Convert file to buffer
-      const buffer = Buffer.from(await image.arrayBuffer());
-
-      // Generate image variants using Sharp
-      const { generateImageVariants } = await import('@/lib/utils/imageProcessor');
-      const variants = await generateImageVariants(buffer);
-
-      // Create image in database with all variants
-      const { createImage } = await import('@/lib/commands/images');
-      const createdImage = await createImage({
-        filename: image.name,
-        mimetype: image.type,
-        imageLg: variants.lg,
-        imageMd: variants.md,
-        imageSm: variants.sm,
-      });
-
-      imageId = createdImage.id;
-    } catch (error) {
-      console.error('Error processing image:', error);
-      return { error: 'Fout bij het verwerken van de afbeelding.' };
-    }
-  }
-
   let finalShowId: string;
+
+  // Handle image - now it's just an ID selected from existing images
+  const finalImageId = imageId && imageId.trim() ? imageId.trim() : undefined;
 
   try {
     if (showId) {
@@ -123,9 +92,9 @@ export async function handleUpsertShow(
         depublicationDate: depublicationDate?.trim() ? new Date(depublicationDate) : null,
       };
 
-      // Only add imageId if a new image was uploaded
-      if (imageId !== undefined) {
-        updateFields.imageId = imageId;
+      // Only add imageId if a new image was selected
+      if (finalImageId !== undefined) {
+        updateFields.imageId = finalImageId;
       }
 
       await updateShow(showId, updateFields);
@@ -151,7 +120,7 @@ export async function handleUpsertShow(
         description,
         basePrice,
         status: 'draft' as ShowStatus,
-        imageId: imageId || undefined,
+        imageId: finalImageId,
         publicationDate: publicationDate?.trim() ? new Date(publicationDate) : null,
         depublicationDate: depublicationDate?.trim() ? new Date(depublicationDate) : null,
       });
@@ -170,7 +139,9 @@ export async function handleUpsertShow(
           showId: finalShowId,
           date: new Date(perf.date),
           price: perf.price,
-          totalSeats: perf.totalSeats,
+          rows: perf.rows,
+          seatsPerRow: perf.seatsPerRow,
+          totalSeats: perf.rows * perf.seatsPerRow,
           availableSeats: perf.availableSeats,
           status: perf.status,
           notes: perf.notes || null,

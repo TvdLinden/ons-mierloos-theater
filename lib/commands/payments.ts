@@ -2,6 +2,7 @@ import { db, Payment, Order } from '@/lib/db';
 import { payments, orders, lineItems, couponUsages } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { sendOrderConfirmationEmail } from '@/lib/utils/email';
+import { createTicketsForLineItem } from '@/lib/commands/tickets';
 
 // Mollie client setup
 const MOLLIE_API_KEY = process.env.MOLLIE_API_KEY;
@@ -314,6 +315,23 @@ export async function handleMollieWebhook(molliePaymentId: string): Promise<void
       });
 
       if (order && orderLineItems.length > 0) {
+        // Generate tickets for each line item
+        console.log('Generating tickets for order:', payment.orderId);
+        for (const lineItem of orderLineItems) {
+          if (lineItem.performance && lineItem.quantity) {
+            const createdTickets = await createTicketsForLineItem(
+              lineItem.id,
+              lineItem.performanceId!,
+              payment.orderId,
+              lineItem.quantity,
+              lineItem.performance,
+            );
+            console.log(
+              `✓ Generated ${createdTickets.length} tickets for line item ${lineItem.id}`,
+            );
+          }
+        }
+
         await sendOrderConfirmationEmail(order, orderLineItems, orderCouponUsages);
         console.log('Confirmation email sent for order:', payment.orderId);
       }

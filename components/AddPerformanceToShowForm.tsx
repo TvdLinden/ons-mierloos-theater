@@ -1,7 +1,7 @@
 'use client';
 
 import { useActionState } from 'react';
-import { Button, SimpleFormField as FormField, Input } from '@/components/ui';
+import { Button, SimpleFormField as FormField } from '@/components/ui';
 import FormError from './FormError';
 import StatusSelector from './StatusSelector';
 import DateTimeInput from './DateTimeInput';
@@ -35,8 +35,12 @@ export default function AddPerformanceToShowForm({ action, showBasePrice }: Perf
         />
       </FormField>
 
-      <FormField label="Aantal plaatsen" helperText="Totaal aantal beschikbare plaatsen">
-        <NumberInput name="totalSeats" min={1} defaultValue={100} disabled={isPending} />
+      <FormField label="Aantal rijen" helperText="Hoeveel rijen in de zaal?" required>
+        <NumberInput name="rows" min={1} max={26} defaultValue={5} disabled={isPending} />
+      </FormField>
+
+      <FormField label="Stoelen per rij" helperText="Hoeveel stoelen per rij?" required>
+        <NumberInput name="seatsPerRow" min={1} defaultValue={20} disabled={isPending} />
       </FormField>
 
       <FormField label="Publicatiedatum" helperText="Wanneer wordt deze speeltijd zichtbaar?">
