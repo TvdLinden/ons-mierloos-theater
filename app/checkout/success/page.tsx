@@ -21,7 +21,7 @@ function SuccessContent() {
     clearCart();
   }, [clearCart]);
   return (
-    <div className="bg-surface rounded-lg shadow-lg p-8 text-center">
+    <div className="bg-surface p-8 text-center">
       <div className="mb-6">
         <svg
           className="mx-auto h-16 w-16 text-green-500"

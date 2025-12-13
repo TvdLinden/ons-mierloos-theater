@@ -32,7 +32,13 @@ function MockPaymentContent() {
       });
 
       if (response.ok) {
-        router.push(`/checkout/success?orderId=${orderId}`);
+        // Only redirect to success page if payment was successful
+        if (status === 'paid') {
+          router.push(`/checkout/success?orderId=${orderId}`);
+        } else {
+          // For failed/canceled payments, redirect to error page
+          router.push(`/checkout/error?error=${status}`);
+        }
       } else {
         alert('Er is een fout opgetreden bij het verwerken van de betaling.');
         setProcessing(false);
