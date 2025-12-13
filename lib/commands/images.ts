@@ -8,8 +8,12 @@ import { findUnusedImages } from '@/lib/queries/images';
  */
 export async function createImage(data: Omit<Image, 'id' | 'uploadedAt'>): Promise<Image> {
   const [image] = await db
-    .insert({ ...images, uploadedAt: new Date() })
-    .values(data)
+    .insert(images)
+    .values({
+      id: crypto.randomUUID(),
+      ...data,
+      uploadedAt: new Date(),
+    })
     .returning();
   return image;
 }
