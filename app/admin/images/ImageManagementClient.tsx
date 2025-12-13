@@ -136,7 +136,7 @@ export default function ImageManagementClient({
             </Alert>
           )}
           {uploadState?.success && (
-            <Alert className="mt-4">
+            <Alert className="mt-4" variant="success">
               <AlertDescription>Afbeelding succesvol geüpload!</AlertDescription>
             </Alert>
           )}
@@ -153,7 +153,7 @@ export default function ImageManagementClient({
 
       {/* Prune Success Message */}
       {pruneMessage && (
-        <Alert>
+        <Alert variant="success">
           <AlertDescription>{pruneMessage}</AlertDescription>
         </Alert>
       )}

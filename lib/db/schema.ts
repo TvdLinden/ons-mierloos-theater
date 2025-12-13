@@ -201,12 +201,14 @@ export const mailingListSubscribers = pgTable(
     id: uuid('id').primaryKey().defaultRandom(),
     email: varchar('email', { length: 255 }).notNull().unique(),
     name: varchar('name', { length: 100 }),
+    unsubscribeToken: varchar('unsubscribe_token', { length: 255 }),
     subscribedAt: timestamp('subscribed_at', { withTimezone: true }).defaultNow(),
     unsubscribedAt: timestamp('unsubscribed_at', { withTimezone: true }),
     isActive: integer('is_active').default(1).notNull(), // 1 = active, 0 = unsubscribed
   },
   (table) => [
     index('mailing_list_email_idx').on(table.email),
+    index('mailing_list_unsubscribe_token_idx').on(table.unsubscribeToken),
     index('mailing_list_is_active_idx').on(table.isActive),
   ],
 );

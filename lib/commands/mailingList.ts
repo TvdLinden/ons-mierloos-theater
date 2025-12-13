@@ -1,6 +1,7 @@
 import { db, MailingListSubscriber } from '@/lib/db';
 import { mailingListSubscribers } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
+import { randomUUID } from 'crypto';
 
 export async function subscribeToMailingList(
   email: string,
@@ -24,6 +25,7 @@ export async function subscribeToMailingList(
       .update(mailingListSubscribers)
       .set({
         isActive: 1,
+        unsubscribeToken: subscriber.unsubscribeToken || randomUUID(),
         unsubscribedAt: null,
         subscribedAt: new Date(),
         name: name || subscriber.name,
@@ -40,6 +42,7 @@ export async function subscribeToMailingList(
       email,
       name: name || null,
       isActive: 1,
+      unsubscribeToken: randomUUID(),
     })
     .returning();
 
@@ -54,6 +57,22 @@ export async function unsubscribeFromMailingList(email: string): Promise<void> {
       unsubscribedAt: new Date(),
     })
     .where(eq(mailingListSubscribers.email, email));
+}
+
+export async function getSubscriberByToken(token: string): Promise<MailingListSubscriber | null> {
+  const rows = await db
+    .select()
+    .from(mailingListSubscribers)
+    .where(eq(mailingListSubscribers.unsubscribeToken, token))
+    .limit(1);
+  return rows.length ? rows[0] : null;
+}
+
+export async function unsubscribeByToken(token: string): Promise<void> {
+  await db
+    .update(mailingListSubscribers)
+    .set({ isActive: 0, unsubscribedAt: new Date() })
+    .where(eq(mailingListSubscribers.unsubscribeToken, token));
 }
 
 export async function getAllActiveSubscribers(): Promise<MailingListSubscriber[]> {

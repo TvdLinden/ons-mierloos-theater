@@ -2,7 +2,7 @@ import { requireRole } from '@/lib/utils/auth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getSiteSettings, getSeoSettings } from '@/lib/queries/settings';
-import { getAllImageMetadata, getAllImages } from '@/lib/queries/images';
+import { getAllImageMetadata } from '@/lib/queries/images';
 import { SiteSettingsForm } from './SiteSettingsForm';
 import { SeoSettingsForm } from './SeoSettingsForm';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
