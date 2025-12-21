@@ -34,6 +34,8 @@ import {
   Image as ImageIcon,
   Youtube,
   Images,
+  ArrowUp,
+  ArrowDown,
 } from 'lucide-react';
 import { TextBlockComponent } from '@/components/blocks/TextBlock';
 import { ImageBlockComponent } from '@/components/blocks/ImageBlock';
@@ -54,9 +56,18 @@ interface SortableBlockProps {
   availableImages: ImageType[];
   onUpdate: (id: string, data: Partial<Block>) => void;
   onDelete: (id: string) => void;
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
 }
 
-function SortableBlock({ block, availableImages, onUpdate, onDelete }: SortableBlockProps) {
+function SortableBlock({
+  block,
+  availableImages,
+  onUpdate,
+  onDelete,
+  onMoveUp,
+  onMoveDown,
+}: SortableBlockProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: block.id,
   });
@@ -133,15 +144,36 @@ function SortableBlock({ block, availableImages, onUpdate, onDelete }: SortableB
               <span className="text-sm font-medium text-muted-foreground">
                 {blockTypeLabels[block.type]}
               </span>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => onDelete(block.id)}
-                className="text-destructive hover:text-destructive"
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
+              <div className="flex gap-1">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={onMoveUp}
+                  title="Move block up"
+                  disabled={block.order === 0}
+                >
+                  <ArrowUp className="h-4 w-4" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={onMoveDown}
+                  title="Move block down"
+                >
+                  <ArrowDown className="h-4 w-4" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onDelete(block.id)}
+                  className="text-destructive hover:text-destructive"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
             {renderBlock()}
           </div>
@@ -206,6 +238,31 @@ export function BlockEditor({
     );
   };
 
+  const moveBlock = (id: string, direction: 'up' | 'down') => {
+    setBlocks((items) => {
+      const currentIndex = items.findIndex((item) => item.id === id);
+      if (currentIndex === -1) return items;
+
+      if (direction === 'up' && currentIndex > 0) {
+        const newItems = [...items];
+        [newItems[currentIndex], newItems[currentIndex - 1]] = [
+          newItems[currentIndex - 1],
+          newItems[currentIndex],
+        ];
+        return newItems.map((block, index) => ({ ...block, order: index }));
+      } else if (direction === 'down' && currentIndex < items.length - 1) {
+        const newItems = [...items];
+        [newItems[currentIndex], newItems[currentIndex + 1]] = [
+          newItems[currentIndex + 1],
+          newItems[currentIndex],
+        ];
+        return newItems.map((block, index) => ({ ...block, order: index }));
+      }
+
+      return items;
+    });
+  };
+
   // Validate and serialize blocks for form submission
   const serializedBlocks = JSON.stringify(blocks);
 
@@ -221,6 +278,8 @@ export function BlockEditor({
                 availableImages={availableImages}
                 onUpdate={updateBlock}
                 onDelete={deleteBlock}
+                onMoveUp={() => moveBlock(block.id, 'up')}
+                onMoveDown={() => moveBlock(block.id, 'down')}
               />
             ))}
           </div>
