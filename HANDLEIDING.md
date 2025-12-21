@@ -6,7 +6,8 @@ Deze handleiding helpt u bij het beheren en gebruiken van de website van Ons Mie
 
 1. [Voor Bezoekers](#voor-bezoekers)
 2. [Voor Beheerders](#voor-beheerders)
-3. [Couponsysteem](#couponsysteem)
+3. [Contentbeheer & Blokken](#contentbeheer--blokken)
+4. [Couponsysteem](#couponsysteem)
 
 ---
 
@@ -104,13 +105,12 @@ Deze handleiding helpt u bij het beheren en gebruiken van de website van Ons Mie
    - **Ondertitel**: Optionele subtitel
    - **Slug**: Automatisch gegenereerd uit de titel (voor de URL)
    - **Beschrijving**: Uitgebreide beschrijving van de voorstelling
-   - **Datum en tijd**: Wanneer de voorstelling plaatsvindt
-   - **Prijs**: Prijs per kaartje in euro's
-   - **Beschikbare plaatsen**: Totaal aantal beschikbare kaartjes
-   - **Afbeelding**: Upload een afbeelding (max 5MB)
-   - **Status**: Concept, Gepubliceerd, of Geannuleerd
-   - **Tags**: Selecteer relevante tags (bijv. "Uitverkocht", "Nieuw")
-4. Klik op **"Voorstelling Toevoegen"**
+4. Voeg één of meerdere voorstellingen toe:
+   - Klik op **'Voorstelling toevoegen'** binnen het formulier om een nieuwe datum/tijd toe te voegen.
+   - Vul per voorstelling de datum, tijd, prijs en aantal beschikbare plaatsen in.
+   - U kunt meerdere voorstellingen (data) aan één show koppelen.
+   - Verwijder of bewerk voorstellingen indien nodig.
+5. Klik op **'Voorstelling Toevoegen'** om alles op te slaan.
 
 #### Voorstelling Bewerken
 
@@ -177,6 +177,127 @@ Tags helpen om voorstellingen te categoriseren en te markeren.
 2. Klik op **"Bewerken"** bij de gewenste sponsor
 3. Pas de velden aan en klik op **"Sponsor Bijwerken"**
 4. Of klik op **"Sponsor Verwijderen"** om de sponsor te verwijderen
+
+---
+
+## Overige Admin Functionaliteiten
+
+### Contentbeheer
+
+#### Pagina's beheren
+
+1. Ga naar **Admin > Content**.
+2. Onder 'Pagina's' zie je een lijst van alle bestaande pagina's.
+3. Klik op **'Nieuwe pagina toevoegen'** om een nieuwe pagina te maken.
+4. Vul de titel, slug en inhoud in met de blokken-editor.
+5. Klik op **'Opslaan'** om de pagina als concept te bewaren, of kies **'Publiceren'** om direct live te zetten.
+6. Om een pagina te bewerken, klik op **'Bewerken'** bij de gewenste pagina.
+7. Pas de inhoud of instellingen aan en sla op.
+8. Om een pagina te verwijderen, klik op **'Verwijderen'** en bevestig.
+9. Je kunt de status van een pagina wisselen tussen 'Concept' en 'Gepubliceerd' via het statusmenu.
+
+#### Navigatiebeheer (Header & Footer)
+
+1. Ga naar **Admin > Content**.
+2. Onder 'Header Navigatie' of 'Footer Navigatie' zie je de huidige links.
+3. Klik op **'Link toevoegen'** om een nieuwe navigatielink toe te voegen.
+4. Vul de naam, URL en volgorde in.
+5. Versleep links om de volgorde te wijzigen.
+6. Klik op **'Bewerken'** om een bestaande link aan te passen.
+7. Klik op **'Verwijderen'** om een link te verwijderen.
+
+#### Homepage content
+
+1. Ga naar **Admin > Content**.
+2. Onder 'Homepage Inhoud' kun je de intro-tekst bewerken met de tekstbewerker.
+3. Sla wijzigingen op om direct zichtbaar te maken op de homepage.
+
+#### Nieuwsartikelen
+
+1. Ga naar **Admin > Content**.
+2. Onder 'Nieuws Artikelen' zie je een lijst van bestaande nieuwsberichten.
+3. Klik op **'Nieuw artikel'** om een nieuw artikel toe te voegen.
+4. Vul titel, inhoud (gebruik de tekstbewerker), afbeelding en publicatiedatum in.
+5. Zet het artikel op 'Actief' om het zichtbaar te maken.
+6. Klik op **'Bewerken'** om een bestaand artikel aan te passen.
+7. Klik op **'Verwijderen'** om een artikel te verwijderen.
+8. Je kunt artikelen activeren/deactiveren en de volgorde wijzigen.
+
+#### Social media links
+
+1. Ga naar **Admin > Content**.
+2. Onder 'Social Media Links' zie je de huidige links.
+3. Klik op **'Link toevoegen'** om een nieuw social media kanaal toe te voegen.
+4. Vul naam, URL en icoon in.
+5. Klik op **'Bewerken'** om een bestaande link aan te passen.
+6. Klik op **'Verwijderen'** om een link te verwijderen.
+
+### Mailinglist
+
+1. Ga naar **Admin > Mailinglist**.
+2. Zie het actuele aantal abonnees.
+3. Vul het onderwerp en bericht in voor de nieuwsbrief.
+4. Klik op **'Versturen'** om de e-mail direct naar alle abonnees te sturen.
+5. Je ontvangt een bevestiging bij succes of een foutmelding bij problemen.
+
+### Afbeeldingenbeheer
+
+1. Ga naar **Admin > Afbeeldingen**.
+2. Zie een overzicht van alle afbeeldingen in het systeem.
+3. Klik op **'Afbeelding uploaden'** om een nieuwe afbeelding toe te voegen (max 5MB).
+4. Klik op **'Verwijderen'** bij een afbeelding om deze te verwijderen.
+5. Gebruik de paginering onderaan om door meerdere pagina's met afbeeldingen te bladeren.
+
+### Verkopen & Bestellingen
+
+1. Ga naar **Admin > Verkopen**.
+2. Zie bovenaan statistieken: totaal aantal orders, betaalde orders, omzet en bestellingen in behandeling.
+3. Onder 'Verkopen per Voorstelling' zie je per voorstelling het aantal verkochte tickets en omzet.
+4. Onder 'Recente Bestellingen' zie je een lijst van alle bestellingen met bestelnummer, klant, datum, items, status en totaalbedrag.
+5. Klik op een bestelling voor meer details (indien beschikbaar).
+
+### Gebruikersbeheer
+
+1. Ga naar **Admin > Gebruikers**.
+2. Gebruik de zoekbalk om gebruikers te zoeken op naam of e-mail.
+3. Zie per gebruiker: naam, e-mail, rol, laatste login en aanmaakdatum.
+4. Gebruik het menu bij een gebruiker om de rol te wijzigen of de gebruiker te verwijderen.
+5. Wijzigingen zijn direct van kracht.
+
+### Instellingen
+
+1. Ga naar **Admin > Instellingen**.
+2. Onder 'Algemeen' kun je site-naam, contactgegevens, logo en kleuren aanpassen.
+3. Onder 'SEO & Metadata' kun je standaard SEO-tags, Open Graph en Twitter Cards beheren.
+4. Sla wijzigingen op om ze direct toe te passen.
+
+---
+
+## Contentbeheer & Blokken
+
+De website maakt gebruik van een flexibel blokken-systeem voor het beheren van pagina-inhoud. Hiermee kunnen beheerders eenvoudig rijke content samenstellen met verschillende soorten blokken en een WYSIWYG-editor.
+
+### Blokkentypen
+
+- **Tekstblok**: Voeg opgemaakte tekst toe met koppen, lijsten, vet/cursief, links, afbeeldingen en YouTube-video's via de gebruiksvriendelijke tekstbewerker.
+- **Afbeelding**: Toon een losse afbeelding met optioneel bijschrift en alt-tekst.
+- **YouTube**: Embed een YouTube-video via een URL.
+- **Galerij**: Toon een carrousel van meerdere afbeeldingen, met instelbaar aantal zichtbare beelden en bijschrift.
+- **Rij**: Plaats meerdere blokken naast elkaar (horizontaal, max-width 65ch per rij). Elk kindblok vult automatisch de beschikbare ruimte.
+- **Kolom**: Stapel meerdere blokken onder elkaar (verticaal, max-width 65ch per kolom).
+
+### Blokken bewerken
+
+- Blokken kunnen worden toegevoegd, verwijderd en herschikt via drag & drop of pijltjestoetsen.
+- Blokken kunnen genest worden: bijvoorbeeld een rij met daarin kolommen, of omgekeerd (maar geen rijen in rijen of kolommen in kolommen).
+- Elk blok heeft een eigen bewerkmodus met relevante velden (tekst, afbeelding, video, etc.).
+- De tekstbewerker ondersteunt plakken van tekst met opmaak (zoals van Word of Markdown), basisopmaak, afbeeldingen en YouTube-video's.
+- Alle blokken zijn responsief en hebben een maximale breedte van 65 tekens voor optimale leesbaarheid.
+
+### Voorbeeldgebruik
+
+- De homepage intro maakt gebruik van een tekstblok met opmaak.
+- Pagina's kunnen opgebouwd worden uit een mix van tekst, afbeeldingen, galerijen en rijen/kolommen voor flexibele layouts.
 
 ---
 
