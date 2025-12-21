@@ -7,6 +7,7 @@ import { PageForm } from '../../page-form';
 import { getAllImages } from '@/lib/queries/images';
 import { blocksArraySchema } from '@/lib/schemas/blocks';
 import type { Page } from '@/lib/db';
+import type { BlocksArray } from '@/lib/schemas/blocks';
 
 export default async function EditPage({ params }) {
   const { id } = await params;
@@ -40,7 +41,12 @@ export default async function EditPage({ params }) {
     });
     redirect('/admin/pages');
 
-    return { ...prevState, success: true };
+    const result: Partial<Page> & { blocks?: BlocksArray; success: boolean } = {
+      ...prevState,
+      blocks,
+      success: true,
+    };
+    return result;
   }
 
   return (

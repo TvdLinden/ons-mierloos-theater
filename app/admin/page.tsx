@@ -58,12 +58,6 @@ const features: AdminFeature[] = [
     href: '/admin/mailing-list',
   },
   {
-    icon: FileText,
-    label: "Pagina's Beheer",
-    description: "Bekijk en beheer statische pagina's.",
-    href: '/admin/pages',
-  },
-  {
     icon: Layout,
     label: 'Content Beheer',
     description: 'Beheer header, footer en homepage inhoud.',

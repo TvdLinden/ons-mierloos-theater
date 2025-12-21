@@ -49,7 +49,7 @@ export default function PerformanceCard({ show, href }: PerformanceCardProps) {
   }, [infoVisible]);
 
   return (
-    <Link href={href || `/performances/${slug}`} className="group w-full max-w-lg cursor-pointer">
+    <Link href={href || `/voorstellingen/${slug}`} className="group w-full max-w-lg cursor-pointer">
       <div className="relative flex flex-col">
         <div className="relative w-full aspect-4/3 rounded-lg overflow-hidden">
           <Image
