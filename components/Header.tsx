@@ -193,27 +193,6 @@ export default function Header({ navigationLinks = [] }: HeaderProps) {
           className="md:hidden absolute top-full left-0 right-0 bg-white z-50 animate-in slide-in-from-top-2 duration-300"
         >
           <nav className="flex flex-col py-2">
-            <Link
-              href="/"
-              className="text-gray-800 hover:text-primary px-6 py-3 font-medium"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Home
-            </Link>
-            <Link
-              href="/sponsors"
-              className="text-gray-800 hover:text-primary px-6 py-3 font-medium"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Sponsors
-            </Link>
-            <Link
-              href="/contact"
-              className="text-gray-800 hover:text-primary px-6 py-3 font-medium"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Contact
-            </Link>
             {navigationLinks.map((link) => (
               <Link
                 key={link.id}
