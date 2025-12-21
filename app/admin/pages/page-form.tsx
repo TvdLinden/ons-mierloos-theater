@@ -2,10 +2,11 @@
 
 import { useActionState } from 'react';
 import { SimpleFormField, Button, Input } from '@/components/ui';
-import MarkdownEditor from '@/components/MarkdownEditor';
-import { Page } from '@/lib/db';
+import { BlockEditor } from '@/components/BlockEditor';
+import { Page, Image } from '@/lib/db';
+import type { BlocksArray } from '@/lib/schemas/blocks';
 
-type InitialFormValues = Partial<Page>;
+type InitialFormValues = Partial<Page> & { blocks?: BlocksArray };
 export type FormActionResult = InitialFormValues & { success: boolean };
 
 type FormAction = (prevState: FormActionResult, formData: FormData) => Promise<InitialFormValues>;
@@ -13,8 +14,9 @@ type FormAction = (prevState: FormActionResult, formData: FormData) => Promise<I
 type PageFormProps = {
   initialValues?: InitialFormValues;
   action: FormAction;
+  availableImages?: Image[];
 };
-export function PageForm({ initialValues, action }: PageFormProps) {
+export function PageForm({ initialValues, action, availableImages = [] }: PageFormProps) {
   const [, formAction] = useActionState(action, initialValues);
 
   return (
@@ -25,8 +27,12 @@ export function PageForm({ initialValues, action }: PageFormProps) {
       <SimpleFormField label="Slug" htmlFor="slug">
         <Input id="slug" name="slug" defaultValue={initialValues?.slug} required />
       </SimpleFormField>
-      <SimpleFormField label="Inhoud" htmlFor="content">
-        <MarkdownEditor name="content" defaultValue={initialValues?.content || ''} />
+      <SimpleFormField label="Inhoud" htmlFor="blocks">
+        <BlockEditor
+          initialBlocks={initialValues?.blocks || []}
+          availableImages={availableImages}
+          name="blocks"
+        />
       </SimpleFormField>
       <div className="pt-4">
         <Button type="submit">Opslaan</Button>

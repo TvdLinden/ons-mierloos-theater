@@ -262,14 +262,19 @@ export function SocialMediaLinksList({ links }: SocialMediaLinksListProps) {
                   <Badge
                     variant={link.active === 1 ? 'default' : 'secondary'}
                     className="cursor-pointer"
-                    onClick={() => toggleActive(link)}
+                    onClick={() => !isPending && toggleActive(link)}
                   >
                     {link.active === 1 ? 'Actief' : 'Inactief'}
                   </Badge>
                 </TableCell>
                 <TableCell>
                   <div className="flex gap-2">
-                    <Button variant="ghost" size="sm" onClick={() => handleEdit(link)}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleEdit(link)}
+                      disabled={isPending}
+                    >
                       <Edit className="h-4 w-4" />
                     </Button>
                     <Button
@@ -279,6 +284,7 @@ export function SocialMediaLinksList({ links }: SocialMediaLinksListProps) {
                         setSelectedLink(link);
                         setDeleteDialogOpen(true);
                       }}
+                      disabled={isPending}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>

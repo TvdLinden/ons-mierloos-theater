@@ -6,34 +6,54 @@ import { NavigationLinksList } from './NavigationLinksList';
 import { HomepageContentForm } from './HomepageContentForm';
 import { NewsArticlesList } from './NewsArticlesList';
 import { SocialMediaLinksList } from './SocialMediaLinksList';
+import { PagesList } from './PagesList';
 import { PreviewMode } from './PreviewMode';
 import { getHomepageContent, getAllNewsArticles } from '@/lib/queries/content';
 import { getAllImages } from '@/lib/queries/images';
 import { getAllSocialMediaLinks } from '@/lib/queries/socialMedia';
+import { getAllPages } from '@/lib/queries/pages';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 
 export default async function ContentManagementPage() {
   await requireRole(['admin', 'contributor']);
 
-  const [headerLinks, footerLinks, homepageContent, newsArticles, images, socialMediaLinks] =
+  const navLinksPromise = getAllNavigationLinks();
+
+  const [navLinks, homepageContent, newsArticles, images, socialMediaLinks, pages] =
     await Promise.all([
-      getAllNavigationLinks().then((links) => links.filter((l) => l.location === 'header')),
-      getAllNavigationLinks().then((links) => links.filter((l) => l.location === 'footer')),
+      navLinksPromise,
       getHomepageContent(),
       getAllNewsArticles(),
       getAllImages(),
       getAllSocialMediaLinks(),
+      getAllPages(),
     ]);
+
+  const headerLinks = navLinks.filter((l) => l.location === 'header');
+  const footerLinks = navLinks.filter((l) => l.location === 'footer');
 
   return (
     <div className="container mx-auto py-8 px-4 space-y-8">
       <div className="flex justify-between items-start">
         <div>
           <AdminPageHeader title="Content Beheer" />
-          <p className="text-muted-foreground">Beheer de inhoud van header, footer en homepagina</p>
+          <p className="text-muted-foreground">
+            Beheer de inhoud van header, footer, pagina's en homepagina
+          </p>
         </div>
         <PreviewMode homepageContent={homepageContent} newsArticles={newsArticles} />
       </div>
+
+      {/* Pages */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Pagina's</CardTitle>
+          <CardDescription>Beheer aangepaste pagina's op je website</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <PagesList pages={pages} />
+        </CardContent>
+      </Card>
 
       {/* Header Navigation */}
       <Card>

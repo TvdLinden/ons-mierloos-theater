@@ -1,6 +1,6 @@
 import { relations } from 'drizzle-orm';
 import { decimal, uuid, customType, index, primaryKey } from 'drizzle-orm/pg-core';
-import { pgTable, pgEnum, varchar, text, integer, timestamp } from 'drizzle-orm/pg-core';
+import { pgTable, pgEnum, varchar, text, integer, timestamp, jsonb } from 'drizzle-orm/pg-core';
 
 const showStatusValues = ['draft', 'published', 'archived'] as const;
 type ShowStatus = (typeof showStatusValues)[number];
@@ -469,6 +469,7 @@ export const pages = pgTable(
     title: varchar('title', { length: 255 }).notNull(),
     slug: varchar('slug', { length: 255 }).unique().notNull(),
     content: text('content'),
+    blocks: jsonb('blocks'),
     status: pageStatus('status').notNull().default('draft'),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),

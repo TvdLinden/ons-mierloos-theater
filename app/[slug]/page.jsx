@@ -1,9 +1,11 @@
 'use server';
 
 import { getPageBySlug } from '@/lib/queries/pages';
+import { getAllImageMetadata } from '@/lib/queries/images';
 import { getSeoSettings } from '@/lib/queries/settings';
 import { notFound } from 'next/navigation';
 import Prose from '@/components/Prose';
+import { BlockRenderer } from '@/components/BlockRenderer';
 
 // Simple in-process cache to avoid fetching the same page twice
 // generateMetadata runs before the page component in the same server process,
@@ -52,7 +54,7 @@ export async function generateMetadata({ params }) {
 export default async function Page({ params }) {
   const { slug } = await params;
 
-  const page = await getCachedPage(slug);
+  const [page, images] = await Promise.all([getCachedPage(slug), getAllImageMetadata(0, 1000)]);
 
   if (!page) {
     notFound();
@@ -60,7 +62,11 @@ export default async function Page({ params }) {
 
   return (
     <main className="container items-center flex flex-col mx-auto px-4 py-8">
-      <Prose content={page.content} />
+      {page.blocks && page.blocks.length > 0 ? (
+        <BlockRenderer blocks={page.blocks} images={images} />
+      ) : (
+        <Prose content={page.content} />
+      )}
     </main>
   );
 }

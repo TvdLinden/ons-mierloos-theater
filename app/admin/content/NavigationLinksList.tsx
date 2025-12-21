@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useTransition } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Plus, Trash2, Edit, ChevronUp, ChevronDown } from 'lucide-react';
@@ -46,6 +46,7 @@ type NavigationLinksListProps = {
 
 export function NavigationLinksList({ links, location }: NavigationLinksListProps) {
   const router = useRouter();
+  const [isPending, startTransition] = useTransition();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [linkToDelete, setLinkToDelete] = useState<string | null>(null);
@@ -71,10 +72,12 @@ export function NavigationLinksList({ links, location }: NavigationLinksListProp
 
   const confirmEdit = async () => {
     if (!editingLink) return;
-    await updateNavigationLinkAction(editingLink.id, editForm);
-    setEditDialogOpen(false);
-    setEditingLink(null);
-    router.refresh();
+    startTransition(async () => {
+      await updateNavigationLinkAction(editingLink.id, editForm);
+      setEditDialogOpen(false);
+      setEditingLink(null);
+      router.refresh();
+    });
   };
 
   const handleMove = async (linkId: string, direction: 'up' | 'down') => {
@@ -90,25 +93,30 @@ export function NavigationLinksList({ links, location }: NavigationLinksListProp
     const targetLink = sortedLinks[targetIndex];
 
     // Swap display orders
-    await Promise.all([
-      updateNavigationLinkAction(currentLink.id, { displayOrder: targetLink.displayOrder }),
-      updateNavigationLinkAction(targetLink.id, { displayOrder: currentLink.displayOrder }),
-    ]);
-
-    router.refresh();
+    startTransition(async () => {
+      await Promise.all([
+        updateNavigationLinkAction(currentLink.id, { displayOrder: targetLink.displayOrder }),
+        updateNavigationLinkAction(targetLink.id, { displayOrder: currentLink.displayOrder }),
+      ]);
+      router.refresh();
+    });
   };
 
   const toggleActive = async (link: NavigationLink) => {
-    await updateNavigationLinkAction(link.id, { active: link.active ? 0 : 1 });
-    router.refresh();
+    startTransition(async () => {
+      await updateNavigationLinkAction(link.id, { active: link.active ? 0 : 1 });
+      router.refresh();
+    });
   };
 
   const confirmDelete = async () => {
     if (!linkToDelete) return;
-    await deleteNavigationLinkAction(linkToDelete);
-    setDeleteDialogOpen(false);
-    setLinkToDelete(null);
-    router.refresh();
+    startTransition(async () => {
+      await deleteNavigationLinkAction(linkToDelete);
+      setDeleteDialogOpen(false);
+      setLinkToDelete(null);
+      router.refresh();
+    });
   };
 
   const handleAdd = async () => {
@@ -116,17 +124,19 @@ export function NavigationLinksList({ links, location }: NavigationLinksListProp
 
     const maxOrder = links.reduce((max, link) => Math.max(max, link.displayOrder), 0);
 
-    await createNavigationLinkAction({
-      label: newLink.label,
-      href: newLink.href,
-      location,
-      displayOrder: maxOrder + 1,
-      active: 1,
-    });
+    startTransition(async () => {
+      await createNavigationLinkAction({
+        label: newLink.label,
+        href: newLink.href,
+        location,
+        displayOrder: maxOrder + 1,
+        active: 1,
+      });
 
-    setNewLink({ label: '', href: '' });
-    setShowAddForm(false);
-    router.refresh();
+      setNewLink({ label: '', href: '' });
+      setShowAddForm(false);
+      router.refresh();
+    });
   };
 
   return (
@@ -155,7 +165,7 @@ export function NavigationLinksList({ links, location }: NavigationLinksListProp
                         variant="ghost"
                         size="sm"
                         onClick={() => handleMove(link.id, 'up')}
-                        disabled={index === 0}
+                        disabled={index === 0 || isPending}
                       >
                         <ChevronUp className="h-4 w-4" />
                       </Button>
@@ -163,7 +173,7 @@ export function NavigationLinksList({ links, location }: NavigationLinksListProp
                         variant="ghost"
                         size="sm"
                         onClick={() => handleMove(link.id, 'down')}
-                        disabled={index === links.length - 1}
+                        disabled={index === links.length - 1 || isPending}
                       >
                         <ChevronDown className="h-4 w-4" />
                       </Button>
@@ -175,17 +185,27 @@ export function NavigationLinksList({ links, location }: NavigationLinksListProp
                     <Badge
                       variant={link.active ? 'default' : 'secondary'}
                       className="cursor-pointer"
-                      onClick={() => toggleActive(link)}
+                      onClick={() => !isPending && toggleActive(link)}
                     >
                       {link.active ? 'Actief' : 'Inactief'}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex gap-2 justify-end">
-                      <Button variant="ghost" size="sm" onClick={() => handleEdit(link)}>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEdit(link)}
+                        disabled={isPending}
+                      >
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="sm" onClick={() => handleDelete(link.id)}>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDelete(link.id)}
+                        disabled={isPending}
+                      >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>

@@ -50,9 +50,7 @@ const NumberInput = React.forwardRef<HTMLInputElement, NumberInputProps>(
       // Only update display value when not focused (avoid disrupting user input)
       if (!isFocused) {
         const formatted =
-          decimals > 0
-            ? currentValue.toFixed(decimals).replace('.', ',')
-            : String(currentValue);
+          decimals > 0 ? currentValue.toFixed(decimals).replace('.', ',') : String(currentValue);
         setDisplayValue(formatted);
       }
     }, [currentValue, decimals, isFocused]);
@@ -121,9 +119,7 @@ const NumberInput = React.forwardRef<HTMLInputElement, NumberInputProps>(
       // Format the display value when user leaves the field
       // Also handles negative number edge case: if only "-" was typed, it becomes "0"
       const formatted =
-        decimals > 0
-          ? currentValue.toFixed(decimals).replace('.', ',')
-          : String(currentValue);
+        decimals > 0 ? currentValue.toFixed(decimals).replace('.', ',') : String(currentValue);
       setDisplayValue(formatted);
     };
 

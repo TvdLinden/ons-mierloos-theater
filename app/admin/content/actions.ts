@@ -14,8 +14,9 @@ import {
   updateSocialMediaLink,
   deleteSocialMediaLink,
 } from '@/lib/commands/socialMedia';
+import { updatePage, createPage } from '@/lib/commands/pages';
 import { revalidatePath, revalidateTag } from 'next/cache';
-import type { LinkLocation, NewsArticle, SocialMediaLink } from '@/lib/db';
+import type { LinkLocation, NewsArticle, SocialMediaLink, Page } from '@/lib/db';
 
 export async function createNavigationLinkAction(data: {
   label: string;
@@ -26,7 +27,8 @@ export async function createNavigationLinkAction(data: {
 }): Promise<{ success: boolean; error?: string }> {
   try {
     await createNavigationLink(data);
-    revalidateTag('navigation', 'max');
+    revalidatePath('/admin/content');
+    revalidateTag('navigation', 'default');
     return { success: true };
   } catch (error) {
     console.error('Error creating navigation link:', error);
@@ -45,7 +47,8 @@ export async function updateNavigationLinkAction(
 ): Promise<{ success: boolean; error?: string }> {
   try {
     await updateNavigationLink(id, data);
-    revalidateTag('navigation', 'max');
+    revalidatePath('/admin/content');
+    revalidateTag('navigation', 'default');
     return { success: true };
   } catch (error) {
     console.error('Error updating navigation link:', error);
@@ -58,7 +61,8 @@ export async function deleteNavigationLinkAction(
 ): Promise<{ success: boolean; error?: string }> {
   try {
     await deleteNavigationLink(id);
-    revalidateTag('navigation', 'max');
+    revalidatePath('/admin/content');
+    revalidateTag('navigation', 'default');
     return { success: true };
   } catch (error) {
     console.error('Error deleting navigation link:', error);
@@ -159,7 +163,8 @@ export async function createSocialMediaLinkAction(data: {
 }): Promise<{ success: boolean; link?: SocialMediaLink; error?: string }> {
   try {
     const link = await createSocialMediaLink(data);
-    revalidateTag('social-media-links', 'max');
+    revalidatePath('/admin/content');
+    revalidateTag('social-media-links', 'default');
     return { success: true, link };
   } catch (error) {
     console.error('Error creating social media link:', error);
@@ -178,7 +183,8 @@ export async function updateSocialMediaLinkAction(
 ): Promise<{ success: boolean; error?: string }> {
   try {
     await updateSocialMediaLink(id, data);
-    revalidateTag('social-media-links', 'max');
+    revalidatePath('/admin/content');
+    revalidateTag('social-media-links', 'default');
     return { success: true };
   } catch (error) {
     console.error('Error updating social media link:', error);
@@ -191,7 +197,8 @@ export async function deleteSocialMediaLinkAction(
 ): Promise<{ success: boolean; error?: string }> {
   try {
     await deleteSocialMediaLink(id);
-    revalidateTag('social-media-links', 'max');
+    revalidatePath('/admin/content');
+    revalidateTag('social-media-links', 'default');
     return { success: true };
   } catch (error) {
     console.error('Error deleting social media link:', error);
@@ -205,10 +212,48 @@ export async function toggleSocialMediaLinkActiveAction(
 ): Promise<{ success: boolean; error?: string }> {
   try {
     await updateSocialMediaLink(id, { active });
-    revalidateTag('social-media-links', 'max');
+    revalidatePath('/admin/content');
+    revalidateTag('social-media-links', 'default');
     return { success: true };
   } catch (error) {
     console.error('Error toggling link active status:', error);
     return { success: false, error: 'Fout bij het wijzigen van de status' };
+  }
+}
+
+export async function updatePageAction(
+  id: string,
+  fields: Partial<Page>,
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    await updatePage(id, fields);
+    revalidatePath('/admin/content');
+    if (fields.slug) {
+      revalidatePath(`/${fields.slug}`);
+    }
+    revalidatePath('/');
+    revalidateTag('pages', 'default');
+    return { success: true };
+  } catch (error) {
+    console.error('Error updating page:', error);
+    return { success: false, error: 'Fout bij het bijwerken van de pagina' };
+  }
+}
+
+export async function createPageAction(
+  fields: Omit<Page, 'id'>,
+): Promise<{ success: boolean; pageId?: string; error?: string }> {
+  try {
+    const pageId = await createPage(fields);
+    revalidatePath('/admin/content');
+    if (fields.slug) {
+      revalidatePath(`/${fields.slug}`);
+    }
+    revalidatePath('/');
+    revalidateTag('pages', 'default');
+    return { success: true, pageId };
+  } catch (error) {
+    console.error('Error creating page:', error);
+    return { success: false, error: 'Fout bij het aanmaken van de pagina' };
   }
 }

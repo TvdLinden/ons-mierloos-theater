@@ -2,7 +2,6 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import ShoppingCart from './ShoppingCart';
 import { useCart } from './CartContext';
 import { useState, useEffect, useRef } from 'react';
 import AccountMenu from '@/components/AccountMenu';
@@ -14,15 +13,13 @@ type HeaderProps = {
 };
 
 export default function Header({ navigationLinks = [] }: HeaderProps) {
-  const { items, removeFromCart, updateQuantity } = useCart();
-  const [cartOpen, setCartOpen] = useState(false);
+  const { items } = useCart();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { data: session } = useSession(); //as { data: Session | null };
   const isAdmin =
     session?.user &&
     'role' in session.user &&
     (session.user.role === 'admin' || session.user.role === 'contributor');
-  const cartRef = useRef<HTMLDivElement>(null);
   const mobileMenuContainerRef = useRef<HTMLDivElement>(null);
   const hamburgerButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -47,20 +44,6 @@ export default function Header({ navigationLinks = [] }: HeaderProps) {
       document.removeEventListener('mousedown', stopNextDocMouseDown, true);
     }, 0);
   };
-
-  // Close cart when clicking outside
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (cartRef.current && !cartRef.current.contains(event.target as Node)) {
-        setCartOpen(false);
-      }
-    }
-
-    if (cartOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
-    }
-  }, [cartOpen]);
 
   // Close mobile menu when clicking outside
   useEffect(() => {
@@ -97,9 +80,6 @@ export default function Header({ navigationLinks = [] }: HeaderProps) {
 
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center gap-8">
-          <Link href="/" className="text-gray-800 hover:text-primary font-medium transition-colors">
-            Home
-          </Link>
           {navigationLinks.map((link) => (
             <Link
               key={link.id}
@@ -118,37 +98,25 @@ export default function Header({ navigationLinks = [] }: HeaderProps) {
             </Link>
           )}
           <div className="flex items-center gap-6 ml-4 pl-4 border-l border-gray-200">
-            <div className="relative" ref={cartRef}>
-              <button
-                className="relative text-gray-800 hover:text-primary transition-colors"
-                onClick={() => setCartOpen(!cartOpen)}
-                aria-label="Open shopping cart"
-              >
-                <svg width={24} height={24} fill="none" viewBox="0 0 24 24">
-                  <path d="M6 6h15l-1.5 9h-13z" stroke="currentColor" strokeWidth={2} />
-                  <circle cx={9} cy={21} r={1.5} fill="currentColor" />
-                  <circle cx={18} cy={21} r={1.5} fill="currentColor" />
-                </svg>
-                {items.length > 0 && (
-                  <span
-                    className="absolute -top-2 -right-2 bg-primary text-white rounded-full px-1.5 text-xs font-bold"
-                    suppressHydrationWarning
-                  >
-                    {items.length}
-                  </span>
-                )}
-              </button>
-              {cartOpen && (
-                <div className="absolute right-0 top-10 z-100 shadow-2xl">
-                  <ShoppingCart
-                    items={items}
-                    onRemove={removeFromCart}
-                    onChangeQuantity={updateQuantity}
-                    showCheckoutButton={true}
-                  />
-                </div>
+            <Link
+              href="/winkelwagen"
+              className="relative text-gray-800 hover:text-primary transition-colors"
+              aria-label="Winkelwagen"
+            >
+              <svg width={24} height={24} fill="none" viewBox="0 0 24 24">
+                <path d="M6 6h15l-1.5 9h-13z" stroke="currentColor" strokeWidth={2} />
+                <circle cx={9} cy={21} r={1.5} fill="currentColor" />
+                <circle cx={18} cy={21} r={1.5} fill="currentColor" />
+              </svg>
+              {items.length > 0 && (
+                <span
+                  className="absolute -top-2 -right-2 bg-primary text-white rounded-full px-1.5 text-xs font-bold"
+                  suppressHydrationWarning
+                >
+                  {items.length}
+                </span>
               )}
-            </div>
+            </Link>
             <AccountMenu />
           </div>
         </div>
@@ -213,35 +181,24 @@ export default function Header({ navigationLinks = [] }: HeaderProps) {
               </Link>
             )}
             <div className="border-t border-gray-200 my-2 pt-2">
-              <div className="relative px-6 py-3" ref={cartRef}>
-                <button
-                  className="relative text-gray-800 hover:text-primary transition-colors flex items-center gap-2 w-full"
-                  onClick={() => setCartOpen(!cartOpen)}
-                  aria-label="Open shopping cart"
-                >
-                  <svg width={20} height={20} fill="none" viewBox="0 0 24 24">
-                    <path d="M6 6h15l-1.5 9h-13z" stroke="currentColor" strokeWidth={2} />
-                    <circle cx={9} cy={21} r={1.5} fill="currentColor" />
-                    <circle cx={18} cy={21} r={1.5} fill="currentColor" />
-                  </svg>
-                  Winkelwagen
-                  {items.length > 0 && (
-                    <span className="bg-primary text-white rounded-full px-2 text-xs font-bold">
-                      {items.length}
-                    </span>
-                  )}
-                </button>
-                {cartOpen && (
-                  <div className="mt-3 shadow-lg">
-                    <ShoppingCart
-                      items={items}
-                      onRemove={removeFromCart}
-                      onChangeQuantity={updateQuantity}
-                      showCheckoutButton={true}
-                    />
-                  </div>
+              <Link
+                href="/winkelwagen"
+                className="relative text-gray-800 hover:text-primary transition-colors flex items-center gap-2 px-6 py-3 font-medium"
+                onClick={() => setMobileMenuOpen(false)}
+                aria-label="Winkelwagen"
+              >
+                <svg width={20} height={20} fill="none" viewBox="0 0 24 24">
+                  <path d="M6 6h15l-1.5 9h-13z" stroke="currentColor" strokeWidth={2} />
+                  <circle cx={9} cy={21} r={1.5} fill="currentColor" />
+                  <circle cx={18} cy={21} r={1.5} fill="currentColor" />
+                </svg>
+                Winkelwagen
+                {items.length > 0 && (
+                  <span className="bg-primary text-white rounded-full px-2 text-xs font-bold">
+                    {items.length}
+                  </span>
                 )}
-              </div>
+              </Link>
             </div>
             {session ? (
               <>
