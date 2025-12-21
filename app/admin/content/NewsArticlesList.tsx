@@ -3,7 +3,7 @@
 import { useState, useTransition, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import MarkdownEditor, { type MarkdownEditorRef } from '@/components/MarkdownEditor';
+import WysiwygEditor, { type WysiwygEditorRef } from '@/components/WysiwygEditor';
 import { Badge } from '@/components/ui/badge';
 import {
   Table,
@@ -60,7 +60,7 @@ export function NewsArticlesList({
 }: NewsArticlesListProps) {
   const [articles, setArticles] = useState(initialArticles);
   const [isPending, startTransition] = useTransition();
-  const contentEditorRef = useRef<MarkdownEditorRef>(null);
+  const contentEditorRef = useRef<WysiwygEditorRef>(null);
   const [editorKey, setEditorKey] = useState(0);
   const [showImagePicker, setShowImagePicker] = useState(false);
 
@@ -309,7 +309,7 @@ export function NewsArticlesList({
                 <label htmlFor="content" className="text-sm font-medium">
                   Inhoud
                 </label>
-                <MarkdownEditor
+                <WysiwygEditor
                   key={editorKey}
                   name="content"
                   defaultValue={formData.content}

@@ -13,7 +13,7 @@ import {
   DialogFooter,
 } from '@/components/ui';
 import TagSelector from './TagSelector';
-import MarkdownEditor, { type MarkdownEditorRef } from './MarkdownEditor';
+import WysiwygEditor, { type WysiwygEditorRef } from './WysiwygEditor';
 import { PerformanceStatus, Tag, Performance } from '@/lib/db';
 import { ImageSelector } from './ImageSelector';
 import { generateSlug } from '@/lib/utils/slug';
@@ -84,7 +84,7 @@ export default function ShowForm({
   );
   const [editingPerformance, setEditingPerformance] = useState<NewPerformance | null>(null);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
-  const descriptionEditorRef = useRef<MarkdownEditorRef>(null);
+  const descriptionEditorRef = useRef<WysiwygEditorRef>(null);
 
   const handleGenerateSlug = () => {
     const titleInput = document.querySelector<HTMLInputElement>('input[name="title"]');
@@ -166,7 +166,7 @@ export default function ShowForm({
           </p>
         </SimpleFormField>
         <SimpleFormField label="Beschrijving" htmlFor="description" required>
-          <MarkdownEditor
+          <WysiwygEditor
             name="description"
             defaultValue={initial?.description}
             disabled={isPending}

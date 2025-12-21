@@ -35,13 +35,35 @@ export const galleryBlockSchema = baseBlockSchema.extend({
   visibleImages: z.number().int().min(1).max(10).default(1),
 });
 
-// Union of all block types
-export const blockSchema = z.discriminatedUnion('type', [
+// Union of all block types - will be defined recursively below
+export const blockSchema: z.ZodType<any> = z.discriminatedUnion('type', [
   textBlockSchema,
   imageBlockSchema,
   youtubeBlockSchema,
   galleryBlockSchema,
+  z.lazy(() => columnBlockSchema),
+  z.lazy(() => rowBlockSchema),
 ]);
+
+// Column block - stacks items horizontally, cannot contain other columns
+export const columnBlockSchema = baseBlockSchema.extend({
+  type: z.literal('column'),
+  children: z
+    .array(blockSchema)
+    .refine((children) => !children.some((child: any) => child.type === 'column'), {
+      message: 'Column blocks cannot contain other columns',
+    }),
+});
+
+// Row block - stacks items vertically, cannot contain other rows
+export const rowBlockSchema = baseBlockSchema.extend({
+  type: z.literal('row'),
+  children: z
+    .array(blockSchema)
+    .refine((children) => !children.some((child: any) => child.type === 'row'), {
+      message: 'Row blocks cannot contain other rows',
+    }),
+});
 
 // Array of blocks
 export const blocksArraySchema = z.array(blockSchema);
@@ -51,5 +73,7 @@ export type TextBlock = z.infer<typeof textBlockSchema>;
 export type ImageBlock = z.infer<typeof imageBlockSchema>;
 export type YoutubeBlock = z.infer<typeof youtubeBlockSchema>;
 export type GalleryBlock = z.infer<typeof galleryBlockSchema>;
+export type ColumnBlock = z.infer<typeof columnBlockSchema>;
+export type RowBlock = z.infer<typeof rowBlockSchema>;
 export type Block = z.infer<typeof blockSchema>;
 export type BlocksArray = z.infer<typeof blocksArraySchema>;

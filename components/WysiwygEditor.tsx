@@ -26,27 +26,27 @@ import { Button } from './ui/button';
 import { Toggle } from './ui/toggle';
 import { ToggleGroup } from './ui/toggle-group';
 
-type MarkdownEditorProps = {
+type WysiwygEditorProps = {
   name: string;
   defaultValue?: string;
   placeholder?: string;
   disabled?: boolean;
-  ref?: React.Ref<MarkdownEditorRef>;
+  ref?: React.Ref<WysiwygEditorRef>;
 };
 
-export type MarkdownEditorRef = {
+export type WysiwygEditorRef = {
   getHTML: () => string;
   getText: () => string;
   getMarkdown: () => string;
 };
 
-export default function MarkdownEditor({
+export default function WysiwygEditor({
   name,
   defaultValue,
   placeholder,
   disabled,
   ref,
-}: MarkdownEditorProps) {
+}: WysiwygEditorProps) {
   const [imageUrl, setImageUrl] = useState('');
   const [youtubeUrl, setYoutubeUrl] = useState('');
   const [imageOpen, setImageOpen] = useState(false);

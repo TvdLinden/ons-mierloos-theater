@@ -4,15 +4,17 @@ import { TextBlockComponent } from '@/components/blocks/TextBlock';
 import { ImageBlockComponent } from '@/components/blocks/ImageBlock';
 import { YoutubeBlockComponent } from '@/components/blocks/YoutubeBlock';
 import { GalleryBlockComponent } from '@/components/blocks/GalleryBlock';
+import { ColumnBlockComponent } from '@/components/blocks/ColumnBlock';
+import { RowBlockComponent } from '@/components/blocks/RowBlock';
 import type { Block, BlocksArray } from '@/lib/schemas/blocks';
-import type { Image as ImageType } from '@/lib/db';
+import type { ImageMetadata } from '@/lib/db';
 
 interface BlockRendererProps {
   blocks: BlocksArray;
-  images: ImageType[];
+  images: ImageMetadata[];
 }
 
-function RenderBlock({ block, images }: { block: Block; images: ImageType[] }) {
+function RenderBlock({ block, images }: { block: Block; images: ImageMetadata[] }) {
   switch (block.type) {
     case 'text':
       return <TextBlockComponent block={block} mode="display" />;
@@ -26,6 +28,12 @@ function RenderBlock({ block, images }: { block: Block; images: ImageType[] }) {
     case 'gallery':
       return <GalleryBlockComponent block={block} mode="display" availableImages={images} />;
 
+    case 'column':
+      return <ColumnBlockComponent block={block} mode="display" availableImages={images} />;
+
+    case 'row':
+      return <RowBlockComponent block={block} mode="display" availableImages={images} />;
+
     default:
       return null;
   }
@@ -38,10 +46,10 @@ export function BlockRenderer({ blocks, images }: BlockRendererProps) {
   const sortedBlocks = [...blocks].sort((a, b) => a.order - b.order);
 
   return (
-    <div>
+    <>
       {sortedBlocks.map((block) => (
         <RenderBlock key={block.id} block={block} images={images} />
       ))}
-    </div>
+    </>
   );
 }

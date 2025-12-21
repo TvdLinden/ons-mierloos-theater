@@ -36,24 +36,29 @@ import {
   Images,
   ArrowUp,
   ArrowDown,
+  Columns3,
+  Rows3,
 } from 'lucide-react';
 import { TextBlockComponent } from '@/components/blocks/TextBlock';
 import { ImageBlockComponent } from '@/components/blocks/ImageBlock';
 import { YoutubeBlockComponent } from '@/components/blocks/YoutubeBlock';
 import { GalleryBlockComponent } from '@/components/blocks/GalleryBlock';
+import { ColumnBlockComponent } from '@/components/blocks/ColumnBlock';
+import { RowBlockComponent } from '@/components/blocks/RowBlock';
 import type { Block, BlocksArray } from '@/lib/schemas/blocks';
-import type { Image as ImageType } from '@/lib/db';
-import { blocksArraySchema } from '@/lib/schemas/blocks';
+import type { ImageMetadata } from '@/lib/db';
 
 interface BlockEditorProps {
   initialBlocks?: BlocksArray;
-  availableImages?: ImageType[];
+  availableImages?: ImageMetadata[];
   name?: string;
+  onChange?: (blocks: BlocksArray) => void;
+  allowedBlockTypes?: Block['type'][];
 }
 
 interface SortableBlockProps {
   block: Block;
-  availableImages: ImageType[];
+  availableImages: ImageMetadata[];
   onUpdate: (id: string, data: Partial<Block>) => void;
   onDelete: (id: string) => void;
   onMoveUp?: () => void;
@@ -114,6 +119,24 @@ function SortableBlock({
             onChange={(data) => onUpdate(block.id, data)}
           />
         );
+      case 'column':
+        return (
+          <ColumnBlockComponent
+            block={block}
+            mode="edit"
+            availableImages={availableImages}
+            onChange={(data) => onUpdate(block.id, data)}
+          />
+        );
+      case 'row':
+        return (
+          <RowBlockComponent
+            block={block}
+            mode="edit"
+            availableImages={availableImages}
+            onChange={(data) => onUpdate(block.id, data)}
+          />
+        );
       default:
         return null;
     }
@@ -124,6 +147,8 @@ function SortableBlock({
     image: 'Afbeelding',
     youtube: 'YouTube',
     gallery: 'Galerij',
+    column: 'Kolom',
+    row: 'Rij',
   };
 
   return (
@@ -187,6 +212,8 @@ export function BlockEditor({
   initialBlocks = [],
   availableImages = [],
   name = 'blocks',
+  onChange,
+  allowedBlockTypes,
 }: BlockEditorProps) {
   const [blocks, setBlocks] = useState<BlocksArray>(initialBlocks);
 
@@ -221,21 +248,32 @@ export function BlockEditor({
       ...(type === 'image' && { imageId: '', caption: '', alt: '' }),
       ...(type === 'youtube' && { url: '', title: '' }),
       ...(type === 'gallery' && { imageIds: [], caption: '', visibleImages: 1 }),
+      ...(type === 'column' && { children: [] }),
+      ...(type === 'row' && { children: [] }),
     } as Block;
 
     setBlocks([...blocks, newBlock]);
+    onChange?.([...blocks, newBlock]);
   };
 
   const updateBlock = (id: string, data: Partial<Omit<Block, 'id' | 'order' | 'type'>>) => {
-    setBlocks((prev) =>
-      prev.map((block) => (block.id === id ? ({ ...block, ...data } as Block) : block)),
-    );
+    setBlocks((prev) => {
+      const updated = prev.map((block) =>
+        block.id === id ? ({ ...block, ...data } as Block) : block,
+      );
+      onChange?.(updated);
+      return updated;
+    });
   };
 
   const deleteBlock = (id: string) => {
-    setBlocks((prev) =>
-      prev.filter((block) => block.id !== id).map((block, index) => ({ ...block, order: index })),
-    );
+    setBlocks((prev) => {
+      const deleted = prev
+        .filter((block) => block.id !== id)
+        .map((block, index) => ({ ...block, order: index }));
+      onChange?.(deleted);
+      return deleted;
+    });
   };
 
   const moveBlock = (id: string, direction: 'up' | 'down') => {
@@ -243,23 +281,26 @@ export function BlockEditor({
       const currentIndex = items.findIndex((item) => item.id === id);
       if (currentIndex === -1) return items;
 
+      let newItems = items;
       if (direction === 'up' && currentIndex > 0) {
-        const newItems = [...items];
+        newItems = [...items];
         [newItems[currentIndex], newItems[currentIndex - 1]] = [
           newItems[currentIndex - 1],
           newItems[currentIndex],
         ];
-        return newItems.map((block, index) => ({ ...block, order: index }));
       } else if (direction === 'down' && currentIndex < items.length - 1) {
-        const newItems = [...items];
+        newItems = [...items];
         [newItems[currentIndex], newItems[currentIndex + 1]] = [
           newItems[currentIndex + 1],
           newItems[currentIndex],
         ];
-        return newItems.map((block, index) => ({ ...block, order: index }));
+      } else {
+        return items;
       }
 
-      return items;
+      const reordered = newItems.map((block, index) => ({ ...block, order: index }));
+      onChange?.(reordered);
+      return reordered;
     });
   };
 
@@ -303,22 +344,42 @@ export function BlockEditor({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-56">
-          <DropdownMenuItem onClick={() => addBlock('text')}>
-            <Type className="mr-2 h-4 w-4" />
-            Tekst
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => addBlock('image')}>
-            <ImageIcon className="mr-2 h-4 w-4" />
-            Afbeelding
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => addBlock('youtube')}>
-            <Youtube className="mr-2 h-4 w-4" />
-            YouTube video
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => addBlock('gallery')}>
-            <Images className="mr-2 h-4 w-4" />
-            Galerij
-          </DropdownMenuItem>
+          {(!allowedBlockTypes || allowedBlockTypes.includes('text')) && (
+            <DropdownMenuItem onClick={() => addBlock('text')}>
+              <Type className="mr-2 h-4 w-4" />
+              Tekst
+            </DropdownMenuItem>
+          )}
+          {(!allowedBlockTypes || allowedBlockTypes.includes('image')) && (
+            <DropdownMenuItem onClick={() => addBlock('image')}>
+              <ImageIcon className="mr-2 h-4 w-4" />
+              Afbeelding
+            </DropdownMenuItem>
+          )}
+          {(!allowedBlockTypes || allowedBlockTypes.includes('youtube')) && (
+            <DropdownMenuItem onClick={() => addBlock('youtube')}>
+              <Youtube className="mr-2 h-4 w-4" />
+              YouTube video
+            </DropdownMenuItem>
+          )}
+          {(!allowedBlockTypes || allowedBlockTypes.includes('gallery')) && (
+            <DropdownMenuItem onClick={() => addBlock('gallery')}>
+              <Images className="mr-2 h-4 w-4" />
+              Galerij
+            </DropdownMenuItem>
+          )}
+          {(!allowedBlockTypes || allowedBlockTypes.includes('column')) && (
+            <DropdownMenuItem onClick={() => addBlock('column')}>
+              <Rows3 className="mr-2 h-4 w-4" />
+              Kolom
+            </DropdownMenuItem>
+          )}
+          {(!allowedBlockTypes || allowedBlockTypes.includes('row')) && (
+            <DropdownMenuItem onClick={() => addBlock('row')}>
+              <Columns3 className="mr-2 h-4 w-4" />
+              Rij
+            </DropdownMenuItem>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
 

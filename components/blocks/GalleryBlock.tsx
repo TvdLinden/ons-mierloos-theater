@@ -41,13 +41,19 @@ export function GalleryBlockComponent({
     const visibleCount = block.visibleImages || 1;
 
     return (
-      <div className="my-8">
+      <div className="my-8 w-full max-w-[65ch]">
         <Carousel className="w-full" opts={{ align: 'start' }}>
           <CarouselContent>
             {selectedImages.map((image) => (
               <CarouselItem key={image.id} className={`basis-1/${visibleCount}`}>
                 <div className="relative w-full aspect-video">
-                  <Image src={getImageUrl(image.id)} alt="" fill className="object-contain" />
+                  <Image
+                    src={getImageUrl(image.id, 'lg')}
+                    alt=""
+                    unoptimized
+                    fill
+                    className="object-contain"
+                  />
                 </div>
               </CarouselItem>
             ))}

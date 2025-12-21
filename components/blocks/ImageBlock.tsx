@@ -27,13 +27,14 @@ export function ImageBlockComponent({
     if (!selectedImage) return null;
 
     return (
-      <div className="my-8">
+      <div className="my-8 w-full max-w-[65ch]">
         <div className="relative w-full aspect-video">
           <Image
             src={getImageUrl(selectedImage.id)}
             alt={block.alt || block.caption || ''}
             fill
             className="object-contain"
+            unoptimized
           />
         </div>
         {block.caption && (
