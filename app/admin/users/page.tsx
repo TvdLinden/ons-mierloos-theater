@@ -5,6 +5,7 @@ import { User } from '@/lib/db';
 import UserSearch from '@/components/UserSearch';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { DataTable, EmptyRow } from '@/components/admin/DataTable';
+import { UserActionsMenu } from '@/components/admin/UserActionsMenu';
 
 export default async function UsersManagementPage({
   searchParams,
@@ -24,9 +25,9 @@ export default async function UsersManagementPage({
         <UserSearch />
       </div>
 
-      <DataTable headers={['Naam', 'Email', 'Rol', 'Laatste Login', 'Aangemaakt']}>
+      <DataTable headers={['Naam', 'Email', 'Rol', 'Laatste Login', 'Aangemaakt', 'Acties']}>
         {users.length === 0 ? (
-          <EmptyRow colSpan={5} message="Geen gebruikers gevonden" />
+          <EmptyRow colSpan={6} message="Geen gebruikers gevonden" />
         ) : (
           users.map((user: User) => (
             <tr key={user.id} className="hover:bg-zinc-50">
@@ -50,6 +51,9 @@ export default async function UsersManagementPage({
                 <div className="text-sm text-zinc-600">
                   {user.createdAt ? new Date(user.createdAt).toLocaleDateString('nl-NL') : 'N/A'}
                 </div>
+              </td>
+              <td className="px-6 py-4">
+                <UserActionsMenu user={user} />
               </td>
             </tr>
           ))
