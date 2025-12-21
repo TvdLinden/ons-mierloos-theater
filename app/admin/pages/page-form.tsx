@@ -6,7 +6,7 @@ import { BlockEditor } from '@/components/BlockEditor';
 import { Page, Image } from '@/lib/db';
 import type { BlocksArray } from '@/lib/schemas/blocks';
 
-type InitialFormValues = Partial<Page> & { blocks?: BlocksArray };
+export type InitialFormValues = Partial<Page> & { blocks?: BlocksArray };
 export type FormActionResult = InitialFormValues & { success: boolean };
 
 type FormAction = (prevState: FormActionResult, formData: FormData) => Promise<InitialFormValues>;

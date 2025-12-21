@@ -16,13 +16,13 @@ import {
   CarouselPrevious,
 } from '@/components/ui/carousel';
 import type { GalleryBlock } from '@/lib/schemas/blocks';
-import type { Image as ImageType } from '@/lib/db';
+import type { ImageMetadata } from '@/lib/db';
 import { getImageUrl } from '@/lib/utils/image-url';
 
 interface GalleryBlockComponentProps {
   block: GalleryBlock;
   mode: 'edit' | 'display';
-  availableImages?: ImageType[];
+  availableImages?: ImageMetadata[];
   onChange?: (data: Partial<GalleryBlock>) => void;
 }
 

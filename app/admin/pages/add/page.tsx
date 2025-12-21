@@ -5,12 +5,15 @@ import { createPage } from '@/lib/commands/pages';
 import { PageForm } from '../page-form';
 import { getAllImages } from '@/lib/queries/images';
 import { blocksArraySchema } from '@/lib/schemas/blocks';
-import type { BlocksArray } from '@/lib/schemas/blocks';
+import type { FormActionResult, InitialFormValues } from '../page-form';
 
 export default async function AddPage() {
   const images = await getAllImages(0, 1000);
 
-  async function handleSubmit(prevState: any, formData: FormData) {
+  async function handleSubmit(
+    prevState: FormActionResult,
+    formData: FormData,
+  ): Promise<InitialFormValues> {
     'use server';
     const title = formData.get('title') as string;
     const slug = formData.get('slug') as string;
@@ -33,8 +36,16 @@ export default async function AddPage() {
       blocks: blocks || undefined,
       createdAt: new Date(),
       updatedAt: new Date(),
+      content: '',
+      status: 'draft',
     });
     redirect('/admin/pages');
+    const result: InitialFormValues & { success: boolean } = {
+      ...prevState,
+      blocks,
+      success: true,
+    };
+    return result;
   }
 
   return (
