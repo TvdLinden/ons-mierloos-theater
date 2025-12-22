@@ -28,11 +28,11 @@ export async function POST(request: NextRequest) {
       errors: [] as string[],
     };
 
-    // Fetch orders that are pending or processing (example criteria)
+    // Fetch orders that are pending (note: "processing" is not a valid status in the schema)
     const pendingOrders = await db
       .select()
       .from(orders)
-      .where(inArray(orders.status, ['pending', 'processing']));
+      .where(inArray(orders.status, ['pending']));
     result.total = pendingOrders.length;
 
     // For now we don't call an external service; this endpoint acts as a placeholder
