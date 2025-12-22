@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { orders } from '@/lib/db/schema';
-import { inArray } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 import { validateClientToken, hasScope } from '@/lib/auth/client-credentials';
 
 const APP_ID = process.env.APP_ID || 'self';
@@ -40,9 +40,11 @@ export async function POST(request: NextRequest) {
     for (const o of pendingOrders) {
       try {
         result.checked++;
-        // Placeholder logic: if order has no line items or other anomaly, record it
-        // (Extend this block with real sync rules later)
-        // No automatic updates currently
+
+        if (o.createdAt < new Date(Date.now() - 24 * 60 * 60 * 1000)) {
+          await db.update(orders).set({ status: 'cancelled' }).where(eq(orders.id, o.id));
+          result.updated++;
+        }
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'Unknown error';
         result.errors.push(`Order ${o.id}: ${msg}`);

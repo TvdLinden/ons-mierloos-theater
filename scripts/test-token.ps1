@@ -69,6 +69,15 @@ if ($CallSync) {
         Write-Error "sync-payments HTTP request failed: $_"
         exit 4
     }
+    try {
+        $syncResp = Invoke-RestMethod -Uri "$BaseUrl/api/admin/sync-orders" -Method Post -ContentType 'application/json' -Headers @{ Authorization = "Bearer $($resp.access_token)" } -ErrorAction Stop
+        Write-Host "sync-orders response:"
+        Write-Host ($syncResp | ConvertTo-Json -Depth 5)
+    }
+    catch {
+        Write-Error "sync-orders HTTP request failed: $_"
+        exit 5
+    }
 }
 
 Write-Host "Done."
