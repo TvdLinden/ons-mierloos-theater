@@ -13,6 +13,7 @@ import {
 import { Eye } from 'lucide-react';
 import Markdown from '@/components/ui/markdown';
 import type { HomepageContent, NewsArticle } from '@/lib/db';
+import Image from 'next/image';
 
 interface PreviewModeProps {
   homepageContent: HomepageContent | null;
@@ -62,10 +63,11 @@ export function PreviewMode({ homepageContent, newsArticles }: PreviewModeProps)
                   <div key={article.id} className="border rounded-lg p-4 space-y-3">
                     {article.imageId && (
                       <div className="relative aspect-video bg-muted rounded-md overflow-hidden">
-                        <img
+                        <Image
                           src={`/api/images/${article.imageId}`}
                           alt={article.title}
                           className="object-cover w-full h-full"
+                          fill
                         />
                       </div>
                     )}

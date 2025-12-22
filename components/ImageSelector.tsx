@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { usePagination } from '@/hooks/usePagination';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -33,35 +34,27 @@ export function ImageSelector({
   imagesPerPage = 12,
 }: ImageSelectorProps) {
   const [showPicker, setShowPicker] = useState(false);
-  const [currentPage, setCurrentPage] = useState(0);
-
   const sizeMap = {
     small: { container: 'w-16 h-16', grid: 'grid-cols-3' },
     medium: { container: 'w-32 h-32', grid: 'grid-cols-4' },
     large: { container: 'w-48 h-48', grid: 'grid-cols-5' },
   };
-
   const { container, grid } = sizeMap[imageSize];
+  const {
+    offset,
+    setOffset,
+    totalPages,
+    nextPage: handleNextPage,
+    prevPage: handlePrevPage,
+    reset: resetPage,
+  } = usePagination(availableImages.length, imagesPerPage);
 
-  const totalPages = Math.ceil(availableImages.length / imagesPerPage);
-  const startIndex = currentPage * imagesPerPage;
-  const endIndex = startIndex + imagesPerPage;
-  const displayedImages = availableImages.slice(startIndex, endIndex);
-
-  const handleNextPage = () => {
-    if (currentPage < totalPages - 1) {
-      setCurrentPage(currentPage + 1);
-    }
-  };
-
-  const handlePrevPage = () => {
-    if (currentPage > 0) {
-      setCurrentPage(currentPage - 1);
-    }
-  };
+  const currentPage = Math.floor(offset / imagesPerPage);
+  const setCurrentPage = (page: number) => setOffset(page * imagesPerPage);
+  const displayedImages = availableImages.slice(offset, offset + imagesPerPage);
 
   const handleOpenPicker = () => {
-    setCurrentPage(0);
+    resetPage();
     setShowPicker(true);
   };
 

@@ -170,7 +170,7 @@ async function createMockPayment(data: CreatePayment): Promise<{
     amount: data.amount,
     currency: data.currency || 'EUR',
     status: 'pending',
-    paymentMethod: null,
+    paymentMethod: 'mock',
     paymentProvider: 'mock',
     providerTransactionId: mockPaymentId,
     providerPaymentUrl: `${baseUrl}/checkout/mock-payment?id=${mockPaymentId}`,
@@ -190,6 +190,7 @@ async function createMockPayment(data: CreatePayment): Promise<{
 export async function getMolliePaymentStatus(molliePaymentId: string): Promise<{
   success: boolean;
   status?: string;
+  method?: string;
   error?: string;
 }> {
   if (!MOLLIE_API_KEY) {
@@ -214,6 +215,7 @@ export async function getMolliePaymentStatus(molliePaymentId: string): Promise<{
     return {
       success: true,
       status: molliePayment.status,
+      method: molliePayment.method,
     };
   } catch (error) {
     console.error('Error fetching Mollie payment:', error);
@@ -226,7 +228,7 @@ export async function getMolliePaymentStatus(molliePaymentId: string): Promise<{
  */
 export async function handleMollieWebhook(molliePaymentId: string): Promise<void> {
   // Fetch the payment status from Mollie
-  const { success, status, error } = await getMolliePaymentStatus(molliePaymentId);
+  const { success, status, method, error } = await getMolliePaymentStatus(molliePaymentId);
 
   if (!success || !status) {
     console.error('Failed to get payment status:', error);
@@ -273,12 +275,16 @@ export async function handleMollieWebhook(molliePaymentId: string): Promise<void
       return;
   }
 
-  // Update payment status
-  await updatePaymentStatus(
-    payment.id,
-    paymentStatus,
-    paymentStatus === 'succeeded' ? new Date() : undefined,
-  );
+  // Update payment status and method if available
+  await db
+    .update(payments)
+    .set({
+      status: paymentStatus,
+      paymentMethod: method || payment.paymentMethod,
+      completedAt: paymentStatus === 'succeeded' ? new Date() : null,
+      updatedAt: new Date(),
+    })
+    .where(eq(payments.id, payment.id));
 
   // Update order status
   await updateOrderStatus(payment.orderId, orderStatus);

@@ -238,7 +238,7 @@ export default function ShowForm({
           title={'Voorstellingen'}
           emptyMessage="Nog geen voorstellingen toegevoegd"
           headers={['Datum & Tijd', 'Prijs', 'Zitplaatsen', 'Beschikbaar', 'Status', 'Acties']}
-          onAddClicked={handleAddPerformance}
+          onAddClickedAction={handleAddPerformance}
         >
           <>
             {performances.map((performance, index) => {

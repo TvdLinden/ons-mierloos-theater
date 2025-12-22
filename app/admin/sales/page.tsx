@@ -1,8 +1,10 @@
+import Link from 'next/link';
 import { requireRole } from '@/lib/utils/auth';
 import { getAllOrders, getSalesStats, getTicketSalesByPerformance } from '@/lib/queries/orders';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { StatCard } from '@/components/admin/StatCard';
 import { DataTable, EmptyRow } from '@/components/admin/DataTable';
+import { OrderSearchClient } from './OrderSearchClient';
 
 export default async function SalesPage() {
   await requireRole(['admin', 'contributor']);
@@ -37,7 +39,11 @@ export default async function SalesPage() {
             performanceSales.map((sale) => (
               <tr key={sale.performanceId} className="hover:bg-zinc-50">
                 <td className="px-6 py-4">
-                  <div className="font-medium text-primary">{sale.showTitle}</div>
+                  <Link href={`/admin/sales/shows/${sale.performanceId}`}>
+                    <div className="font-medium text-primary hover:underline cursor-pointer">
+                      {sale.showTitle}
+                    </div>
+                  </Link>
                 </td>
                 <td className="px-6 py-4 text-zinc-600">
                   {sale.performanceDate
@@ -57,65 +63,7 @@ export default async function SalesPage() {
       </div>
 
       {/* Orders List */}
-      <DataTable
-        title="Recente Bestellingen"
-        headers={['Bestelnummer', 'Klant', 'Datum', 'Items', 'Status', 'Totaal']}
-      >
-        {orders.length === 0 ? (
-          <EmptyRow colSpan={6} message="Nog geen bestellingen" />
-        ) : (
-          orders.map((order) => (
-            <tr key={order.id} className="hover:bg-zinc-50">
-              <td className="px-6 py-4">
-                <div className="font-mono text-sm text-zinc-600">{order.id.substring(0, 8)}...</div>
-              </td>
-              <td className="px-6 py-4">
-                <div className="font-medium text-primary">{order.customerName}</div>
-                <div className="text-sm text-zinc-500">{order.customerEmail}</div>
-              </td>
-              <td className="px-6 py-4 text-zinc-600 text-sm">
-                {new Date(order.createdAt || '').toLocaleString('nl-NL', {
-                  dateStyle: 'short',
-                  timeStyle: 'short',
-                })}
-              </td>
-              <td className="px-6 py-4">
-                <div className="text-sm">
-                  {order.lineItems.map((item, idx) => (
-                    <div key={idx} className="text-zinc-600">
-                      {item.quantity}x {item.performance?.show?.title || 'Onbekend'}
-                    </div>
-                  ))}
-                </div>
-              </td>
-              <td className="px-6 py-4">
-                <span
-                  className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                    order.status === 'paid'
-                      ? 'bg-green-100 text-green-800'
-                      : order.status === 'pending'
-                        ? 'bg-yellow-100 text-yellow-800'
-                        : order.status === 'failed'
-                          ? 'bg-red-100 text-red-800'
-                          : 'bg-zinc-100 text-zinc-800'
-                  }`}
-                >
-                  {order.status === 'paid'
-                    ? 'Betaald'
-                    : order.status === 'pending'
-                      ? 'In Behandeling'
-                      : order.status === 'failed'
-                        ? 'Mislukt'
-                        : order.status === 'cancelled'
-                          ? 'Geannuleerd'
-                          : order.status}
-                </span>
-              </td>
-              <td className="px-6 py-4 text-right font-bold text-primary">€{order.totalAmount}</td>
-            </tr>
-          ))
-        )}
-      </DataTable>
+      <OrderSearchClient />
     </div>
   );
 }

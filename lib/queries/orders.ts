@@ -39,7 +39,11 @@ export async function getOrderById(orderId: string) {
     with: {
       lineItems: {
         with: {
-          performance: true,
+          performance: {
+            with: {
+              show: true,
+            },
+          },
         },
       },
       payments: true,
