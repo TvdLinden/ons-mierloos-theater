@@ -16,6 +16,7 @@ import {
   Image,
   Layout,
   Settings,
+  Lock,
 } from 'lucide-react';
 
 interface AdminFeature {
@@ -88,6 +89,13 @@ const features: AdminFeature[] = [
     label: 'Site Instellingen',
     description: 'Beheer SEO instellingen voor betere vindbaarheid.',
     href: '/admin/settings',
+    adminOnly: true,
+  },
+  {
+    icon: Lock,
+    label: 'Client Applicaties',
+    description: 'Beheer client applicaties, secrets en scopes voor API access.',
+    href: '/admin/applications',
     adminOnly: true,
   },
 ];

@@ -1,0 +1,32 @@
+name: Sync Payments
+
+on:
+  schedule:
+    # Runs every hour; adjust as needed
+    - cron: '0 * * * *'
+  workflow_dispatch:
+
+jobs:
+  sync-payments:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call sync-payments endpoint
+        env:
+          CLIENT_ID: ${{ secrets.CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+          BASE_URL: ${{ secrets.BASE_URL }} # e.g. https://your-app.vercel.app
+        run: |
+          # Get access token
+          TOKEN=$(curl -s -X POST "$BASE_URL/api/oauth/token" \
+            -H "Content-Type: application/json" \
+            -d '{"grant_type":"client_credentials","client_id":"'$CLIENT_ID'","client_secret":"'$CLIENT_SECRET'"}' | jq -r .access_token)
+
+          if [ "$TOKEN" = "null" ] || [ -z "$TOKEN" ]; then
+            echo "Failed to get access token" >&2
+            exit 1
+          fi
+
+          # Call sync-payments endpoint with Bearer token
+          curl -X POST "$BASE_URL/api/admin/sync-payments" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/json"

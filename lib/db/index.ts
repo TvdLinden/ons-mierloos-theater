@@ -34,6 +34,9 @@ import {
   homepageContent,
   newsArticles,
   socialMediaLinks,
+  clientApplications,
+  clientSecrets,
+  clientScopes,
 } from '@/lib/db/schema';
 
 export type User = typeof users.$inferSelect;
@@ -87,6 +90,10 @@ export type Image = typeof images.$inferSelect;
 export type ImageContent = Pick<Image, 'imageLg' | 'imageMd' | 'imageSm'>;
 export type ImageMetadata = Omit<Image, keyof ImageContent>;
 
+export type ClientApplication = typeof clientApplications.$inferSelect;
+export type ClientSecret = typeof clientSecrets.$inferSelect;
+export type ClientScope = typeof clientScopes.$inferSelect;
+
 if (!process.env.DATABASE_URL) {
   throw new Error('DATABASE_URL environment variable is required');
 }
@@ -130,6 +137,9 @@ const db = drizzle(pool, {
     homepageContent,
     newsArticles,
     socialMediaLinks,
+    clientApplications,
+    clientSecrets,
+    clientScopes,
   },
 });
 

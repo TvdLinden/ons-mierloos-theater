@@ -1,5 +1,5 @@
 import { relations } from 'drizzle-orm';
-import { decimal, uuid, customType, index, primaryKey } from 'drizzle-orm/pg-core';
+import { decimal, uuid, customType, index, primaryKey, boolean } from 'drizzle-orm/pg-core';
 import { pgTable, pgEnum, varchar, text, integer, timestamp, jsonb } from 'drizzle-orm/pg-core';
 
 const showStatusValues = ['draft', 'published', 'archived'] as const;
@@ -146,6 +146,47 @@ export const tickets = pgTable(
 );
 
 // You can add more tables as needed, e.g., for tickets, payments, etc.
+
+// --- Client Applications & Secrets for Machine-to-Machine Auth ---
+
+export const clientApplications = pgTable('client_applications', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: varchar('name', { length: 128 }).notNull(),
+  clientId: varchar('client_id', { length: 64 }).notNull().unique(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const clientScopes = pgTable(
+  'client_scopes',
+  {
+    clientApplicationId: uuid('client_application_id')
+      .notNull()
+      .references(() => clientApplications.id, { onDelete: 'cascade' }),
+    targetApplicationId: uuid('target_application_id')
+      .notNull()
+      .references(() => clientApplications.id, { onDelete: 'cascade' }),
+    scope: varchar('scope', { length: 128 }).notNull(), // e.g., 'sync:payments', 'sync:orders'
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.clientApplicationId, table.targetApplicationId, table.scope] }),
+    index('client_scopes_client_application_id_idx').on(table.clientApplicationId),
+    index('client_scopes_target_application_id_idx').on(table.targetApplicationId),
+  ],
+);
+
+export const clientSecrets = pgTable('client_secrets', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  clientApplicationId: uuid('client_application_id')
+    .notNull()
+    .references(() => clientApplications.id, { onDelete: 'cascade' }),
+  secretHash: varchar('secret_hash', { length: 255 }).notNull(),
+  active: boolean('active').notNull().default(true),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  lastUsedAt: timestamp('last_used_at', { withTimezone: true }),
+});
+
 const bytea = customType<{ data: Buffer }>({
   dataType() {
     return 'bytea';
