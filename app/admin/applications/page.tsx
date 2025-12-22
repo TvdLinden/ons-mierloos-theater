@@ -57,10 +57,14 @@ export default function ApplicationsPage() {
   const [newScopeName, setNewScopeName] = useState('');
   const [newScopeDescription, setNewScopeDescription] = useState('');
 
+  // State for granting permission
+  const [grantScopeId, setGrantScopeId] = useState<string>('');
+  const [granting, setGranting] = useState(false);
+
   // Confirmation dialogs
   const [confirmDialog, setConfirmDialog] = useState<{
     isOpen: boolean;
-    type: 'delete_app' | 'deactivate_secret' | 'remove_defined_scope' | null;
+    type: 'delete_app' | 'deactivate_secret' | 'remove_defined_scope' | 'revoke_permission' | null;
     title: string;
     description: string;
     resourceId?: string;
@@ -70,6 +74,30 @@ export default function ApplicationsPage() {
     title: '',
     description: '',
   });
+
+  // Compute all defined scopes from other apps, excluding already granted and own scopes
+  const availableScopesToGrant = selectedApp
+    ? applications
+        .flatMap((app) =>
+          app.definedScopes.map((scope) => ({
+            ...scope,
+            appName: app.name,
+          })),
+        )
+        .filter(
+          (scope) =>
+            scope.applicationId !== selectedApp.id &&
+            !selectedApp.grantedPermissions.some((perm) => perm.definedScopeId === scope.id),
+        )
+    : [];
+
+  const findScopeById = (id: string) =>
+    applications.flatMap((app) => app.definedScopes).find((s) => s.id === id);
+
+  const formatPermissionLabel = (permission: { definedScopeId: string }) => {
+    const s = findScopeById(permission.definedScopeId);
+    return s?.scope ?? `Permissie-ID: ${permission.definedScopeId.slice(0, 8)}...`;
+  };
 
   // Fetch all applications
   useEffect(() => {
@@ -240,12 +268,84 @@ export default function ApplicationsPage() {
     }
   };
 
+  // Open revoke confirmation
+  const openRevokePermissionDialog = (permissionId: string, scopeName?: string) => {
+    setConfirmDialog({
+      isOpen: true,
+      type: 'revoke_permission',
+      title: 'Permissie intrekken',
+      description: `Weet je zeker dat je de permissie ${
+        scopeName || permissionId.slice(0, 8)
+      } wilt intrekken? Hierdoor verliest de app toegang.`,
+      resourceId: permissionId,
+    });
+  };
+
+  // Revoke permission handler
+  const revokePermission = async (permissionId?: string) => {
+    if (!selectedApp || !permissionId) return;
+    try {
+      const res = await fetch('/api/admin/applications', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          applicationId: selectedApp.id,
+          action: 'revoke_permission',
+          permissionId,
+        }),
+      });
+
+      if (!res.ok) throw new Error('Failed to revoke permission');
+
+      setConfirmDialog({ isOpen: false, type: null, title: '', description: '' });
+      await fetchApplications();
+      // update selectedApp after fetch
+      const updated = applications.find((a) => a.id === selectedApp.id);
+      if (updated) setSelectedApp(updated);
+    } catch (error) {
+      console.error('Error revoking permission:', error);
+      alert('Failed to revoke permission');
+    }
+  };
+
+  const handleGrantPermission = async () => {
+    if (!selectedApp || !grantScopeId) {
+      alert('Select a scope to grant');
+      return;
+    }
+    setGranting(true);
+    try {
+      const res = await fetch('/api/admin/applications', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          applicationId: selectedApp.id,
+          action: 'grant_permission',
+          definedScopeId: grantScopeId,
+        }),
+      });
+      if (!res.ok) throw new Error('Failed to grant permission');
+      setGrantScopeId('');
+      await fetchApplications();
+      // Update selectedApp after fetch
+      if (selectedApp) {
+        const updated = applications.find((a) => a.id === selectedApp.id);
+        if (updated) setSelectedApp(updated);
+      }
+    } catch (error) {
+      console.error('Error granting permission:', error);
+      alert('Failed to grant permission');
+    } finally {
+      setGranting(false);
+    }
+  };
+
   const openDeleteAppDialog = () => {
     setConfirmDialog({
       isOpen: true,
       type: 'delete_app',
-      title: 'Delete Application',
-      description: `Are you sure you want to delete "${selectedApp?.name}"? This will also delete all associated secrets and scopes. This action cannot be undone.`,
+      title: 'Applicatie verwijderen',
+      description: `Weet je zeker dat je "${selectedApp?.name}" wilt verwijderen? Alle bijbehorende geheimen en scopes worden ook verwijderd. Deze actie kan niet ongedaan worden gemaakt.`,
     });
   };
 
@@ -253,9 +353,9 @@ export default function ApplicationsPage() {
     setConfirmDialog({
       isOpen: true,
       type: 'deactivate_secret',
-      title: 'Deactivate Secret',
+      title: 'Deactiveer geheim',
       description:
-        'Are you sure you want to deactivate this secret? It will no longer be usable for authentication.',
+        'Weet je zeker dat je dit geheim wilt deactiveren? Het is daarna niet meer bruikbaar voor authenticatie.',
       resourceId: secretId,
     });
   };
@@ -264,8 +364,8 @@ export default function ApplicationsPage() {
     setConfirmDialog({
       isOpen: true,
       type: 'remove_defined_scope',
-      title: 'Remove Defined Scope',
-      description: `Are you sure you want to remove the "${scopeName}" scope? This will also revoke access for any app that was granted this scope.`,
+      title: 'Verwijder scope',
+      description: `Weet je zeker dat je de scope "${scopeName}" wilt verwijderen? Hierdoor verliezen apps die deze scope hadden toegang.`,
       resourceId: scopeId,
     });
   };
@@ -281,34 +381,37 @@ export default function ApplicationsPage() {
       case 'remove_defined_scope':
         if (confirmDialog.resourceId) handleRemoveDefinedScope(confirmDialog.resourceId);
         break;
+      case 'revoke_permission':
+        if (confirmDialog.resourceId) revokePermission(confirmDialog.resourceId);
+        break;
     }
   };
 
-  if (loading) return <div className="p-4">Loading applications...</div>;
+  if (loading) return <div className="p-4">Applicaties laden...</div>;
 
   return (
     <div className="grid grid-cols-1 gap-6 p-6 lg:grid-cols-3">
       {/* Applications List */}
       <div className="lg:col-span-1">
         <div className="rounded-lg border p-4">
-          <h2 className="mb-4 text-lg font-semibold">Client Applications</h2>
+          <h2 className="mb-4 text-lg font-semibold">Clientapplicaties</h2>
           <Button
             onClick={() => setShowNewAppForm(!showNewAppForm)}
             className="mb-4 w-full"
             variant="outline"
           >
-            {showNewAppForm ? 'Cancel' : 'New Application'}
+            {showNewAppForm ? 'Annuleren' : 'Nieuwe applicatie'}
           </Button>
 
           {showNewAppForm && (
             <div className="mb-4 space-y-3">
               <Input
-                placeholder="Application name"
+                placeholder="Applicatienaam"
                 value={newAppName}
                 onChange={(e) => setNewAppName(e.target.value)}
               />
               <Button onClick={handleCreateApplication} className="w-full">
-                Create
+                Aanmaken
               </Button>
             </div>
           )}
@@ -336,35 +439,35 @@ export default function ApplicationsPage() {
           <div className="space-y-6">
             {/* Basic Info */}
             <div className="rounded-lg border p-4">
-              <h3 className="mb-4 text-lg font-semibold">Application Details</h3>
+              <h3 className="mb-4 text-lg font-semibold">Applicatiegegevens</h3>
               <div className="space-y-3">
                 <div>
-                  <label className="text-sm font-medium">Name</label>
+                  <label className="text-sm font-medium">Naam</label>
                   <Input value={selectedApp.name} disabled />
                 </div>
                 <div>
-                  <label className="text-sm font-medium">Client ID</label>
+                  <label className="text-sm font-medium">Client-ID</label>
                   <Input value={selectedApp.clientId} disabled />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-sm font-medium">Created</label>
+                    <label className="text-sm font-medium">Aangemaakt</label>
                     <Input value={new Date(selectedApp.createdAt).toLocaleString()} disabled />
                   </div>
                   <div>
-                    <label className="text-sm font-medium">Updated</label>
+                    <label className="text-sm font-medium">Bijgewerkt</label>
                     <Input value={new Date(selectedApp.updatedAt).toLocaleString()} disabled />
                   </div>
                 </div>
               </div>
               <Button onClick={openDeleteAppDialog} variant="destructive" className="mt-4 w-full">
-                Delete Application
+                Verwijder applicatie
               </Button>
             </div>
 
             {/* Secrets */}
             <div className="rounded-lg border p-4">
-              <h3 className="mb-4 text-lg font-semibold">Secrets</h3>
+              <h3 className="mb-4 text-lg font-semibold">Geheimen</h3>
               <div className="mb-4 space-y-2">
                 {selectedApp.secrets.map((secret) => (
                   <div
@@ -373,10 +476,10 @@ export default function ApplicationsPage() {
                   >
                     <div>
                       <div className="text-sm font-medium">
-                        {secret.active ? '✓ Active' : '✗ Inactive'}
+                        {secret.active ? '✓ Actief' : '✗ Inactief'}
                       </div>
                       <div className="text-xs text-gray-500">
-                        Created: {new Date(secret.createdAt).toLocaleDateString()}
+                        Aangemaakt: {new Date(secret.createdAt).toLocaleDateString()}
                       </div>
                     </div>
                     {secret.active && (
@@ -392,13 +495,13 @@ export default function ApplicationsPage() {
                 ))}
               </div>
               <Button onClick={() => handleGenerateSecret(selectedApp.id)} className="w-full">
-                Generate New Secret
+                Genereer nieuw geheim
               </Button>
             </div>
 
             {/* Defined Scopes */}
             <div className="rounded-lg border p-4">
-              <h3 className="mb-4 text-lg font-semibold">Scopes Defined by This App</h3>
+              <h3 className="mb-4 text-lg font-semibold">Door deze app gedefinieerde scopes</h3>
               <div className="mb-4 space-y-2">
                 {selectedApp.definedScopes.map((scope) => (
                   <div
@@ -424,42 +527,78 @@ export default function ApplicationsPage() {
 
               <div className="space-y-3">
                 <Input
-                  placeholder="Scope name (e.g., sync:orders)"
+                  placeholder="Scope-naam (bv. sync:orders)"
                   value={newScopeName}
                   onChange={(e) => setNewScopeName(e.target.value)}
                 />
                 <Input
-                  placeholder="Description (optional)"
+                  placeholder="Beschrijving (optioneel)"
                   value={newScopeDescription}
                   onChange={(e) => setNewScopeDescription(e.target.value)}
                 />
                 <Button onClick={() => handleAddDefinedScope()} className="w-full">
-                  Define New Scope
+                  Definieer nieuwe scope
                 </Button>
               </div>
             </div>
 
             {/* Granted Permissions */}
             <div className="rounded-lg border p-4">
-              <h3 className="mb-4 text-lg font-semibold">Permissions Granted to This App</h3>
+              <h3 className="mb-4 text-lg font-semibold">Aan deze app verleende permissies</h3>
               <div className="mb-4 space-y-2">
                 {selectedApp.grantedPermissions.length === 0 ? (
-                  <div className="text-sm text-gray-500 italic">No permissions granted yet</div>
+                  <div className="text-sm text-gray-500 italic">Nog geen permissies verleend</div>
                 ) : (
-                  selectedApp.grantedPermissions.map((permission) => (
-                    <div
-                      key={permission.id}
-                      className="flex items-center justify-between rounded bg-green-50 p-3"
-                    >
-                      <div className="text-sm font-medium">
-                        Permission ID: {permission.definedScopeId.slice(0, 8)}...
+                  selectedApp.grantedPermissions.map((permission) => {
+                    const scope = findScopeById(permission.definedScopeId);
+                    const permissionLabel = formatPermissionLabel(permission);
+
+                    return (
+                      <div
+                        key={permission.id}
+                        className="flex items-center justify-between rounded bg-green-50 p-3"
+                      >
+                        <div className="text-sm">
+                          <span className="font-medium">{permissionLabel}</span>
+                          {scope && scope.description && (
+                            <span className="ml-2 text-xs text-gray-500">{scope.description}</span>
+                          )}
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => openRevokePermissionDialog(permission.id, scope?.scope)}
+                        >
+                          Intrekken
+                        </Button>
                       </div>
-                      <Button variant="outline" size="sm" disabled>
-                        Revoke
-                      </Button>
-                    </div>
-                  ))
+                    );
+                  })
                 )}
+              </div>
+              {/* Grant new permission UI */}
+              <div className="flex gap-2 items-center mt-4">
+                <select
+                  className="border rounded px-2 py-1 flex-1"
+                  value={grantScopeId}
+                  onChange={(e) => setGrantScopeId(e.target.value)}
+                  disabled={granting || availableScopesToGrant.length === 0}
+                >
+                  <option value="">Selecteer scope om te verlenen...</option>
+                  {availableScopesToGrant.map((scope) => (
+                    <option key={scope.id} value={scope.id}>
+                      {scope.scope} (van {scope.appName})
+                      {scope.description ? ` — ${scope.description}` : ''}
+                    </option>
+                  ))}
+                </select>
+                <Button
+                  onClick={handleGrantPermission}
+                  disabled={granting || !grantScopeId}
+                  className="whitespace-nowrap"
+                >
+                  {granting ? 'Bezig...' : 'Verleen permissie'}
+                </Button>
               </div>
             </div>
           </div>
@@ -481,14 +620,15 @@ export default function ApplicationsPage() {
             <AlertDialogDescription>{confirmDialog.description}</AlertDialogDescription>
           </AlertDialogHeader>
           <div className="flex gap-3">
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>Annuleren</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleConfirmAction}
               className="bg-red-600 hover:bg-red-700"
             >
-              {confirmDialog.type === 'delete_app' && 'Delete Application'}
-              {confirmDialog.type === 'deactivate_secret' && 'Deactivate Secret'}
-              {confirmDialog.type === 'remove_defined_scope' && 'Remove Scope'}
+              {confirmDialog.type === 'delete_app' && 'Verwijder applicatie'}
+              {confirmDialog.type === 'deactivate_secret' && 'Deactiveer geheim'}
+              {confirmDialog.type === 'remove_defined_scope' && 'Verwijder scope'}
+              {confirmDialog.type === 'revoke_permission' && 'Trek permissie in'}
             </AlertDialogAction>
           </div>
         </AlertDialogContent>

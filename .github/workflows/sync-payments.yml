@@ -16,17 +16,42 @@ jobs:
           CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
           BASE_URL: ${{ secrets.BASE_URL }} # e.g. https://your-app.vercel.app
         run: |
-          # Get access token
-          TOKEN=$(curl -s -X POST "$BASE_URL/api/oauth/token" \
-            -H "Content-Type: application/json" \
-            -d '{"grant_type":"client_credentials","client_id":"'$CLIENT_ID'","client_secret":"'$CLIENT_SECRET'"}' | jq -r .access_token)
+          set -euo pipefail
 
-          if [ "$TOKEN" = "null" ] || [ -z "$TOKEN" ]; then
-            echo "Failed to get access token" >&2
+          # Basic validation of inputs
+          if [ -z "${CLIENT_ID:-}" ] || [ -z "${CLIENT_SECRET:-}" ] || [ -z "${BASE_URL:-}" ]; then
+            echo "Required secrets CLIENT_ID, CLIENT_SECRET or BASE_URL are missing" >&2
             exit 1
           fi
 
-          # Call sync-payments endpoint with Bearer token
-          curl -X POST "$BASE_URL/api/admin/sync-payments" \
+          # Request access token and capture full response for diagnostics
+          RESP=$(curl -sS -X POST "$BASE_URL/api/oauth/token" \
+            -H "Content-Type: application/json" \
+            -d "{\"grant_type\":\"client_credentials\",\"client_id\":\"$CLIENT_ID\",\"client_secret\":\"$CLIENT_SECRET\"}")
+
+          # Try to extract access_token using jq; on failure, show the full response
+          if ! TOKEN=$(echo "$RESP" | jq -r '.access_token // empty'); then
+            echo "Failed to parse token response as JSON:" >&2
+            echo "$RESP" >&2
+            exit 1
+          fi
+
+          if [ -z "$TOKEN" ]; then
+            echo "No access token returned by the server. Response:" >&2
+            echo "$RESP" >&2
+            exit 1
+          fi
+
+          # Call sync-payments endpoint with Bearer token and fail on HTTP >=400
+          HTTP_RESP=$(curl -sS -w "%{http_code}" -o /tmp/sync_resp.txt -X POST "$BASE_URL/api/admin/sync-payments" \
             -H "Authorization: Bearer $TOKEN" \
-            -H "Content-Type: application/json"
+            -H "Content-Type: application/json")
+
+          if [ "$HTTP_RESP" -ge 400 ]; then
+            echo "sync-payments endpoint returned HTTP $HTTP_RESP" >&2
+            echo "Response body:" >&2
+            cat /tmp/sync_resp.txt >&2
+            exit 1
+          fi
+
+          echo "sync-payments completed successfully (HTTP $HTTP_RESP)"
