@@ -63,7 +63,7 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
         <StatCard label="Status" value={status.label} />
       </div>
 
-      {/* Customer Information */}
+      {/* Customer Information & Order Details */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
         <div className="bg-white rounded-lg shadow p-6">
           <h2 className="text-lg font-semibold mb-4">Klantgegevens</h2>
@@ -109,6 +109,45 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
               <div>
                 <p className="text-sm text-zinc-600">Betalingsmethode</p>
                 <p className="font-medium capitalize">{order.payments[0].paymentMethod}</p>
+              </div>
+            )}
+            {/* Coupon Usage */}
+            {order.couponUsages && order.couponUsages.length > 0 && (
+              <div>
+                <p className="text-sm text-zinc-600 mb-1">Gebruikte kortingscodes</p>
+                <ul className="list-disc list-inside">
+                  {order.couponUsages.map((usage) => (
+                    <li key={usage.id}>
+                      <span className="font-medium">{usage.coupon?.code}</span>
+                      {usage.coupon?.discountType === 'fixed' && usage.coupon?.discountValue && (
+                        <span className="ml-2 text-green-700 font-semibold">
+                          -€{usage.coupon.discountValue}
+                        </span>
+                      )}
+                      {usage.coupon?.discountType === 'percentage' &&
+                        usage.coupon?.discountValue && (
+                          <span className="ml-2 text-green-700 font-semibold">
+                            -{usage.coupon.discountValue}%
+                          </span>
+                        )}
+                      {usage.coupon?.discountType === 'free_tickets' &&
+                        usage.coupon?.discountValue && (
+                          <span className="ml-2 text-green-700 font-semibold">
+                            +{usage.coupon.discountValue} gratis ticket
+                            {Number(usage.coupon.discountValue) > 1 ? 's' : ''}
+                          </span>
+                        )}
+                      {usage.discountAmount && (
+                        <span className="ml-2 text-green-800">
+                          (Korting toegepast: -€{usage.discountAmount})
+                        </span>
+                      )}
+                      {usage.coupon?.description && (
+                        <span className="ml-2 text-zinc-500">{usage.coupon.description}</span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
               </div>
             )}
           </div>

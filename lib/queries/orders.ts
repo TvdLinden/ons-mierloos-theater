@@ -54,6 +54,11 @@ export async function getOrderById(orderId: string) {
           email: true,
         },
       },
+      couponUsages: {
+        with: {
+          coupon: true,
+        },
+      },
     },
   });
 }
