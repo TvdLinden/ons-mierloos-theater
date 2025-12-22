@@ -5,6 +5,7 @@ import { usePagination } from '@/hooks/usePagination';
 import Link from 'next/link';
 import { DataTable, EmptyRow } from '@/components/admin/DataTable';
 import { useDebouncedValue } from '@/hooks/useDebounce';
+import type { ExportData } from '@/lib/utils/export';
 
 interface OrderItem {
   quantity: number;
@@ -40,7 +41,7 @@ function getExportData(
   status: string,
   sortBy: string,
   sortDir: string,
-): () => Promise<import('c:/dev/ons-mierloos-theater/lib/utils/export').ExportData> {
+): () => Promise<ExportData> {
   return async () => {
     const params = new URLSearchParams({
       search: debouncedSearchTerm,
