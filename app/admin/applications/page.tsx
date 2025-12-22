@@ -12,7 +12,6 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 
 interface ClientSecret {
   id: string;
@@ -23,11 +22,18 @@ interface ClientSecret {
   lastUsedAt: Date | null;
 }
 
-interface ClientScope {
+interface ApplicationDefinedScope {
   id: string;
-  clientApplicationId: string;
-  targetApplicationId: string;
+  applicationId: string;
   scope: string;
+  description: string | null;
+  createdAt: Date;
+}
+
+interface GrantedPermission {
+  id: string;
+  grantedToApplicationId: string;
+  definedScopeId: string;
   createdAt: Date;
 }
 
@@ -38,7 +44,8 @@ interface ClientApplication {
   createdAt: Date;
   updatedAt: Date;
   secrets: ClientSecret[];
-  scopes: ClientScope[];
+  definedScopes: ApplicationDefinedScope[];
+  grantedPermissions: GrantedPermission[];
 }
 
 export default function ApplicationsPage() {
@@ -48,12 +55,12 @@ export default function ApplicationsPage() {
   const [showNewAppForm, setShowNewAppForm] = useState(false);
   const [newAppName, setNewAppName] = useState('');
   const [newScopeName, setNewScopeName] = useState('');
-  const [newScopeTargetId, setNewScopeTargetId] = useState('');
+  const [newScopeDescription, setNewScopeDescription] = useState('');
 
   // Confirmation dialogs
   const [confirmDialog, setConfirmDialog] = useState<{
     isOpen: boolean;
-    type: 'delete_app' | 'deactivate_secret' | 'remove_scope' | null;
+    type: 'delete_app' | 'deactivate_secret' | 'remove_defined_scope' | null;
     title: string;
     description: string;
     resourceId?: string;
@@ -75,7 +82,7 @@ export default function ApplicationsPage() {
       const res = await fetch('/api/admin/applications');
       if (!res.ok) throw new Error('Failed to fetch applications');
       const data = await res.json();
-      setApplications(data);
+      setApplications(data.applications);
     } catch (error) {
       console.error('Error fetching applications:', error);
     } finally {
@@ -172,9 +179,9 @@ export default function ApplicationsPage() {
     }
   };
 
-  const handleAddScope = async () => {
-    if (!selectedApp || !newScopeName.trim() || !newScopeTargetId.trim()) {
-      alert('Scope name and target application ID are required');
+  const handleAddDefinedScope = async () => {
+    if (!selectedApp || !newScopeName.trim()) {
+      alert('Scope name is required');
       return;
     }
 
@@ -184,16 +191,16 @@ export default function ApplicationsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           applicationId: selectedApp.id,
-          action: 'add_scope',
+          action: 'add_defined_scope',
           scope: newScopeName,
-          targetApplicationId: newScopeTargetId,
+          description: newScopeDescription || null,
         }),
       });
 
       if (!res.ok) throw new Error('Failed to add scope');
 
       setNewScopeName('');
-      setNewScopeTargetId('');
+      setNewScopeDescription('');
       await fetchApplications();
       if (selectedApp) {
         const updated = applications.find((a) => a.id === selectedApp.id);
@@ -205,7 +212,7 @@ export default function ApplicationsPage() {
     }
   };
 
-  const handleRemoveScope = async (scopeId: string) => {
+  const handleRemoveDefinedScope = async (scopeId: string) => {
     if (!selectedApp) return;
 
     try {
@@ -214,7 +221,7 @@ export default function ApplicationsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           applicationId: selectedApp.id,
-          action: 'remove_scope',
+          action: 'remove_defined_scope',
           scopeId,
         }),
       });
@@ -253,12 +260,12 @@ export default function ApplicationsPage() {
     });
   };
 
-  const openRemoveScopeDialog = (scopeId: string, scopeName: string) => {
+  const openRemoveDefinedScopeDialog = (scopeId: string, scopeName: string) => {
     setConfirmDialog({
       isOpen: true,
-      type: 'remove_scope',
-      title: 'Remove Scope',
-      description: `Are you sure you want to remove the "${scopeName}" scope? This will revoke access to this feature for this application.`,
+      type: 'remove_defined_scope',
+      title: 'Remove Defined Scope',
+      description: `Are you sure you want to remove the "${scopeName}" scope? This will also revoke access for any app that was granted this scope.`,
       resourceId: scopeId,
     });
   };
@@ -271,8 +278,8 @@ export default function ApplicationsPage() {
       case 'deactivate_secret':
         if (confirmDialog.resourceId) handleDeactivateSecret(confirmDialog.resourceId);
         break;
-      case 'remove_scope':
-        if (confirmDialog.resourceId) handleRemoveScope(confirmDialog.resourceId);
+      case 'remove_defined_scope':
+        if (confirmDialog.resourceId) handleRemoveDefinedScope(confirmDialog.resourceId);
         break;
     }
   };
@@ -389,23 +396,23 @@ export default function ApplicationsPage() {
               </Button>
             </div>
 
-            {/* Scopes */}
+            {/* Defined Scopes */}
             <div className="rounded-lg border p-4">
-              <h3 className="mb-4 text-lg font-semibold">Scopes & Permissions</h3>
+              <h3 className="mb-4 text-lg font-semibold">Scopes Defined by This App</h3>
               <div className="mb-4 space-y-2">
-                {selectedApp.scopes.map((scope) => (
+                {selectedApp.definedScopes.map((scope) => (
                   <div
                     key={scope.id}
-                    className="flex items-center justify-between rounded bg-gray-50 p-3"
+                    className="flex items-center justify-between rounded bg-blue-50 p-3"
                   >
                     <div>
                       <div className="text-sm font-medium">{scope.scope}</div>
-                      <div className="text-xs text-gray-500">
-                        Target: {scope.targetApplicationId}
-                      </div>
+                      {scope.description && (
+                        <div className="text-xs text-gray-500">{scope.description}</div>
+                      )}
                     </div>
                     <Button
-                      onClick={() => openRemoveScopeDialog(scope.id, scope.scope)}
+                      onClick={() => openRemoveDefinedScopeDialog(scope.id, scope.scope)}
                       variant="outline"
                       size="sm"
                     >
@@ -422,13 +429,37 @@ export default function ApplicationsPage() {
                   onChange={(e) => setNewScopeName(e.target.value)}
                 />
                 <Input
-                  placeholder="Target Application ID"
-                  value={newScopeTargetId}
-                  onChange={(e) => setNewScopeTargetId(e.target.value)}
+                  placeholder="Description (optional)"
+                  value={newScopeDescription}
+                  onChange={(e) => setNewScopeDescription(e.target.value)}
                 />
-                <Button onClick={handleAddScope} className="w-full">
-                  Add Scope
+                <Button onClick={() => handleAddDefinedScope()} className="w-full">
+                  Define New Scope
                 </Button>
+              </div>
+            </div>
+
+            {/* Granted Permissions */}
+            <div className="rounded-lg border p-4">
+              <h3 className="mb-4 text-lg font-semibold">Permissions Granted to This App</h3>
+              <div className="mb-4 space-y-2">
+                {selectedApp.grantedPermissions.length === 0 ? (
+                  <div className="text-sm text-gray-500 italic">No permissions granted yet</div>
+                ) : (
+                  selectedApp.grantedPermissions.map((permission) => (
+                    <div
+                      key={permission.id}
+                      className="flex items-center justify-between rounded bg-green-50 p-3"
+                    >
+                      <div className="text-sm font-medium">
+                        Permission ID: {permission.definedScopeId.slice(0, 8)}...
+                      </div>
+                      <Button variant="outline" size="sm" disabled>
+                        Revoke
+                      </Button>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           </div>
@@ -457,7 +488,7 @@ export default function ApplicationsPage() {
             >
               {confirmDialog.type === 'delete_app' && 'Delete Application'}
               {confirmDialog.type === 'deactivate_secret' && 'Deactivate Secret'}
-              {confirmDialog.type === 'remove_scope' && 'Remove Scope'}
+              {confirmDialog.type === 'remove_defined_scope' && 'Remove Scope'}
             </AlertDialogAction>
           </div>
         </AlertDialogContent>

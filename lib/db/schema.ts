@@ -157,22 +157,37 @@ export const clientApplications = pgTable('client_applications', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
-export const clientScopes = pgTable(
-  'client_scopes',
+// Scopes defined by an application
+export const applicationDefinedScopes = pgTable(
+  'application_defined_scopes',
   {
-    clientApplicationId: uuid('client_application_id')
+    id: uuid('id').primaryKey().defaultRandom(),
+    applicationId: uuid('application_id')
       .notNull()
       .references(() => clientApplications.id, { onDelete: 'cascade' }),
-    targetApplicationId: uuid('target_application_id')
+    scope: varchar('scope', { length: 128 }).notNull(), // e.g., 'sync:orders', 'sync:payments'
+    description: text('description'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index('application_defined_scopes_application_id_idx').on(table.applicationId)],
+);
+
+// Permissions granted to an application to use scopes from another application
+export const grantedPermissions = pgTable(
+  'granted_permissions',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    grantedToApplicationId: uuid('granted_to_application_id')
       .notNull()
       .references(() => clientApplications.id, { onDelete: 'cascade' }),
-    scope: varchar('scope', { length: 128 }).notNull(), // e.g., 'sync:payments', 'sync:orders'
+    definedScopeId: uuid('defined_scope_id')
+      .notNull()
+      .references(() => applicationDefinedScopes.id, { onDelete: 'cascade' }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
-    primaryKey({ columns: [table.clientApplicationId, table.targetApplicationId, table.scope] }),
-    index('client_scopes_client_application_id_idx').on(table.clientApplicationId),
-    index('client_scopes_target_application_id_idx').on(table.targetApplicationId),
+    index('granted_permissions_granted_to_application_id_idx').on(table.grantedToApplicationId),
+    index('granted_permissions_defined_scope_id_idx').on(table.definedScopeId),
   ],
 );
 
@@ -640,4 +655,39 @@ export const ticketsRelations = relations(tickets, ({ one }) => ({
     references: [performances.id],
   }),
   order: one(orders, { fields: [tickets.orderId], references: [orders.id] }),
+}));
+// Client Application relations
+export const clientApplicationsRelations = relations(clientApplications, ({ many }) => ({
+  secrets: many(clientSecrets),
+  definedScopes: many(applicationDefinedScopes),
+  grantedPermissions: many(grantedPermissions),
+}));
+
+export const clientSecretsRelations = relations(clientSecrets, ({ one }) => ({
+  application: one(clientApplications, {
+    fields: [clientSecrets.clientApplicationId],
+    references: [clientApplications.id],
+  }),
+}));
+
+export const applicationDefinedScopesRelations = relations(
+  applicationDefinedScopes,
+  ({ one, many }) => ({
+    application: one(clientApplications, {
+      fields: [applicationDefinedScopes.applicationId],
+      references: [clientApplications.id],
+    }),
+    grantedPermissions: many(grantedPermissions),
+  }),
+);
+
+export const grantedPermissionsRelations = relations(grantedPermissions, ({ one }) => ({
+  grantedToApplication: one(clientApplications, {
+    fields: [grantedPermissions.grantedToApplicationId],
+    references: [clientApplications.id],
+  }),
+  definedScope: one(applicationDefinedScopes, {
+    fields: [grantedPermissions.definedScopeId],
+    references: [applicationDefinedScopes.id],
+  }),
 }));

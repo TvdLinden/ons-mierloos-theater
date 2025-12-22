@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
+import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/utils/auth';
 import { db } from '@/lib/db';
-import { clientApplications, clientSecrets, clientScopes } from '@/lib/db/schema';
+import {
+  clientApplications,
+  clientSecrets,
+  applicationDefinedScopes,
+  grantedPermissions,
+} from '@/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
 import crypto from 'crypto';
 
@@ -25,7 +30,7 @@ async function checkAdminAuth(req: NextRequest) {
   return true;
 }
 
-// GET: List all applications with their secrets and scopes
+// GET: List all applications with their secrets and defined scopes
 export async function GET(req: NextRequest) {
   try {
     if (!(await checkAdminAuth(req))) {
@@ -34,15 +39,19 @@ export async function GET(req: NextRequest) {
 
     const apps = await db.select().from(clientApplications);
     const secretsData = await db.select().from(clientSecrets);
-    const scopesData = await db.select().from(clientScopes);
+    const definedScopesData = await db.select().from(applicationDefinedScopes);
+    const grantedPermissionsData = await db.select().from(grantedPermissions);
 
     const applicationsWithDetails = apps.map((app) => ({
       ...app,
       secrets: secretsData.filter((s) => s.clientApplicationId === app.id),
-      scopes: scopesData.filter((s) => s.clientApplicationId === app.id),
+      definedScopes: definedScopesData.filter((s) => s.applicationId === app.id),
+      grantedPermissions: grantedPermissionsData.filter((p) => p.grantedToApplicationId === app.id),
     }));
 
-    return NextResponse.json(applicationsWithDetails);
+    return NextResponse.json({
+      applications: applicationsWithDetails,
+    });
   } catch (error) {
     console.error('Error fetching applications:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -177,36 +186,63 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json(updated);
     }
 
-    // Add scope to application
-    if (action === 'add_scope') {
-      const { scope, targetApplicationId } = rest;
-      if (!scope || !targetApplicationId) {
-        return NextResponse.json(
-          { error: 'Scope and target application ID are required' },
-          { status: 400 },
-        );
+    // Add scope definition to application
+    if (action === 'add_defined_scope') {
+      const { scope, description } = rest;
+      if (!scope) {
+        return NextResponse.json({ error: 'Scope name is required' }, { status: 400 });
       }
 
       const [newScope] = await db
-        .insert(clientScopes)
+        .insert(applicationDefinedScopes)
         .values({
-          clientApplicationId: applicationId,
-          targetApplicationId,
+          applicationId,
           scope,
+          description: description || null,
         })
         .returning();
 
       return NextResponse.json(newScope, { status: 201 });
     }
 
-    // Remove scope from application
-    if (action === 'remove_scope') {
+    // Remove scope definition from application
+    if (action === 'remove_defined_scope') {
       const { scopeId } = rest;
       if (!scopeId) {
         return NextResponse.json({ error: 'Scope ID is required' }, { status: 400 });
       }
 
-      await db.delete(clientScopes).where(eq(clientScopes.id, scopeId));
+      await db.delete(applicationDefinedScopes).where(eq(applicationDefinedScopes.id, scopeId));
+
+      return NextResponse.json({ success: true });
+    }
+
+    // Grant permission to an application for a scope
+    if (action === 'grant_permission') {
+      const { definedScopeId } = rest;
+      if (!definedScopeId) {
+        return NextResponse.json({ error: 'Defined scope ID is required' }, { status: 400 });
+      }
+
+      const [newPermission] = await db
+        .insert(grantedPermissions)
+        .values({
+          grantedToApplicationId: applicationId,
+          definedScopeId,
+        })
+        .returning();
+
+      return NextResponse.json(newPermission, { status: 201 });
+    }
+
+    // Revoke permission from an application
+    if (action === 'revoke_permission') {
+      const { permissionId } = rest;
+      if (!permissionId) {
+        return NextResponse.json({ error: 'Permission ID is required' }, { status: 400 });
+      }
+
+      await db.delete(grantedPermissions).where(eq(grantedPermissions.id, permissionId));
 
       return NextResponse.json({ success: true });
     }

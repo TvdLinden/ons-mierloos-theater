@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { clientApplications, clientSecrets, clientScopes } from '@/lib/db/schema';
+import {
+  clientApplications,
+  clientSecrets,
+  grantedPermissions,
+  applicationDefinedScopes,
+} from '@/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
@@ -71,14 +76,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Fetch client application
+    // Fetch client application with secrets and granted permissions
     const app = await db.query.clientApplications.findFirst({
       where: eq(clientApplications.clientId, client_id),
       with: {
         secrets: {
           where: eq(clientSecrets.active, true),
         },
-        scopes: true,
       },
     });
 
@@ -112,13 +116,27 @@ export async function POST(req: NextRequest) {
       .set({ lastUsedAt: new Date() })
       .where(eq(clientSecrets.id, validSecret.id));
 
-    // Group scopes by target application
-    const scopesByTarget = app.scopes.reduce(
-      (acc, scope) => {
-        if (!acc[scope.targetApplicationId]) {
-          acc[scope.targetApplicationId] = [];
+    // Fetch granted permissions for this application
+    const permissions = await db.query.grantedPermissions.findMany({
+      where: eq(grantedPermissions.grantedToApplicationId, app.id),
+      with: {
+        definedScope: {
+          with: {
+            application: true,
+          },
+        },
+      },
+    });
+
+    // Group scopes by the application that defined them (targetApplication)
+    const scopesByTarget = permissions.reduce(
+      (acc, permission) => {
+        const targetAppId = permission.definedScope.applicationId;
+        const scopeName = permission.definedScope.scope;
+        if (!acc[targetAppId]) {
+          acc[targetAppId] = [];
         }
-        acc[scope.targetApplicationId].push(scope.scope);
+        acc[targetAppId].push(scopeName);
         return acc;
       },
       {} as Record<string, string[]>,

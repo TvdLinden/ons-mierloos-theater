@@ -36,7 +36,12 @@ import {
   socialMediaLinks,
   clientApplications,
   clientSecrets,
-  clientScopes,
+  applicationDefinedScopes,
+  grantedPermissions,
+  clientApplicationsRelations,
+  clientSecretsRelations,
+  applicationDefinedScopesRelations,
+  grantedPermissionsRelations,
 } from '@/lib/db/schema';
 
 export type User = typeof users.$inferSelect;
@@ -92,7 +97,8 @@ export type ImageMetadata = Omit<Image, keyof ImageContent>;
 
 export type ClientApplication = typeof clientApplications.$inferSelect;
 export type ClientSecret = typeof clientSecrets.$inferSelect;
-export type ClientScope = typeof clientScopes.$inferSelect;
+export type ApplicationDefinedScope = typeof applicationDefinedScopes.$inferSelect;
+export type GrantedPermission = typeof grantedPermissions.$inferSelect;
 
 if (!process.env.DATABASE_URL) {
   throw new Error('DATABASE_URL environment variable is required');
@@ -139,7 +145,12 @@ const db = drizzle(pool, {
     socialMediaLinks,
     clientApplications,
     clientSecrets,
-    clientScopes,
+    applicationDefinedScopes,
+    grantedPermissions,
+    clientApplicationsRelations,
+    clientSecretsRelations,
+    applicationDefinedScopesRelations,
+    grantedPermissionsRelations,
   },
 });
 

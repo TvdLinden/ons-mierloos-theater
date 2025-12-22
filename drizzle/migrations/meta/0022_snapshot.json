@@ -1,9 +1,80 @@
 {
-  "id": "e55fa23f-a7b7-47c9-b3bc-0e7ea39a9f0d",
-  "prevId": "f2b72021-7139-49ca-b470-8b1654e4b25a",
+  "id": "127d7360-249e-447f-bb09-cb743ce1e8c5",
+  "prevId": "cbe38d44-0d9a-4fa2-9029-813a46883439",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
+    "public.application_defined_scopes": {
+      "name": "application_defined_scopes",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "application_id": {
+          "name": "application_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "scope": {
+          "name": "scope",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "application_defined_scopes_application_id_idx": {
+          "name": "application_defined_scopes_application_id_idx",
+          "columns": [
+            {
+              "expression": "application_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "application_defined_scopes_application_id_client_applications_id_fk": {
+          "name": "application_defined_scopes_application_id_client_applications_id_fk",
+          "tableFrom": "application_defined_scopes",
+          "tableTo": "client_applications",
+          "columnsFrom": ["application_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.client_applications": {
       "name": "client_applications",
       "schema": "",
@@ -52,106 +123,6 @@
           "columns": ["client_id"]
         }
       },
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.client_scopes": {
-      "name": "client_scopes",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "client_application_id": {
-          "name": "client_application_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "target_application_id": {
-          "name": "target_application_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "scope": {
-          "name": "scope",
-          "type": "varchar(128)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "client_scopes_client_application_id_idx": {
-          "name": "client_scopes_client_application_id_idx",
-          "columns": [
-            {
-              "expression": "client_application_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "client_scopes_target_application_id_idx": {
-          "name": "client_scopes_target_application_id_idx",
-          "columns": [
-            {
-              "expression": "target_application_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "client_scopes_client_application_id_client_applications_id_fk": {
-          "name": "client_scopes_client_application_id_client_applications_id_fk",
-          "tableFrom": "client_scopes",
-          "tableTo": "client_applications",
-          "columnsFrom": ["client_application_id"],
-          "columnsTo": ["id"],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "client_scopes_target_application_id_client_applications_id_fk": {
-          "name": "client_scopes_target_application_id_client_applications_id_fk",
-          "tableFrom": "client_scopes",
-          "tableTo": "client_applications",
-          "columnsFrom": ["target_application_id"],
-          "columnsTo": ["id"],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {
-        "client_scopes_client_application_id_target_application_id_scope_pk": {
-          "name": "client_scopes_client_application_id_target_application_id_scope_pk",
-          "columns": ["client_application_id", "target_application_id", "scope"]
-        }
-      },
-      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -208,7 +179,7 @@
           "tableTo": "client_applications",
           "columnsFrom": ["client_application_id"],
           "columnsTo": ["id"],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
@@ -611,6 +582,95 @@
           "columns": ["code"]
         }
       },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.granted_permissions": {
+      "name": "granted_permissions",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "granted_to_application_id": {
+          "name": "granted_to_application_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "defined_scope_id": {
+          "name": "defined_scope_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "granted_permissions_granted_to_application_id_idx": {
+          "name": "granted_permissions_granted_to_application_id_idx",
+          "columns": [
+            {
+              "expression": "granted_to_application_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "granted_permissions_defined_scope_id_idx": {
+          "name": "granted_permissions_defined_scope_id_idx",
+          "columns": [
+            {
+              "expression": "defined_scope_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "granted_permissions_granted_to_application_id_client_applications_id_fk": {
+          "name": "granted_permissions_granted_to_application_id_client_applications_id_fk",
+          "tableFrom": "granted_permissions",
+          "tableTo": "client_applications",
+          "columnsFrom": ["granted_to_application_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "granted_permissions_defined_scope_id_application_defined_scopes_id_fk": {
+          "name": "granted_permissions_defined_scope_id_application_defined_scopes_id_fk",
+          "tableFrom": "granted_permissions",
+          "tableTo": "application_defined_scopes",
+          "columnsFrom": ["defined_scope_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
