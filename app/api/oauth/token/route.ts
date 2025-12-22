@@ -129,9 +129,12 @@ export async function POST(req: NextRequest) {
     });
 
     // Group scopes by the application that defined them (targetApplication)
+    // NOTE: we use the target application's public `clientId` here (permission.definedScope.application.clientId)
+    // so that the generated token's `aud` and scope prefixes are the stable public identifiers that other
+    // services will check against (rather than the internal DB id).
     const scopesByTarget = permissions.reduce(
       (acc, permission) => {
-        const targetAppId = permission.definedScope.applicationId;
+        const targetAppId = permission.definedScope.application.clientId;
         const scopeName = permission.definedScope.scope;
         if (!acc[targetAppId]) {
           acc[targetAppId] = [];

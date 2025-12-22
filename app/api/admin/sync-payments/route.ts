@@ -26,7 +26,7 @@ interface SyncResult {
 export async function POST(request: NextRequest) {
   try {
     // Try JWT token first (preferred for automation)
-    const token = validateClientToken(request);
+    const token = await validateClientToken(request);
     if (token) {
       // Validate required scope for this endpoint
       if (!hasScope(token, APP_ID, 'sync:payments')) {
@@ -77,6 +77,29 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('Payment sync completed:', result);
+    // Also trigger order sync (call internal endpoint)
+    try {
+      const internalUrl = new URL('/api/admin/sync-orders', request.url).toString();
+      const headers: Record<string, string> = {};
+      const authHeader = request.headers.get('authorization');
+      if (authHeader) headers['authorization'] = authHeader;
+      const secretParam = new URL(request.url).searchParams.get('secret');
+      const syncOrdersResp = await fetch(internalUrl, {
+        method: 'POST',
+        headers,
+      });
+
+      if (!syncOrdersResp.ok) {
+        console.error('sync-orders failed', await syncOrdersResp.text());
+      } else {
+        const ordersResult = await syncOrdersResp.json();
+        console.log('Order sync completed:', ordersResult);
+      }
+    } catch (err) {
+      console.error('Error invoking sync-orders:', err);
+      // don't fail the payments response if order sync fails
+    }
+
     return NextResponse.json(result, { status: 200 });
   } catch (error) {
     console.error('Payment sync error:', error);
