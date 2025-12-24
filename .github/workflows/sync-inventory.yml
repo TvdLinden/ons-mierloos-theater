@@ -28,10 +28,16 @@ jobs:
             -H "Content-Type: application/json" \
             -d "{\"grant_type\":\"client_credentials\",\"client_id\":\"$CLIENT_ID\",\"client_secret\":\"$CLIENT_SECRET\"}")
 
-          TOKEN=$(echo "$RESP" | jq -r '.access_token // empty')
+          echo "Raw token endpoint response:" >&2
+          echo "$RESP" >&2
+
+          # Try to parse access_token, fail if jq errors
+          TOKEN=$(echo "$RESP" | jq -e -r '.access_token // empty') || {
+            echo "Failed to parse token response as JSON. See above for raw response." >&2
+            exit 5
+          }
           if [ -z "$TOKEN" ]; then
-            echo "No access_token in response" >&2
-            echo "$RESP" >&2
+            echo "No access_token in response. See above for raw response." >&2
             exit 1
           fi
 
