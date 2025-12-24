@@ -32,7 +32,7 @@ export const shows = pgTable(
     title: varchar('title', { length: 255 }).notNull(),
     subtitle: varchar('subtitle', { length: 255 }),
     slug: varchar('slug', { length: 255 }).unique().notNull(),
-    description: text('description'),
+    blocks: jsonb('blocks'),
     imageId: uuid('image_id').references(() => images.id, { onDelete: 'set null' }),
     basePrice: decimal('base_price', { precision: 8, scale: 2 }),
     status: showStatus('status').default('draft').notNull(),

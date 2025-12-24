@@ -27,7 +27,7 @@ export default async function EditShowPage(props: { params: Promise<{ id: string
   const initialData: ShowFormState = {
     title: show.title,
     subtitle: show.subtitle || undefined,
-    description: show.description,
+    blocks: show.blocks,
     slug: show.slug,
     imageId: show.imageId || undefined,
     price: show.basePrice,

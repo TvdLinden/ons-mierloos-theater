@@ -10,7 +10,16 @@ interface TextBlockComponentProps {
   onChange?: (content: string) => void;
 }
 
-export function TextBlockComponent({ block, mode, onChange }: TextBlockComponentProps) {
+export function TextBlockDisplayMode({ block }) {
+  return (
+    <div
+      className="prose prose-lg w-full max-w-[65ch]"
+      dangerouslySetInnerHTML={{ __html: block.content }}
+    />
+  );
+}
+
+export function TextBlockEditMode({ block, onChange }) {
   const editorRef = useRef<WysiwygEditorRef>(null);
 
   const handleBlur = () => {
@@ -19,15 +28,6 @@ export function TextBlockComponent({ block, mode, onChange }: TextBlockComponent
       onChange(html);
     }
   };
-
-  if (mode === 'display') {
-    return (
-      <div
-        className="prose prose-lg max-w-none w-full max-w-[65ch]"
-        dangerouslySetInnerHTML={{ __html: block.content }}
-      />
-    );
-  }
 
   return (
     <div className="space-y-2">
@@ -41,4 +41,11 @@ export function TextBlockComponent({ block, mode, onChange }: TextBlockComponent
       </div>
     </div>
   );
+}
+
+export function TextBlockComponent({ block, mode, onChange }: TextBlockComponentProps) {
+  if (mode === 'display') {
+    return <TextBlockDisplayMode block={block} />;
+  }
+  return <TextBlockEditMode block={block} onChange={onChange} />;
 }

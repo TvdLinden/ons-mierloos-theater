@@ -15,58 +15,53 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from '@/components/ui/carousel';
-import type { GalleryBlock } from '@/lib/schemas/blocks';
-import type { ImageMetadata } from '@/lib/db';
 import { getImageUrl } from '@/lib/utils/image-url';
 
-interface GalleryBlockComponentProps {
-  block: GalleryBlock;
-  mode: 'edit' | 'display';
-  availableImages?: ImageMetadata[];
-  onChange?: (data: Partial<GalleryBlock>) => void;
+import type { GalleryBlock } from '@/lib/schemas/blocks';
+import type { ImageMetadata } from '@/lib/db';
+
+export function GalleryBlockDisplay({ block }: { block: GalleryBlock }) {
+  if (block.imageIds.length === 0) return null;
+  const visibleCount = block.visibleImages || 1;
+  return (
+    <div className="my-8 w-full max-w-[65ch]">
+      <Carousel className="w-full" opts={{ align: 'start' }}>
+        <CarouselContent>
+          {block.imageIds.map((imageId) => (
+            <CarouselItem key={imageId} className={`basis-1/${visibleCount}`}>
+              <div className="relative w-full aspect-video">
+                <Image
+                  src={getImageUrl(imageId, 'lg')}
+                  alt=""
+                  unoptimized
+                  fill
+                  className="object-contain"
+                />
+              </div>
+            </CarouselItem>
+          ))}
+        </CarouselContent>
+        <CarouselPrevious />
+        <CarouselNext />
+      </Carousel>
+      {block.caption && (
+        <p className="text-center text-sm text-muted-foreground mt-2">{block.caption}</p>
+      )}
+    </div>
+  );
 }
 
-export function GalleryBlockComponent({
-  block,
-  mode,
-  availableImages = [],
-  onChange,
-}: GalleryBlockComponentProps) {
+// Edit-only component
+interface GalleryBlockEditProps {
+  block: GalleryBlock;
+  availableImages: ImageMetadata[];
+  onChange: (data: Partial<GalleryBlock>) => void;
+}
+
+export function GalleryBlockEdit({ block, availableImages, onChange }: GalleryBlockEditProps) {
+  // ...reuse the edit logic from the original component...
   const [showPicker, setShowPicker] = useState(false);
   const selectedImages = availableImages.filter((img) => block.imageIds.includes(img.id));
-
-  if (mode === 'display') {
-    if (selectedImages.length === 0) return null;
-
-    const visibleCount = block.visibleImages || 1;
-
-    return (
-      <div className="my-8 w-full max-w-[65ch]">
-        <Carousel className="w-full" opts={{ align: 'start' }}>
-          <CarouselContent>
-            {selectedImages.map((image) => (
-              <CarouselItem key={image.id} className={`basis-1/${visibleCount}`}>
-                <div className="relative w-full aspect-video">
-                  <Image
-                    src={getImageUrl(image.id, 'lg')}
-                    alt=""
-                    unoptimized
-                    fill
-                    className="object-contain"
-                  />
-                </div>
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-          <CarouselPrevious />
-          <CarouselNext />
-        </Carousel>
-        {block.caption && (
-          <p className="text-center text-sm text-muted-foreground mt-2">{block.caption}</p>
-        )}
-      </div>
-    );
-  }
 
   const handleToggleImage = (imageId: string) => {
     const currentIds = block.imageIds || [];
@@ -75,12 +70,11 @@ export function GalleryBlockComponent({
       : currentIds.length < 10
         ? [...currentIds, imageId]
         : currentIds;
-
-    onChange?.({ imageIds: newIds });
+    onChange({ imageIds: newIds });
   };
 
   const handleRemoveImage = (imageId: string) => {
-    onChange?.({ imageIds: block.imageIds.filter((id) => id !== imageId) });
+    onChange({ imageIds: block.imageIds.filter((id) => id !== imageId) });
   };
 
   return (
@@ -117,7 +111,7 @@ export function GalleryBlockComponent({
         <Input
           id={`block-${block.id}-caption`}
           value={block.caption || ''}
-          onChange={(e) => onChange?.({ caption: e.target.value })}
+          onChange={(e) => onChange({ caption: e.target.value })}
           placeholder="Voer een bijschrift in..."
         />
       </div>
@@ -129,7 +123,7 @@ export function GalleryBlockComponent({
           min={1}
           max={10}
           value={block.visibleImages || 1}
-          onChange={(value) => onChange?.({ visibleImages: value })}
+          onChange={(value) => onChange({ visibleImages: value })}
         />
       </div>
 
@@ -176,4 +170,22 @@ export function GalleryBlockComponent({
       </Dialog>
     </div>
   );
+}
+interface GalleryBlockComponentProps {
+  block: GalleryBlock;
+  mode: 'edit' | 'display';
+  availableImages?: ImageMetadata[];
+  onChange?: (data: Partial<GalleryBlock>) => void;
+}
+
+export function GalleryBlockComponent({
+  block,
+  mode,
+  availableImages = [],
+  onChange,
+}: GalleryBlockComponentProps) {
+  if (mode === 'display') {
+    return <GalleryBlockDisplay block={block} />;
+  }
+  return <GalleryBlockEdit block={block} availableImages={availableImages} onChange={onChange!} />;
 }

@@ -12,6 +12,8 @@ import { setShowTags } from '@/lib/commands/tags';
 import { isValidSlug } from '@/lib/utils/slug';
 import { invalidateShowPaths } from '@/lib/utils/invalidateShowPaths';
 import type { PerformanceStatus, ShowStatus } from '@/lib/db';
+import { Blocks } from 'lucide-react';
+import { BlocksArray, blocksArraySchema } from '@/lib/schemas/blocks';
 
 type NewPerformance = {
   id?: string;
@@ -45,7 +47,7 @@ export async function handleUpsertShow(
   // Parse basic show fields
   const title = formData.get('title') as string;
   const subtitle = formData.get('subtitle') as string;
-  const description = formData.get('description') as string;
+  const blocksJson = formData.get('blocks') as string;
   const slug = formData.get('slug') as string;
   const basePrice = formData.get('price') as string;
   const publicationDate = formData.get('publicationDate') as string;
@@ -58,8 +60,21 @@ export async function handleUpsertShow(
   const performances: NewPerformance[] = performancesData.map((p) => JSON.parse(p));
 
   // Validate basic fields
-  if (!title || !description) {
-    return { error: 'Titel en beschrijving zijn verplicht.' };
+  if (!title) {
+    return { error: 'Titel is verplicht.' };
+  }
+
+  let blocks: BlocksArray = [];
+  if (blocksJson) {
+    try {
+      const parsed = JSON.parse(blocksJson);
+      blocks = blocksArraySchema.parse(parsed);
+    } catch (error) {
+      console.error('Error parsing blocks:', error);
+      return { error: 'Ongeldige inhoud.' };
+    }
+  } else {
+    return { error: 'Inhoud is verplicht.' };
   }
 
   if (!isValidSlug(slug)) {
@@ -85,7 +100,7 @@ export async function handleUpsertShow(
       const updateFields: any = {
         title,
         subtitle: subtitle?.trim() || null,
-        description,
+        blocks,
         slug,
         basePrice,
         publicationDate: publicationDate?.trim() ? new Date(publicationDate) : null,
@@ -117,7 +132,7 @@ export async function handleUpsertShow(
         title,
         subtitle: subtitle?.trim() || null,
         slug,
-        description,
+        blocks,
         basePrice,
         status: 'draft' as ShowStatus,
         imageId: finalImageId,

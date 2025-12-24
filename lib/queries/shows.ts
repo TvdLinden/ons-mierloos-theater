@@ -10,6 +10,7 @@ import {
 import { shows, performances, showTags, tags } from '@/lib/db/schema';
 import { eq, and, desc, asc, or, lte, isNull, gte, inArray } from 'drizzle-orm';
 import { getTagsForShow } from './tags';
+import { BlocksArray, blocksArraySchema } from '../schemas/blocks';
 
 /**
  * Get all shows
@@ -80,7 +81,7 @@ export async function getShowByIdWithPerformances(
  */
 export async function getShowByIdWithTagsAndPerformances(
   id: string,
-): Promise<ShowWithTagsAndPerformances | null> {
+): Promise<(ShowWithTagsAndPerformances & { blocks: BlocksArray }) | null> {
   const result = await db.query.shows.findFirst({
     where: eq(shows.id, id),
     with: {
@@ -95,8 +96,22 @@ export async function getShowByIdWithTagsAndPerformances(
 
   if (!result) return null;
 
+  // Parse and validate blocks
+  const blocks = result.blocks
+    ? (() => {
+        try {
+          const parsed = JSON.parse(JSON.stringify(result.blocks));
+          return blocksArraySchema.parse(parsed);
+        } catch {
+          return undefined;
+        }
+      })()
+    : undefined;
+
+  console.log('Parsed blocks for show ID', id, ':', blocks);
   return {
     ...result,
+    blocks: blocks || [],
     tags: result.showTags.map((st) => st.tag).filter(Boolean),
   };
 }

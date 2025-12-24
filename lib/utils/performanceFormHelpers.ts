@@ -1,4 +1,3 @@
-import { mapFormToPerformance } from './mapFormToPerformance';
 import type { Performance, PerformanceStatus } from '@/lib/db';
 import { isValidSlug } from './slug';
 

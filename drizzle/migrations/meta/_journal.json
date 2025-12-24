@@ -162,6 +162,13 @@
       "when": 1766417809632,
       "tag": "0022_update_scopes_schema",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1766500716702,
+      "tag": "0023_melted_piledriver",
+      "breakpoints": true
     }
   ]
 }

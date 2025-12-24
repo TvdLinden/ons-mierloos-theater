@@ -1,45 +1,43 @@
 'use client';
 
-import { TextBlockComponent } from '@/components/blocks/TextBlock';
-import { ImageBlockComponent } from '@/components/blocks/ImageBlock';
-import { YoutubeBlockComponent } from '@/components/blocks/YoutubeBlock';
-import { GalleryBlockComponent } from '@/components/blocks/GalleryBlock';
-import { ColumnBlockComponent } from '@/components/blocks/ColumnBlock';
-import { RowBlockComponent } from '@/components/blocks/RowBlock';
+import { TextBlockDisplayMode } from '@/components/blocks/TextBlock';
+import { ImageBlockDisplay } from '@/components/blocks/ImageBlock';
+import { YoutubeBlockDisplay } from '@/components/blocks/YoutubeBlock';
+import { GalleryBlockDisplay } from '@/components/blocks/GalleryBlock';
+import { ColumnBlockDisplay } from '@/components/blocks/ColumnBlock';
+import { RowBlockDisplay } from '@/components/blocks/RowBlock';
 import type { Block, BlocksArray } from '@/lib/schemas/blocks';
-import type { ImageMetadata } from '@/lib/db';
 
 interface BlockRendererProps {
   blocks: BlocksArray;
-  images: ImageMetadata[];
 }
 
-function RenderBlock({ block, images }: { block: Block; images: ImageMetadata[] }) {
+function RenderBlock({ block }: { block: Block }) {
   switch (block.type) {
     case 'text':
-      return <TextBlockComponent block={block} mode="display" />;
+      return <TextBlockDisplayMode block={block} />;
 
     case 'image':
-      return <ImageBlockComponent block={block} mode="display" availableImages={images} />;
+      return <ImageBlockDisplay block={block} />;
 
     case 'youtube':
-      return <YoutubeBlockComponent block={block} mode="display" />;
+      return <YoutubeBlockDisplay block={block} />;
 
     case 'gallery':
-      return <GalleryBlockComponent block={block} mode="display" availableImages={images} />;
+      return <GalleryBlockDisplay block={block} />;
 
     case 'column':
-      return <ColumnBlockComponent block={block} mode="display" availableImages={images} />;
+      return <ColumnBlockDisplay block={block} />;
 
     case 'row':
-      return <RowBlockComponent block={block} mode="display" availableImages={images} />;
+      return <RowBlockDisplay block={block} />;
 
     default:
       return null;
   }
 }
 
-export function BlockRenderer({ blocks, images }: BlockRendererProps) {
+export function BlockRenderer({ blocks }: BlockRendererProps) {
   if (!blocks || blocks.length === 0) return null;
 
   // Sort blocks by order
@@ -48,7 +46,7 @@ export function BlockRenderer({ blocks, images }: BlockRendererProps) {
   return (
     <>
       {sortedBlocks.map((block) => (
-        <RenderBlock key={block.id} block={block} images={images} />
+        <RenderBlock key={block.id} block={block} />
       ))}
     </>
   );

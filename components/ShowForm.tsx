@@ -13,21 +13,22 @@ import {
   DialogFooter,
 } from '@/components/ui';
 import TagSelector from './TagSelector';
-import WysiwygEditor, { type WysiwygEditorRef } from './WysiwygEditor';
-import { PerformanceStatus, Tag, Performance } from '@/lib/db';
+import { PerformanceStatus, Tag, Performance, ImageMetadata } from '@/lib/db';
 import { ImageSelector } from './ImageSelector';
 import { generateSlug } from '@/lib/utils/slug';
-import Image from 'next/image';
 import { useState } from 'react';
 import { DataTable, Row } from './admin/DataTable';
 import StatusSelector from './StatusSelector';
 import { Textarea } from '@/components/ui/textarea';
 import { NumberInput } from './ui/number-input';
+import Link from 'next/link';
+import { BlockEditor } from './BlockEditor';
+import { BlocksArray } from '@/lib/schemas/blocks';
 
 export type ShowFormState = {
   title: string;
   subtitle?: string;
-  description: string;
+  blocks: BlocksArray;
   slug: string;
   imageId?: string;
   price: string;
@@ -62,7 +63,7 @@ export default function ShowForm({
   action: (prevState: FormState, formData: FormData) => Promise<FormState>;
   initial?: ShowFormState;
   availableTags?: Tag[];
-  availableImages?: Array<{ id: string; filename: string | null }>;
+  availableImages?: Array<ImageMetadata>;
 }) {
   const [state, formAction, isPending] = useActionState(action, { error: undefined });
   const [selectedImageId, setSelectedImageId] = useState<string | null>(initial?.imageId || null);
@@ -84,7 +85,8 @@ export default function ShowForm({
   );
   const [editingPerformance, setEditingPerformance] = useState<NewPerformance | null>(null);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
-  const descriptionEditorRef = useRef<WysiwygEditorRef>(null);
+  // const descriptionEditorRef = useRef<WysiwygEditorRef>(null);
+  const priceRef = useRef<HTMLInputElement>(null);
 
   const handleGenerateSlug = () => {
     const titleInput = document.querySelector<HTMLInputElement>('input[name="title"]');
@@ -98,9 +100,10 @@ export default function ShowForm({
     const rows = 5;
     const seatsPerRow = 20;
     const totalCapacity = rows * seatsPerRow;
+    const price = priceRef?.current?.value || initial?.price || '';
     setEditingPerformance({
       date: '',
-      price: initial?.price || '',
+      price: price,
       rows,
       seatsPerRow,
       availableSeats: totalCapacity,
@@ -165,12 +168,12 @@ export default function ShowForm({
             URL-vriendelijke naam: alleen kleine letters, cijfers en streepjes.
           </p>
         </SimpleFormField>
-        <SimpleFormField label="Beschrijving" htmlFor="description" required>
-          <WysiwygEditor
-            name="description"
-            defaultValue={initial?.description}
-            disabled={isPending}
-            ref={descriptionEditorRef}
+        <SimpleFormField label="Inhoud" htmlFor="blocks" required>
+          {/* <pre>{JSON.stringify(initial?.blocks || [], null, 2)}</pre> */}
+          <BlockEditor
+            name="blocks"
+            initialBlocks={initial?.blocks}
+            availableImages={availableImages}
           />
         </SimpleFormField>
         <SimpleFormField label="Prijs (€)" htmlFor="price" required>
@@ -178,6 +181,7 @@ export default function ShowForm({
             id="price"
             name="price"
             step={0.01}
+            ref={priceRef}
             defaultValue={Number(initial?.price)}
             required
           />
@@ -334,6 +338,17 @@ export default function ShowForm({
           <Button type="submit" className="w-full" disabled={isPending}>
             {isPending ? 'Opslaan...' : 'Opslaan'}
           </Button>
+          <Link href="/admin/shows">
+            <Button
+              onClick={() => {}}
+              type="button"
+              variant="outline"
+              className="w-full mt-2"
+              disabled={isPending}
+            >
+              Annuleren
+            </Button>
+          </Link>
         </div>
       </form>
 

@@ -1,24 +1,17 @@
 import Image from 'next/image';
-import CurrencyDisplay from '@/components/CurrencyDisplay';
 import { ShowWithTagsAndPerformances } from '@/lib/db';
 import { getShowImageUrl } from '@/lib/utils/performanceImages';
 import TagsContainer from './TagsContainer';
-import Markdown from './ui/markdown';
+import { BlockRenderer } from './BlockRenderer';
+import { BlocksArray } from '@/lib/schemas/blocks';
 
 export type ShowDetailProps = {
   show: ShowWithTagsAndPerformances;
   children?: React.ReactNode;
 };
 
-const markdownContent = `
-## Welcome to Ons Mierloos Theater
-- Algemene informatie
-- Contact
-- Voorstellingen
-`;
-
 export default function ShowDetail({ show, children }: ShowDetailProps) {
-  const { title, subtitle, description, basePrice: price } = show;
+  const { title, subtitle, blocks } = show;
   const imageUrl = getShowImageUrl(show);
   return (
     <div className="max-w-xl w-full p-8 flex flex-col items-center">
@@ -47,12 +40,7 @@ export default function ShowDetail({ show, children }: ShowDetailProps) {
         )}
       </p> */}
       <TagsContainer tags={show.tags} size="md" />
-      <Markdown content={description} />
-      {price && (
-        <p className="mt-2 text-lg font-bold text-primary">
-          Prijs: <CurrencyDisplay value={price} />
-        </p>
-      )}
+      <BlockRenderer blocks={blocks as BlocksArray} />
       {children}
     </div>
   );
