@@ -24,7 +24,7 @@ jobs:
           fi
 
           echo "Requesting token from $BASE_URL/api/oauth/token..."
-          RESP=$(curl -sS -X POST "$BASE_URL/api/oauth/token" \
+          RESP=$(curl -sSL -X POST "$BASE_URL/api/oauth/token" \
             -H "Content-Type: application/json" \
             -d "{\"grant_type\":\"client_credentials\",\"client_id\":\"$CLIENT_ID\",\"client_secret\":\"$CLIENT_SECRET\"}")
 
@@ -44,14 +44,14 @@ jobs:
           echo "Access token retrieved (first 8 chars): ${TOKEN:0:8}..."
 
           echo "Calling /api/admin/sync-payments with Bearer token..."
-          PAYMENTS_RESP=$(curl -sS -X POST "$BASE_URL/api/admin/sync-payments" \
+          PAYMENTS_RESP=$(curl -sSL -X POST "$BASE_URL/api/admin/sync-payments" \
             -H "Authorization: Bearer $TOKEN" \
             -H "Content-Type: application/json")
           echo "sync-payments response:"
           echo "$PAYMENTS_RESP"
 
           echo "Calling /api/admin/sync-orders with Bearer token..."
-          ORDERS_RESP=$(curl -sS -X POST "$BASE_URL/api/admin/sync-orders" \
+          ORDERS_RESP=$(curl -sSL -X POST "$BASE_URL/api/admin/sync-orders" \
             -H "Authorization: Bearer $TOKEN" \
             -H "Content-Type: application/json")
           echo "sync-orders response:"
