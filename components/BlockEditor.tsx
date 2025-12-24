@@ -90,7 +90,7 @@ function SortableBlock({
           <TextBlockComponent
             block={block}
             mode="edit"
-            onChange={(content) => onUpdate(block.id, { content })}
+            onChange={(data) => onUpdate(block.id, data)}
           />
         );
       case 'image':

@@ -20,21 +20,55 @@ import { getImageUrl } from '@/lib/utils/image-url';
 import type { GalleryBlock } from '@/lib/schemas/blocks';
 import type { ImageMetadata } from '@/lib/db';
 
+function FullscreenImageDialog({
+  imageId,
+  onClose,
+}: {
+  imageId: string | null;
+  onClose: () => void;
+}) {
+  return (
+    <Dialog open={!!imageId} onOpenChange={onClose}>
+      <DialogContent className="p-0 border border-transparent bg-transparent">
+        {imageId && (
+          <div className="relative">
+            <Image
+              src={getImageUrl(imageId, 'lg')}
+              alt=""
+              unoptimized
+              width={1200} // Example width for full-size image
+              height={800} // Example height for full-size image
+              className="object-contain"
+            />
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export function GalleryBlockDisplay({ block }: { block: GalleryBlock }) {
+  const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
+
   if (block.imageIds.length === 0) return null;
   const visibleCount = block.visibleImages || 1;
+
   return (
     <div className="my-8 w-full max-w-[65ch]">
       <Carousel className="w-full" opts={{ align: 'start' }}>
         <CarouselContent>
           {block.imageIds.map((imageId) => (
             <CarouselItem key={imageId} className={`basis-1/${visibleCount}`}>
-              <div className="relative w-full aspect-video">
+              <div
+                className="relative w-full aspect-video cursor-pointer"
+                onClick={() => setFullscreenImage(imageId)}
+              >
                 <Image
-                  src={getImageUrl(imageId, 'lg')}
+                  src={getImageUrl(imageId, 'md')}
                   alt=""
                   unoptimized
-                  fill
+                  width={100}
+                  height={56}
                   className="object-contain"
                 />
               </div>
@@ -47,6 +81,9 @@ export function GalleryBlockDisplay({ block }: { block: GalleryBlock }) {
       {block.caption && (
         <p className="text-center text-sm text-muted-foreground mt-2">{block.caption}</p>
       )}
+
+      {/* Fullscreen Dialog */}
+      <FullscreenImageDialog imageId={fullscreenImage} onClose={() => setFullscreenImage(null)} />
     </div>
   );
 }
@@ -59,7 +96,6 @@ interface GalleryBlockEditProps {
 }
 
 export function GalleryBlockEdit({ block, availableImages, onChange }: GalleryBlockEditProps) {
-  // ...reuse the edit logic from the original component...
   const [showPicker, setShowPicker] = useState(false);
   const selectedImages = availableImages.filter((img) => block.imageIds.includes(img.id));
 

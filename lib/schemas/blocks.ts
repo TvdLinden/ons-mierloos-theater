@@ -10,6 +10,9 @@ const baseBlockSchema = z.object({
 export const textBlockSchema = baseBlockSchema.extend({
   type: z.literal('text'),
   content: z.string(),
+  textAlignment: z.enum(['text-left', 'text-center', 'text-right']).optional().default('text-left'),
+  className: z.string().optional().default(''),
+  proseVariant: z.enum(['prose', 'prose-lg', 'prose-sm']).optional().default('prose'),
 });
 
 // Image block - single image with optional caption
