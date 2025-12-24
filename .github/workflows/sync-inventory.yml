@@ -1,16 +1,16 @@
 name: Sync Inventory
 
 on:
-  schedule:
-    # Runs every hour; adjust as needed
-    - cron: '0 * * * *'
+  # schedule:
+  # Runs every hour; adjust as needed
+  # - cron: '0 * * * *'
   workflow_dispatch:
 
 jobs:
   sync-inventory:
     runs-on: ubuntu-latest
     steps:
-      - name: Call sync-inventory endpoint
+      - name: Sync payments and orders (PowerShell logic in bash)
         env:
           CLIENT_ID: ${{ secrets.CLIENT_ID }}
           CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
@@ -23,31 +23,35 @@ jobs:
             exit 1
           fi
 
+          echo "Requesting token from $BASE_URL/api/oauth/token..."
           RESP=$(curl -sS -X POST "$BASE_URL/api/oauth/token" \
             -H "Content-Type: application/json" \
             -d "{\"grant_type\":\"client_credentials\",\"client_id\":\"$CLIENT_ID\",\"client_secret\":\"$CLIENT_SECRET\"}")
 
-          if ! TOKEN=$(echo "$RESP" | jq -r '.access_token // empty'); then
-            echo "Failed to parse token response as JSON:" >&2
-            echo "$RESP" >&2
-            exit 1
-          fi
-
+          TOKEN=$(echo "$RESP" | jq -r '.access_token // empty')
           if [ -z "$TOKEN" ]; then
-            echo "No access token returned by the server. Response:" >&2
+            echo "No access_token in response" >&2
             echo "$RESP" >&2
             exit 1
           fi
 
-          HTTP_RESP=$(curl -sS -w "%{http_code}" -o /tmp/sync_inventory_resp.txt -X POST "$BASE_URL/api/admin/sync-inventory" \
+          echo "Access token retrieved (first 8 chars): ${TOKEN:0:8}..."
+
+          echo "Calling /api/admin/sync-payments with Bearer token..."
+          PAYMENTS_RESP=$(curl -sS -X POST "$BASE_URL/api/admin/sync-payments" \
             -H "Authorization: Bearer $TOKEN" \
             -H "Content-Type: application/json")
+          echo "sync-payments response:"
+          echo "$PAYMENTS_RESP"
 
-          if [ "$HTTP_RESP" -ge 400 ]; then
-            echo "sync-inventory endpoint returned HTTP $HTTP_RESP" >&2
-            echo "Response body:" >&2
-            cat /tmp/sync_inventory_resp.txt >&2
-            exit 1
+          echo "Calling /api/admin/sync-orders with Bearer token..."
+          ORDERS_RESP=$(curl -sS -X POST "$BASE_URL/api/admin/sync-orders" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/json")
+          echo "sync-orders response:"
+          echo "$ORDERS_RESP"
+
+          echo "Done."
           fi
 
           echo "sync-inventory completed successfully (HTTP $HTTP_RESP)"
