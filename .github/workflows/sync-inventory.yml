@@ -28,8 +28,6 @@ jobs:
             -H "Content-Type: application/json" \
             -d "{\"grant_type\":\"client_credentials\",\"client_id\":\"$CLIENT_ID\",\"client_secret\":\"$CLIENT_SECRET\"}")
 
-          echo "Raw token endpoint response:" >&2
-          echo "$RESP" >&2
 
           # Try to parse access_token, fail if jq errors
           TOKEN=$(echo "$RESP" | jq -e -r '.access_token // empty') || {
@@ -58,6 +56,3 @@ jobs:
           echo "$ORDERS_RESP"
 
           echo "Done."
-          fi
-
-          echo "sync-inventory completed successfully (HTTP $HTTP_RESP)"
