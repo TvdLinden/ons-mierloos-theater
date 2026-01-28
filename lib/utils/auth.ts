@@ -1,13 +1,12 @@
-// Client/server auth utilities
+// Auth utilities
 import { getServerSession } from 'next-auth/next';
-import { signIn, useSession } from 'next-auth/react';
+import { signIn } from 'next-auth/react';
 import type { Session } from 'next-auth';
 import bcrypt from 'bcryptjs';
 import { User, UserRole } from '../db';
 import { redirect } from 'next/navigation';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { getUserByEmail } from '@/lib/queries/users';
-import { updateUser } from '@/lib/commands/users';
 
 /**
  * Validates user credentials and returns user info if valid
@@ -77,6 +76,7 @@ export const authOptions = {
         }
 
         // Update last signin timestamp
+        const { updateUser } = await import('@/lib/commands/users');
         await updateUser(result.user.id, { lastSignin: new Date() });
 
         return {
@@ -112,18 +112,6 @@ export const authOptions = {
     },
   },
 };
-
-/**
- * Client-side hook to check if the current user has one of the allowed roles.
- * Returns true if authorized, false otherwise.
- */
-export function useHasRole(roles: UserRole | UserRole[]) {
-  const { data: session } = useSession();
-  const allowedRoles = Array.isArray(roles) ? roles : [roles];
-  return (
-    session?.user && 'role' in session.user && allowedRoles.includes(session.user.role as UserRole)
-  );
-}
 
 /**
  * Checks if the user is authenticated. If not, redirects to signin (401).
@@ -162,21 +150,32 @@ export async function verifyPassword(plain: string, user: User): Promise<boolean
 }
 
 /**
- * Checks if a password meets policy requirements.
- */
-export function isPasswordPolicyCompliant(password: string): boolean {
-  const minLength = 8;
-  const hasUpperCase = /[A-Z]/.test(password);
-  const hasLowerCase = /[a-z]/.test(password);
-  const hasDigit = /\d/.test(password);
-  const hasMinLength = password.length >= minLength;
-  return hasUpperCase && hasLowerCase && hasDigit && hasMinLength;
-}
-
-/**
  * Hashes a password using bcrypt.
  */
 export async function hashPassword(password: string): Promise<string> {
   const saltIterations = 10;
   return bcrypt.hash(password, saltIterations);
+}
+
+/**
+ * Validates a password reset token and returns the user if valid.
+ */
+export async function validateResetToken(token: string) {
+  const { eq, and, isNotNull, gt } = await import('drizzle-orm');
+  const { db } = await import('@/lib/db');
+  const { users } = await import('@/lib/db/schema');
+
+  const [user] = await db
+    .select()
+    .from(users)
+    .where(
+      and(
+        eq(users.resetToken, token),
+        isNotNull(users.resetToken),
+        gt(users.resetTokenExpiry, new Date()),
+      ),
+    )
+    .limit(1);
+
+  return user || null;
 }

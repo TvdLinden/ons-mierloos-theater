@@ -21,6 +21,23 @@ const crimsonPro = Crimson_Pro({
 export const metadata: Metadata = {
   title: 'Ons Mierloos Theater',
   description: 'Cultuur en theater in Mierlo',
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://onsmierloos.nl'),
+  openGraph: {
+    title: 'Ons Mierloos Theater',
+    description: 'Cultuur en theater in Mierlo',
+    url: '/',
+    siteName: 'Ons Mierloos Theater',
+    type: 'website',
+    locale: 'nl_NL',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Ons Mierloos Theater',
+    description: 'Cultuur en theater in Mierlo',
+  },
+  icons: {
+    icon: '/favicon.ico',
+  },
 };
 
 export default async function RootLayout({

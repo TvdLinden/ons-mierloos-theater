@@ -36,10 +36,11 @@ export const galleryBlockSchema = baseBlockSchema.extend({
   imageIds: z.array(z.string()).min(1).max(10),
   caption: z.string().optional(),
   visibleImages: z.number().int().min(1).max(10).default(1),
+  imageSize: z.enum(['xs', 'sm', 'md', 'lg', 'xl']).optional().default('md'),
 });
 
 // Union of all block types - will be defined recursively below
-export const blockSchema: z.ZodType<any> = z.discriminatedUnion('type', [
+export const blockSchema = z.discriminatedUnion('type', [
   textBlockSchema,
   imageBlockSchema,
   youtubeBlockSchema,

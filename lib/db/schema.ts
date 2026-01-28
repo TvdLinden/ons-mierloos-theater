@@ -425,7 +425,8 @@ export const couponUsages = pgTable(
       .notNull()
       .references(() => orders.id, { onDelete: 'cascade' }),
     userId: uuid('user_id').references(() => users.id),
-    discountAmount: decimal('discount_amount', { precision: 10, scale: 2 }).notNull(),
+    discountType: couponDiscountType('discount_type').notNull(), // 'percentage', 'fixed', or 'free_tickets'
+    discountAmount: decimal('discount_amount', { precision: 10, scale: 2 }).notNull(), // Actual monetary value given to customer
     usedAt: timestamp('used_at', { withTimezone: true }).defaultNow(),
   },
   (table) => [
@@ -691,3 +692,39 @@ export const grantedPermissionsRelations = relations(grantedPermissions, ({ one 
     references: [applicationDefinedScopes.id],
   }),
 }));
+
+// Job status enum
+const jobStatusValues = ['pending', 'processing', 'completed', 'failed'] as const;
+type JobStatus = (typeof jobStatusValues)[number];
+
+export const jobStatus = pgEnum(
+  'job_status',
+  jobStatusValues as unknown as [JobStatus, ...JobStatus[]],
+);
+
+// Jobs table - generic background job processing
+export const jobs = pgTable(
+  'jobs',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    type: varchar('type', { length: 50 }).notNull(), // 'pdf_generation', 'payment_creation', 'payment_webhook', etc.
+    status: jobStatus('status').default('pending').notNull(),
+    priority: integer('priority').default(0),
+    data: jsonb('data').notNull(), // Job-specific payload
+    result: jsonb('result'), // Result data after completion
+    errorMessage: text('error_message'),
+    executionCount: integer('execution_count').default(0),
+    nextRetryAt: timestamp('next_retry_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+    completedAt: timestamp('completed_at', { withTimezone: true }),
+  },
+  (table) => [
+    index('jobs_type_status_idx').on(table.type, table.status),
+    index('jobs_next_retry_at_idx').on(table.nextRetryAt),
+    index('jobs_created_at_idx').on(table.createdAt),
+    index('jobs_status_idx').on(table.status),
+  ],
+);
+
+export const jobsRelations = relations(jobs, () => ({}));

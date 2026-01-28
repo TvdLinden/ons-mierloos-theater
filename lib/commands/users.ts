@@ -19,3 +19,14 @@ export async function updateUser(id: string, fields: Partial<User>): Promise<voi
 export async function replaceUser(id: string, fields: Omit<User, 'id'>): Promise<void> {
   await db.update(users).set(fields).where(eq(users.id, id));
 }
+
+export async function resetUserPassword(id: string, passwordHash: string): Promise<void> {
+  await db
+    .update(users)
+    .set({
+      passwordHash,
+      resetToken: null,
+      resetTokenExpiry: null,
+    })
+    .where(eq(users.id, id));
+}

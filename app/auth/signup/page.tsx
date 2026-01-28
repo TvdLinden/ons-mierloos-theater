@@ -2,7 +2,8 @@ import { redirect } from 'next/navigation';
 import { db } from '@/lib/db';
 import { users } from '@/lib/db/schema';
 import { getUserByEmail } from '@/lib/queries/users';
-import { hashPassword, isPasswordPolicyCompliant } from '@/lib/utils/auth';
+import { hashPassword } from '@/lib/utils/auth';
+import { isPasswordPolicyCompliant } from '@/lib/utils/password-policy';
 import { generateVerificationToken, sendVerificationEmail } from '@/lib/utils/email';
 import SignupForm from './SignupForm';
 

@@ -9,7 +9,7 @@ import { SocialMediaLinksList } from './SocialMediaLinksList';
 import { PagesList } from './PagesList';
 import { PreviewMode } from './PreviewMode';
 import { getHomepageContent, getAllNewsArticles } from '@/lib/queries/content';
-import { getAllImages } from '@/lib/queries/images';
+import { getAllImageMetadata } from '@/lib/queries/images';
 import { getAllSocialMediaLinks } from '@/lib/queries/socialMedia';
 import { getAllPages } from '@/lib/queries/pages';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
@@ -24,7 +24,7 @@ export default async function ContentManagementPage() {
       navLinksPromise,
       getHomepageContent(),
       getAllNewsArticles(),
-      getAllImages(),
+      getAllImageMetadata(),
       getAllSocialMediaLinks(),
       getAllPages(),
     ]);
@@ -38,7 +38,7 @@ export default async function ContentManagementPage() {
         <div>
           <AdminPageHeader title="Content Beheer" />
           <p className="text-muted-foreground">
-            Beheer de inhoud van header, footer, pagina's en homepagina
+            Beheer de inhoud van header, footer, pagina&apos;s en homepagina
           </p>
         </div>
         <PreviewMode homepageContent={homepageContent} newsArticles={newsArticles} />
@@ -47,8 +47,8 @@ export default async function ContentManagementPage() {
       {/* Pages */}
       <Card>
         <CardHeader>
-          <CardTitle>Pagina's</CardTitle>
-          <CardDescription>Beheer aangepaste pagina's op je website</CardDescription>
+          <CardTitle>Pagina&apos;s</CardTitle>
+          <CardDescription>Beheer aangepaste pagina&apos;s op je website</CardDescription>
         </CardHeader>
         <CardContent>
           <PagesList pages={pages} />

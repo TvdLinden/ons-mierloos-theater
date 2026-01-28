@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import {
   db,
   Show,
@@ -8,7 +9,7 @@ import {
   PerformanceWithShow,
 } from '@/lib/db';
 import { shows, performances, showTags, tags } from '@/lib/db/schema';
-import { eq, and, desc, asc, or, lte, isNull, gte, inArray } from 'drizzle-orm';
+import { eq, and, desc, asc, or, lte, isNull, gte, inArray, lt } from 'drizzle-orm';
 import { getTagsForShow } from './tags';
 import { BlocksArray, blocksArraySchema } from '../schemas/blocks';
 
@@ -108,7 +109,6 @@ export async function getShowByIdWithTagsAndPerformances(
       })()
     : undefined;
 
-  console.log('Parsed blocks for show ID', id, ':', blocks);
   return {
     ...result,
     blocks: blocks || [],
@@ -156,13 +156,43 @@ export async function getShowBySlugWithPerformances(
 /**
  * Get show by slug with tags and performances
  */
-export async function getShowBySlugWithTagsAndPerformances(
+export const getShowBySlugWithTagsAndPerformances = cache(
+  async (slug: string): Promise<ShowWithTagsAndPerformances | null> => {
+    const result = await db.query.shows.findFirst({
+      where: eq(shows.slug, slug),
+      with: {
+        performances: {
+          orderBy: [asc(performances.date)],
+        },
+        showTags: {
+          with: { tag: true },
+        },
+      },
+    });
+
+    if (!result) return null;
+
+    return {
+      ...result,
+      tags: result.showTags.map((st) => st.tag).filter(Boolean),
+    };
+  },
+);
+
+/**
+ * Get show by slug with available (future and published) performances only
+ * Used for the show detail page to prevent users from selecting past performances
+ */
+export async function getShowBySlugWithAvailablePerformances(
   slug: string,
 ): Promise<ShowWithTagsAndPerformances | null> {
+  const now = new Date();
+
   const result = await db.query.shows.findFirst({
     where: eq(shows.slug, slug),
     with: {
       performances: {
+        where: and(gte(performances.date, now), eq(performances.status, 'published')),
         orderBy: [asc(performances.date)],
       },
       showTags: {
@@ -255,6 +285,52 @@ export async function getUpcomingShows(
   const result = await db.query.shows.findMany(queryConfig as any);
 
   // Filter out shows with no upcoming performances and map tags
+  return result
+    .filter((show: any) => show.performances.length > 0)
+    .map((show: any) => ({
+      ...show,
+      tags: show.showTags.map((st: any) => st.tag).filter(Boolean),
+    })) as ShowWithTagsAndPerformances[];
+}
+
+/**
+ * Get recently passed shows (fallback when no upcoming shows exist)
+ * Returns shows with past performances, ordered by most recent first
+ */
+export async function getRecentlyPassedShows(
+  offset?: number,
+  limit?: number,
+): Promise<ShowWithTagsAndPerformances[]> {
+  const now = new Date();
+  const nowUTC = new Date(now.toISOString());
+
+  let whereConditions = and(
+    eq(shows.status, 'published'),
+    or(isNull(shows.publicationDate), lte(shows.publicationDate, nowUTC)),
+    or(isNull(shows.depublicationDate), gte(shows.depublicationDate, nowUTC)),
+  );
+
+  const queryConfig = {
+    where: whereConditions,
+    with: {
+      performances: {
+        where: and(
+          lt(performances.date, nowUTC),
+          eq(performances.status, 'published'),
+        ),
+        orderBy: [desc(performances.date)],
+      },
+      showTags: {
+        with: { tag: true },
+      },
+    },
+    orderBy: [desc(shows.title)],
+    ...(offset && offset > 0 ? { offset } : {}),
+    ...(limit && limit > 0 ? { limit } : {}),
+  } as const;
+
+  const result = await db.query.shows.findMany(queryConfig as any);
+
   return result
     .filter((show: any) => show.performances.length > 0)
     .map((show: any) => ({

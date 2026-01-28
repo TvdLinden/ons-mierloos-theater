@@ -1,12 +1,15 @@
 import React from 'react';
 import Link from 'next/link';
 import { NumberInput } from './ui/number-input';
+import { isCartItemExpired } from '@/lib/utils/validation';
 
 export type CartItem = {
   id: string;
   title: string;
   price: number;
   quantity: number;
+  performanceDate?: Date;
+  addedAt?: Date;
 };
 
 export type ShoppingCartProps = {
@@ -26,15 +29,48 @@ export default function ShoppingCart({
   showTotal = true,
   showTitle = true,
 }: ShoppingCartProps) {
-  const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  // Separate valid and expired items
+  const validItems = items.filter((item) => {
+    if (!item.performanceDate) return true; // Allow items without date for backward compatibility
+    return !isCartItemExpired(item);
+  });
+
+  const expiredItems = items.filter((item) => {
+    if (!item.performanceDate) return false;
+    return isCartItemExpired(item);
+  });
+
+  const total = validItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const isCheckoutDisabled = items.length > 0 && validItems.length === 0;
+
   return (
     <div className="bg-gray-50 rounded-lg p-6 w-full">
       {showTitle && <h2 className="text-2xl font-bold mb-4 text-primary">Winkelwagen</h2>}
-      {items.length === 0 ? (
+
+      {/* Show warning for expired items */}
+      {expiredItems.length > 0 && (
+        <div className="bg-red-50 border border-red-200 rounded p-4 mb-4">
+          <h3 className="font-semibold text-red-900">Niet meer beschikbare items</h3>
+          <p className="text-red-800 text-sm mt-1">
+            {expiredItems.length} item{expiredItems.length > 1 ? 's' : ''} in je winkelwagen{' '}
+            {expiredItems.length > 1 ? 'zijn' : 'is'} niet meer beschikbaar (de voorstelling is al
+            geweest).
+          </p>
+          {expiredItems.length > 0 && (
+            <ul className="mt-2 text-sm text-red-700">
+              {expiredItems.map((item) => (
+                <li key={item.id}>• {item.title}</li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+
+      {validItems.length === 0 ? (
         <p className="text-gray-500">Je winkelwagen is leeg.</p>
       ) : (
         <ul className="divide-y divide-gray-200 mb-4">
-          {items.map((item) => (
+          {validItems.map((item) => (
             <li key={item.id} className="py-3 flex items-center justify-between">
               <div>
                 <span className="font-semibold text-gray-900">{item.title}</span>
@@ -59,7 +95,7 @@ export default function ShoppingCart({
           ))}
         </ul>
       )}
-      {showTotal && (
+      {showTotal && validItems.length > 0 && (
         <div className="text-lg font-bold text-right mb-2 text-gray-900">
           Totaal: €{total.toFixed(2)}
         </div>
@@ -67,9 +103,14 @@ export default function ShoppingCart({
       {showCheckoutButton && (
         <Link
           href="/checkout"
-          className="block w-full px-6 py-3 bg-primary text-surface rounded font-bold hover:bg-secondary text-center disabled:opacity-50"
+          className={`block w-full px-6 py-3 rounded font-bold text-center transition-colors ${
+            isCheckoutDisabled
+              ? 'bg-gray-300 text-gray-600 cursor-not-allowed opacity-50'
+              : 'bg-primary text-surface hover:bg-secondary'
+          }`}
+          onClick={(e) => isCheckoutDisabled && e.preventDefault()}
         >
-          Naar afrekenen
+          {isCheckoutDisabled ? 'Voeg geldige items toe' : 'Naar afrekenen'}
         </Link>
       )}
     </div>

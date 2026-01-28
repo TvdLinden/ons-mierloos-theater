@@ -42,6 +42,8 @@ import {
   clientSecretsRelations,
   applicationDefinedScopesRelations,
   grantedPermissionsRelations,
+  jobs,
+  jobsRelations,
 } from '@/lib/db/schema';
 
 export type User = typeof users.$inferSelect;
@@ -151,6 +153,8 @@ const db = drizzle(pool, {
     clientSecretsRelations,
     applicationDefinedScopesRelations,
     grantedPermissionsRelations,
+    jobs,
+    jobsRelations,
   },
 });
 

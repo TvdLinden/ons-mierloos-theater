@@ -494,6 +494,111 @@ export async function sendVerificationEmail(
 }
 
 /**
+ * Send queued payment email (when payment is being processed)
+ */
+export async function sendQueuedPaymentEmail(data: {
+  to: string;
+  orderNumber: string;
+  customerName: string;
+  totalAmount: string;
+  orderId: string;
+}): Promise<{ success: boolean; error?: string }> {
+  console.log('📧 Attempting to send queued payment email...');
+  console.log('Recipient:', data.to);
+  console.log('Order ID:', data.orderId);
+
+  const transporter = createTransporter();
+
+  if (!transporter) {
+    console.log('❌ Email not sent: SMTP not configured');
+    return { success: false, error: 'SMTP not configured' };
+  }
+
+  const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+  const orderStatusUrl = `${baseUrl}/order/${data.orderId}?email=${encodeURIComponent(data.to)}`;
+
+  const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Je bestelling wordt verwerkt</title>
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <div style="background: linear-gradient(135deg, #1a1a2e 0%, #2d3748 100%); color: #f7e9c1; padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
+    <h1 style="margin: 0; font-size: 28px;">🎭 ${FROM_NAME}</h1>
+    <p style="margin: 10px 0 0 0; opacity: 0.9;">Bedankt voor je bestelling!</p>
+  </div>
+
+  <div style="background: #fff; padding: 30px; border: 1px solid #ddd; border-top: none; border-radius: 0 0 8px 8px;">
+    <h2 style="color: #1a1a2e; margin-top: 0;">Je bestelling is aangemaakt!</h2>
+
+    <p>Hallo ${data.customerName},</p>
+
+    <p>Je bestelling is succesvol aangemaakt en je plaatsen zijn gereserveerd.</p>
+
+    <div style="background: #f8f9fa; padding: 20px; margin: 20px 0; border-radius: 8px;">
+      <h3 style="margin-top: 0; color: #1a1a2e;">Bestelling #${data.orderNumber}</h3>
+      <p style="margin: 5px 0;"><strong>Totaal:</strong> €${data.totalAmount}</p>
+      <p style="margin: 5px 0;"><strong>Status:</strong> <span style="color: #ffc107;">⏱️ Wacht op betaling</span></p>
+    </div>
+
+    <h3 style="color: #1a1a2e;">⏱️ Wat gebeurt er nu?</h3>
+    <p>We maken momenteel je betaallink aan. Dit duurt normaal gesproken <strong>minder dan 5 minuten</strong>.</p>
+
+    <h3 style="color: #1a1a2e;">📧 Volgende stappen:</h3>
+    <ol style="line-height: 2;">
+      <li>Je ontvangt binnen enkele minuten een nieuwe e-mail met de betaallink</li>
+      <li>Klik op de link om je betaling te voltooien</li>
+      <li>Je plaatsen blijven <strong>15 minuten</strong> gereserveerd vanaf het moment van bestelling</li>
+    </ol>
+
+    <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 25px 0; border-radius: 4px;">
+      <p style="margin: 0;"><strong>⚠️ Belangrijk:</strong></p>
+      <p style="margin: 10px 0 0 0;">Rond je betaling binnen 15 minuten af om je plaatsen te behouden.</p>
+    </div>
+
+    <p>Je kunt de status van je bestelling ook bekijken via:</p>
+    <div style="text-align: center; margin: 30px 0;">
+      <a href="${orderStatusUrl}"
+         style="display: inline-block; background: #1a1a2e; color: #f7e9c1; padding: 15px 40px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 16px;">
+        Bekijk mijn bestelling
+      </a>
+    </div>
+
+    <p style="color: #666; font-size: 14px; margin-top: 30px;">
+      Vragen? Neem contact op via <a href="mailto:info@onsmierloostheater.nl" style="color: #1a1a2e;">info@onsmierloostheater.nl</a>
+    </p>
+
+    <p style="margin-top: 30px;">Met vriendelijke groet,<br/>
+    <strong>${FROM_NAME}</strong></p>
+  </div>
+
+  <div style="text-align: center; padding: 20px; color: #666; font-size: 12px;">
+    <p>© ${new Date().getFullYear()} ${FROM_NAME}. Alle rechten voorbehouden.</p>
+  </div>
+</body>
+</html>
+  `;
+
+  try {
+    await transporter.sendMail({
+      from: `"${FROM_NAME}" <${FROM_EMAIL}>`,
+      to: data.to,
+      subject: `Je bestelling wordt verwerkt - Bestelling #${data.orderNumber}`,
+      html: htmlContent,
+    });
+
+    console.log(`✅ Queued payment email sent successfully to ${data.to}`);
+    return { success: true };
+  } catch (error) {
+    console.error('❌ Failed to send queued payment email:', error);
+    return { success: false, error: String(error) };
+  }
+}
+
+/**
  * Send password reset email
  */
 export async function sendPasswordResetEmail(

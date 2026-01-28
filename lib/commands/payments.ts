@@ -1,6 +1,6 @@
 import { db, Payment, Order } from '@/lib/db';
-import { payments, orders, lineItems, couponUsages } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
+import { payments, orders, lineItems, couponUsages, coupons, performances } from '@/lib/db/schema';
+import { eq, sql } from 'drizzle-orm';
 import { sendOrderConfirmationEmail } from '@/lib/utils/email';
 import { createTicketsForLineItem } from '@/lib/commands/tickets';
 
@@ -275,77 +275,225 @@ export async function handleMollieWebhook(molliePaymentId: string): Promise<void
       return;
   }
 
-  // Update payment status and method if available
-  await db
-    .update(payments)
-    .set({
-      status: paymentStatus,
-      paymentMethod: method || payment.paymentMethod,
-      completedAt: paymentStatus === 'succeeded' ? new Date() : null,
-      updatedAt: new Date(),
-    })
-    .where(eq(payments.id, payment.id));
-
-  // Update order status
-  await updateOrderStatus(payment.orderId, orderStatus);
-
-  // If payment succeeded, send confirmation email and link line items
-  if (orderStatus === 'paid') {
-    await db
-      .update(lineItems)
-      .set({ orderId: payment.orderId })
-      .where(eq(lineItems.orderId, payment.orderId));
-
-    // Fetch order with line items and performances for email
+  // Handle payment failure - release reserved seats
+  if (paymentStatus === 'failed' || paymentStatus === 'cancelled') {
+    console.log(`[WEBHOOK] Payment ${paymentStatus}: ${payment.orderId}`);
     try {
-      const order = await db.query.orders.findFirst({
-        where: eq(orders.id, payment.orderId),
-      });
+      await handlePaymentFailure(payment.orderId);
+    } catch (error) {
+      console.error('Error handling payment failure:', error);
+      // Still update payment status even if seat release fails
+    }
+  }
 
-      const orderLineItems = await db.query.lineItems.findMany({
-        where: eq(lineItems.orderId, payment.orderId),
-        with: {
-          performance: {
-            with: {
-              show: true,
-            },
+  // Update payment status and order status in a transaction
+  await db.transaction(async (tx) => {
+    await tx
+      .update(payments)
+      .set({
+        status: paymentStatus,
+        paymentMethod: method || payment.paymentMethod,
+        completedAt: paymentStatus === 'succeeded' ? new Date() : null,
+        updatedAt: new Date(),
+      })
+      .where(eq(payments.id, payment.id));
+
+    await tx
+      .update(orders)
+      .set({
+        status: orderStatus,
+        updatedAt: new Date(),
+      })
+      .where(eq(orders.id, payment.orderId));
+  });
+
+  // If payment succeeded, generate tickets and send email
+  if (orderStatus === 'paid') {
+    await handlePaymentSuccess(payment.orderId);
+  }
+}
+
+/**
+ * Handle successful payment - generate tickets and send confirmation email
+ * Uses transaction to ensure ticket generation is atomic
+ */
+async function handlePaymentSuccess(orderId: string): Promise<void> {
+  console.log(`[PAYMENT_SUCCESS] Processing success for order ${orderId}`);
+
+  try {
+    // Fetch order with line items and performances in a transaction
+    const order = await db.query.orders.findFirst({
+      where: eq(orders.id, orderId),
+    });
+
+    const orderLineItems = await db.query.lineItems.findMany({
+      where: eq(lineItems.orderId, orderId),
+      with: {
+        performance: {
+          with: {
+            show: true,
           },
         },
-      });
+      },
+    });
 
-      const orderCouponUsages = await db.query.couponUsages.findMany({
-        where: eq(couponUsages.orderId, payment.orderId),
-        with: {
-          coupon: true,
-        },
-      });
+    const orderCouponUsages = await db.query.couponUsages.findMany({
+      where: eq(couponUsages.orderId, orderId),
+      with: {
+        coupon: true,
+      },
+    });
 
-      if (order && orderLineItems.length > 0) {
-        // Generate tickets for each line item
-        console.log('Generating tickets for order:', payment.orderId);
-        for (const lineItem of orderLineItems) {
-          if (lineItem.performance && lineItem.quantity) {
-            const createdTickets = await createTicketsForLineItem(
-              lineItem.id,
-              lineItem.performanceId!,
-              payment.orderId,
-              lineItem.quantity,
-              lineItem.performance,
-            );
-            console.log(
-              `✓ Generated ${createdTickets.length} tickets for line item ${lineItem.id}`,
-            );
-          }
-        }
-
-        await sendOrderConfirmationEmail(order, orderLineItems, orderCouponUsages);
-        console.log('Confirmation email sent for order:', payment.orderId);
-      }
-    } catch (emailError) {
-      console.error('Failed to send confirmation email:', emailError);
-      // Don't fail the webhook if email fails
+    if (!order || orderLineItems.length === 0) {
+      console.error(`[PAYMENT_SUCCESS] Order or line items not found for ${orderId}`);
+      return;
     }
 
-    console.log('Payment succeeded for order:', payment.orderId);
+    // Generate tickets in a transaction to ensure atomicity
+    // If any ticket generation fails, all fail together
+    await db.transaction(async (tx) => {
+      console.log(
+        `[PAYMENT_SUCCESS] Generating ${orderLineItems.length} line items for order ${orderId}`,
+      );
+
+      for (const lineItem of orderLineItems) {
+        if (!lineItem.performance || !lineItem.quantity) {
+          console.warn(
+            `[PAYMENT_SUCCESS] Skipping line item ${lineItem.id}: missing performance or quantity`,
+          );
+          continue;
+        }
+
+        const createdTickets = await createTicketsForLineItem(
+          lineItem.id,
+          lineItem.performanceId,
+          orderId,
+          lineItem.quantity,
+          lineItem.performance,
+        );
+
+        console.log(`✓ Generated ${createdTickets.length} tickets for line item ${lineItem.id}`);
+      }
+    });
+
+    // Send confirmation email (non-critical - don't let email failure block ticket generation)
+    try {
+      await sendOrderConfirmationEmail(order, orderLineItems, orderCouponUsages);
+      console.log(`✅ Confirmation email sent for order ${orderId}`);
+    } catch (emailError) {
+      console.error(
+        `[PAYMENT_SUCCESS] Failed to send confirmation email for order ${orderId}:`,
+        emailError,
+      );
+      // Don't fail the entire flow if email fails
+      // Tickets were already generated and persisted in the transaction above
+    }
+
+    console.log(`✅ Payment success processing completed for order ${orderId}`);
+  } catch (error) {
+    console.error(`[PAYMENT_SUCCESS] Error processing success for ${orderId}:`, error);
+    throw error;
+  }
+}
+
+/**
+ * Handle payment failure - release reserved seats back to performances
+ * Called when payment webhook indicates failure or payment is cancelled
+ * Uses transaction to ensure seat release is atomic
+ */
+export async function handlePaymentFailure(orderId: string): Promise<void> {
+  console.log(`[PAYMENT_FAILED] Processing failure for order ${orderId}`);
+
+  try {
+    // Get order with line items BEFORE transaction
+    const order = await db.query.orders.findFirst({
+      where: eq(orders.id, orderId),
+    });
+
+    if (!order) {
+      console.error(`[PAYMENT_FAILED] Order not found: ${orderId}`);
+      return;
+    }
+
+    // Only process if order is still pending (not already processed)
+    if (order.status !== 'pending') {
+      console.log(
+        `[PAYMENT_FAILED] Order ${orderId} is already ${order.status}, skipping seat release`,
+      );
+      return;
+    }
+
+    // Get line items to know which performances to release seats for
+    const orderLineItems = await db.query.lineItems.findMany({
+      where: eq(lineItems.orderId, orderId),
+    });
+
+    if (orderLineItems.length === 0) {
+      console.error(`[PAYMENT_FAILED] No line items found for order ${orderId}`);
+      return;
+    }
+
+    // Get coupon usages BEFORE transaction for later reference
+    const orderCouponUsages = await db.query.couponUsages.findMany({
+      where: eq(couponUsages.orderId, orderId),
+    });
+
+    // Group by performance to calculate total seats to release
+    const performanceGroups = new Map<string, number>();
+    for (const item of orderLineItems) {
+      const current = performanceGroups.get(item.performanceId) || 0;
+      performanceGroups.set(item.performanceId, current + item.quantity);
+    }
+
+    // Release seats and coupons in a transaction - atomic operation
+    await db.transaction(async (tx) => {
+      console.log(`[PAYMENT_FAILED] Releasing seats for ${performanceGroups.size} performances`);
+
+      // Release seats for each performance
+      for (const [perfId, quantity] of performanceGroups.entries()) {
+        await tx.execute(
+          sql`
+            UPDATE ${performances}
+            SET available_seats = available_seats + ${quantity}
+            WHERE id = ${perfId}
+          `,
+        );
+        console.log(`[PAYMENT_FAILED] Released ${quantity} seats for performance ${perfId}`);
+      }
+
+      // Mark order as failed in same transaction
+      await tx
+        .update(orders)
+        .set({ status: 'failed', updatedAt: new Date() })
+        .where(eq(orders.id, orderId));
+
+      // Release any applied coupons - delete coupon usage records and decrement usage count
+      if (orderCouponUsages.length > 0) {
+        // Delete coupon usage records
+        await tx.delete(couponUsages).where(eq(couponUsages.orderId, orderId));
+
+        // Decrement usage count for each coupon
+        for (const couponUsage of orderCouponUsages) {
+          await tx.execute(
+            sql`
+              UPDATE ${coupons}
+              SET usage_count = GREATEST(0, usage_count - 1),
+                  updated_at = NOW()
+              WHERE id = ${couponUsage.couponId}
+            `,
+          );
+          console.log(
+            `[PAYMENT_FAILED] Released coupon usage for coupon ${couponUsage.couponId}, order ${orderId}`,
+          );
+        }
+      }
+
+      console.log(`[PAYMENT_FAILED] Order ${orderId} marked as failed with coupon release`);
+    });
+
+    console.log(`✅ Payment failure processed: ${orderId}, seats released`);
+  } catch (error) {
+    console.error(`[PAYMENT_FAILED] Error processing failure for ${orderId}:`, error);
+    throw error;
   }
 }

@@ -23,9 +23,13 @@ export default function TimeslotPicker({
   const router = useRouter();
   const { addToCart } = useCart();
 
-  const availablePerformances = performances.filter(
-    (p) => p.status === 'published' && p.availableSeats > 0,
-  );
+  // Filter performances: must be published, have available seats, and be in the future
+  // (This is a safety net - the server should already filter past dates)
+  const now = new Date();
+  const availablePerformances = performances.filter((p) => {
+    const perfDate = new Date(p.date);
+    return p.status === 'published' && p.availableSeats > 0 && perfDate > now;
+  });
 
   // Auto-select the first (and only) performance if there's only one available
   const defaultPerformanceId =

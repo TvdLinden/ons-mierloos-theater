@@ -15,6 +15,13 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from '@/components/ui/carousel';
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@/components/ui/select';
 import { getImageUrl } from '@/lib/utils/image-url';
 
 import type { GalleryBlock } from '@/lib/schemas/blocks';
@@ -29,15 +36,16 @@ function FullscreenImageDialog({
 }) {
   return (
     <Dialog open={!!imageId} onOpenChange={onClose}>
+      <DialogTitle hidden>Afbeelding bekijken</DialogTitle>
       <DialogContent className="p-0 border border-transparent bg-transparent">
         {imageId && (
           <div className="relative">
             <Image
-              src={getImageUrl(imageId, 'lg')}
-              alt=""
+              src={getImageUrl(imageId, 'lg')} // Use 'xl' size for fullscreen
+              alt="Fullscreen image"
               unoptimized
-              width={1200} // Example width for full-size image
-              height={800} // Example height for full-size image
+              width={1600} // Example width for extra-large image
+              height={900} // Example height for extra-large image
               className="object-contain"
             />
           </div>
@@ -49,6 +57,15 @@ function FullscreenImageDialog({
 
 export function GalleryBlockDisplay({ block }: { block: GalleryBlock }) {
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
+
+  const sizes = {
+    xs: [100, 56],
+    sm: [200, 112],
+    md: [400, 225],
+    lg: [800, 450],
+    xl: [1200, 675],
+  };
+  const [width, height] = sizes[block.imageSize || 'md'];
 
   if (block.imageIds.length === 0) return null;
   const visibleCount = block.visibleImages || 1;
@@ -64,12 +81,11 @@ export function GalleryBlockDisplay({ block }: { block: GalleryBlock }) {
                 onClick={() => setFullscreenImage(imageId)}
               >
                 <Image
-                  src={getImageUrl(imageId, 'md')}
-                  alt=""
-                  unoptimized
-                  width={100}
-                  height={56}
-                  className="object-contain"
+                  src={getImageUrl(imageId)} // Use 'sm' size for thumbnails
+                  alt="Gallery image"
+                  width={width}
+                  height={height}
+                  className="object-cover rounded"
                 />
               </div>
             </CarouselItem>
@@ -117,7 +133,12 @@ export function GalleryBlockEdit({ block, availableImages, onChange }: GalleryBl
     <div className="space-y-4">
       <div className="space-y-2">
         <Label>Galerij afbeeldingen (max 10)</Label>
-        <Button type="button" variant="outline" onClick={() => setShowPicker(true)}>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => setShowPicker(true)}
+          aria-label="Selecteer afbeeldingen voor galerij"
+        >
           <ImageIcon className="mr-2 h-4 w-4" />
           Selecteer afbeeldingen ({block.imageIds.length}/10)
         </Button>
@@ -128,12 +149,18 @@ export function GalleryBlockEdit({ block, availableImages, onChange }: GalleryBl
           {selectedImages.map((image) => (
             <div key={image.id} className="relative group">
               <div className="relative w-full aspect-square">
-                <Image src={getImageUrl(image.id)} alt="" fill className="object-cover rounded" />
+                <Image
+                  src={getImageUrl(image.id, 'sm')}
+                  alt="Selected image preview"
+                  fill
+                  className="object-cover rounded"
+                />
               </div>
               <button
                 type="button"
                 onClick={() => handleRemoveImage(image.id)}
                 className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                aria-label="Verwijder afbeelding"
               >
                 <X className="h-3 w-3" />
               </button>
@@ -149,7 +176,27 @@ export function GalleryBlockEdit({ block, availableImages, onChange }: GalleryBl
           value={block.caption || ''}
           onChange={(e) => onChange({ caption: e.target.value })}
           placeholder="Voer een bijschrift in..."
+          aria-label="Bijschrift voor galerij"
         />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor={`block-${block.id}-imageSize`}>Afbeeldingsgrootte</Label>
+        <Select
+          value={block.imageSize || 'md'}
+          onValueChange={(value) => onChange({ imageSize: value as GalleryBlock['imageSize'] })}
+        >
+          <SelectTrigger id={`block-${block.id}-imageSize`}>
+            <SelectValue placeholder="Kies grootte" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="xs">Extra Klein</SelectItem>
+            <SelectItem value="sm">Klein</SelectItem>
+            <SelectItem value="md">Middel</SelectItem>
+            <SelectItem value="lg">Groot</SelectItem>
+            <SelectItem value="xl">Extra Groot</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="space-y-2">
@@ -160,6 +207,7 @@ export function GalleryBlockEdit({ block, availableImages, onChange }: GalleryBl
           max={10}
           value={block.visibleImages || 1}
           onChange={(value) => onChange({ visibleImages: value })}
+          aria-label="Aantal zichtbare afbeeldingen per keer"
         />
       </div>
 
@@ -186,8 +234,18 @@ export function GalleryBlockEdit({ block, availableImages, onChange }: GalleryBl
                         ? 'border-gray-200 hover:border-primary'
                         : 'border-gray-200 opacity-50 cursor-not-allowed'
                   }`}
+                  aria-label={
+                    isSelected
+                      ? `Afbeelding geselecteerd: ${image.id}`
+                      : `Selecteer afbeelding: ${image.id}`
+                  }
                 >
-                  <Image src={getImageUrl(image.id)} alt="" fill className="object-cover rounded" />
+                  <Image
+                    src={getImageUrl(image.id)}
+                    alt="Beschikbare afbeelding"
+                    fill
+                    className="object-cover rounded"
+                  />
                   {isSelected && (
                     <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
                       <div className="bg-primary text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold">
