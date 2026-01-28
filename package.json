@@ -9,6 +9,9 @@
     "lint": "eslint",
     "lint:fix": "eslint --fix",
     "format": "prettier --write .",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
     "db:generate": "cross-env NODE_ENV=development drizzle-kit generate",
     "db:migrate": "cross-env NODE_ENV=development drizzle-kit push",
     "migrate-images": "node -r dotenv/config --env-file=.env.local --import tsx scripts/migrate-images.ts",
@@ -75,7 +78,10 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@tailwindcss/typography": "^0.5.19",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
     "@types/express": "^5.0.6",
+    "@types/jest": "^30.0.0",
     "@types/node": "^20",
     "@types/nodemailer": "^7.0.4",
     "@types/pg": "^8.15.6",
@@ -90,10 +96,12 @@
     "eslint-config-next": "16.0.4",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
+    "jest": "^30.2.0",
     "jimp": "^0.22.12",
     "prettier": "^3.7.1",
     "sharp": "^0.33.5",
     "tailwindcss": "^4.1.17",
+    "ts-jest": "^29.4.6",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3"
   }
