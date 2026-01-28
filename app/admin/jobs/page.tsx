@@ -7,8 +7,8 @@ import Link from 'next/link';
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
-  title: 'Jobs Dashboard - Admin',
-  description: 'Monitor background job processing',
+  title: 'Achtergrondtaken - Admin',
+  description: 'Controleer achtergrondtaken',
 };
 
 export default async function JobsDashboard({
@@ -50,7 +50,7 @@ export default async function JobsDashboard({
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-text-primary font-display">Jobs Dashboard</h1>
+        <h1 className="text-3xl font-bold text-text-primary font-display">Achtergrondtaken</h1>
         <Link
           href="/admin"
           className="text-sm text-primary hover:underline"
@@ -61,37 +61,37 @@ export default async function JobsDashboard({
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
-        <StatCard label="Total" value={stats.total} color="blue" />
-        <StatCard label="Pending" value={stats.pending} color="yellow" />
-        <StatCard label="Processing" value={stats.processing} color="purple" />
-        <StatCard label="Completed" value={stats.completed} color="green" />
-        <StatCard label="Failed" value={stats.failed} color="red" />
-        <StatCard label="Last 24h" value={stats.last24h} color="gray" />
+        <StatCard label="Totaal" value={stats.total} color="blue" />
+        <StatCard label="In wachtrij" value={stats.pending} color="yellow" />
+        <StatCard label="Verwerken" value={stats.processing} color="purple" />
+        <StatCard label="Voltooid" value={stats.completed} color="green" />
+        <StatCard label="Mislukt" value={stats.failed} color="red" />
+        <StatCard label="Laatste 24u" value={stats.last24h} color="gray" />
       </div>
 
       {/* Filters */}
       <div className="bg-surface rounded-lg shadow p-4 mb-6">
         <div className="flex gap-2 flex-wrap">
-          <FilterButton href="/admin/jobs" label="All" active={!statusFilter && !typeFilter} />
+          <FilterButton href="/admin/jobs" label="Alles" active={!statusFilter && !typeFilter} />
           <FilterButton
             href="/admin/jobs?status=pending"
-            label="Pending"
+            label="In wachtrij"
             active={statusFilter === 'pending'}
           />
           <FilterButton
             href="/admin/jobs?status=processing"
-            label="Processing"
+            label="Verwerken"
             active={statusFilter === 'processing'}
           />
           <FilterButton
             href="/admin/jobs?status=failed"
-            label="Failed"
+            label="Mislukt"
             active={statusFilter === 'failed'}
           />
           <div className="border-l border-border mx-2"></div>
           <FilterButton
             href="/admin/jobs?type=payment_creation"
-            label="Payment Creation"
+            label="Betaling Aanmaken"
             active={typeFilter === 'payment_creation'}
           />
           <FilterButton
@@ -101,7 +101,7 @@ export default async function JobsDashboard({
           />
           <FilterButton
             href="/admin/jobs?type=orphaned_order_cleanup"
-            label="Cleanup"
+            label="Opschoning"
             active={typeFilter === 'orphaned_order_cleanup'}
           />
         </div>
@@ -123,16 +123,16 @@ export default async function JobsDashboard({
                   Status
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Attempts
+                  Pogingen
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Created
+                  Gemaakt
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Next Retry
+                  Volgende Poging
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Error
+                  Fout
                 </th>
               </tr>
             </thead>
@@ -174,26 +174,26 @@ export default async function JobsDashboard({
 
         {allJobs.length === 0 && (
           <div className="text-center py-12 text-gray-500">
-            <p className="text-lg font-medium mb-2">No jobs found</p>
-            <p className="text-sm">Try adjusting your filters or check back later</p>
+            <p className="text-lg font-medium mb-2">Geen taken gevonden</p>
+            <p className="text-sm">Probeer je filters aan te passen of kom later terug</p>
           </div>
         )}
 
         {allJobs.length === 100 && (
           <div className="bg-yellow-50 border-t border-yellow-200 px-4 py-3 text-center text-sm text-yellow-800">
-            Showing first 100 results. Use filters to narrow down the list.
+            De eerste 100 resultaten worden weergegeven. Gebruik filters om de lijst te beperken.
           </div>
         )}
       </div>
 
       {/* Info Section */}
       <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
-        <h3 className="font-semibold mb-2">💡 Job Processing Info</h3>
+        <h3 className="font-semibold mb-2">💡 Informatie over Achtergrondtaken</h3>
         <ul className="space-y-1 list-disc list-inside">
-          <li>Jobs are processed by the worker every 5 seconds</li>
-          <li>Failed jobs retry with exponential backoff (5s → 10s → 20s → 40s → 80s)</li>
-          <li>Maximum 5 retry attempts before permanent failure</li>
-          <li>Webhook jobs respond in &lt;100ms to prevent provider retries</li>
+          <li>Taken worden elke 5 seconden verwerkt door de worker</li>
+          <li>Mislukte taken worden opnieuw geprobeerd met exponentiële vertraging (5s → 10s → 20s → 40s → 80s)</li>
+          <li>Maximaal 5 pogingen voordat een taak permanent als mislukt wordt gemarkeerd</li>
+          <li>Webhook-taken reageren in &lt;100ms om herhaalde pogingen van de provider te voorkomen</li>
         </ul>
       </div>
     </div>
@@ -218,6 +218,16 @@ function StatCard({ label, value, color }: { label: string; value: number; color
   );
 }
 
+function getStatusLabel(status: string): string {
+  const labels: { [key: string]: string } = {
+    pending: 'In wachtrij',
+    processing: 'Verwerken',
+    completed: 'Voltooid',
+    failed: 'Mislukt',
+  };
+  return labels[status] || status;
+}
+
 function StatusBadge({ status }: { status: string }) {
   const styles = {
     pending: 'bg-yellow-100 text-yellow-800',
@@ -230,7 +240,7 @@ function StatusBadge({ status }: { status: string }) {
     <span
       className={`px-2 py-1 rounded text-xs font-medium ${styles[status as keyof typeof styles] || 'bg-gray-100 text-gray-800'}`}
     >
-      {status}
+      {getStatusLabel(status)}
     </span>
   );
 }

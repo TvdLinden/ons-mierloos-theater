@@ -17,6 +17,7 @@ import {
   Layout,
   Settings,
   Lock,
+  Clock,
 } from 'lucide-react';
 
 interface AdminFeature {
@@ -89,6 +90,13 @@ const features: AdminFeature[] = [
     label: 'Site Instellingen',
     description: 'Beheer SEO instellingen voor betere vindbaarheid.',
     href: '/admin/settings',
+    adminOnly: true,
+  },
+  {
+    icon: Clock,
+    label: 'Achtergrondtaken',
+    description: 'Bekijk status en logs van achtergrondtaken.',
+    href: '/admin/jobs',
     adminOnly: true,
   },
   {
