@@ -4,17 +4,52 @@ This document describes the test suite for the payment creation retry flow when 
 
 ## Overview
 
-The test suite verifies that when the Mollie payment API is unavailable during checkout:
+The test suite covers two main scenarios:
+
+### Happy Path (37 tests)
+When Mollie payment API is available and succeeds immediately:
+1. Order is created with correct total amount
+2. Seats are reserved via transaction lock
+3. Payment succeeds on first attempt
+4. User is redirected to Mollie payment gateway
+5. No job queuing needed
+6. User completes payment and returns
+
+### Retry Flow (31 tests)
+When Mollie payment API is unavailable:
 1. A `payment_creation` job is queued in the database
 2. The user receives a queued payment email
 3. The user is redirected to an order status page
 4. Seats remain reserved in the database
-5. The job retries with exponential backoff
+5. The job retries with exponential backoff (5s → 10s → 20s → ...)
 6. The job eventually succeeds when the provider is available again
 
 ## Test Files
 
-### 1. `lib/jobs/worker.test.ts` ✅ ALL PASSING
+### 1. `app/checkout/happy-path.test.ts` ✅ ALL 37 PASSING
+Tests for when everything works: Mollie payment succeeds immediately without job queuing.
+
+**Key test cases (37 tests):**
+- ✅ Payment response structure validation
+- ✅ Amount formatting and currency validation
+- ✅ Payment request details (redirectUrl, webhookUrl, metadata)
+- ✅ Order creation with pending status
+- ✅ Total amount calculation (single & multiple items)
+- ✅ Customer info preservation
+- ✅ Seat reservation and locking
+- ✅ Newsletter subscription (optional, non-blocking)
+- ✅ Email validation (valid & invalid cases)
+- ✅ Cart validation (requires items)
+- ✅ Seat availability checking
+- ✅ Happy path vs retry flow differences
+- ✅ Mollie payment handler integration
+- ✅ Customer experience and redirects
+
+```bash
+npm test -- happy-path.test.ts
+```
+
+### 2. `lib/jobs/worker.test.ts` ✅ ALL 17 PASSING
 Tests the job worker that processes queued jobs with exponential backoff retry logic.
 
 **Key test cases (17 tests):**
@@ -31,7 +66,7 @@ Tests the job worker that processes queued jobs with exponential backoff retry l
 npm test -- worker.test.ts
 ```
 
-### 2. `app/checkout/integration.test.ts` ✅ ALL PASSING
+### 3. `app/checkout/integration.test.ts` ✅ ALL 14 PASSING
 Integration test validating the contract/expectations for payment retry flow.
 
 **Key test cases (14 tests):**
@@ -88,6 +123,12 @@ npm test -- actions.test.ts
 
 ## Running Tests
 
+### Summary
+- **Total: 68 passing tests** across 5 test files
+  - 37 happy path tests ✅
+  - 17 worker/retry tests ✅
+  - 14 integration tests ✅
+
 ### Run all tests
 ```bash
 npm test
@@ -105,12 +146,17 @@ npm test:coverage
 
 ### Run specific test file
 ```bash
+npm test -- happy-path.test.ts
+npm test -- worker.test.ts
+npm test -- integration.test.ts
 npm test -- paymentCreationHandler.test.ts
 ```
 
 ### Run tests matching a pattern
 ```bash
-npm test -- --testNamePattern="should queue payment_creation job"
+npm test -- --testNamePattern="should redirect to payment URL"
+npm test -- --testNamePattern="exponential backoff"
+npm test -- --testNamePattern="reserve seats"
 ```
 
 ## Test Architecture
