@@ -1,6 +1,8 @@
 import { db } from '@/lib/db';
 import { payments, orders, lineItems, performances, coupons, couponUsages } from '@/lib/db/schema';
 import { eq, sql } from 'drizzle-orm';
+import { createTicketsForLineItem } from '@/lib/commands/tickets';
+import { sendOrderConfirmationEmail } from '@/lib/utils/email';
 
 const USE_MOCK_PAYMENT = process.env.USE_MOCK_PAYMENT === 'true';
 
@@ -99,36 +101,107 @@ export async function handlePaymentWebhook(
 
 /**
  * Handle successful payment
- * Updates order status, payment status, and sends confirmation email
+ * Updates payment/order status, generates tickets, and sends confirmation email
  */
 async function handlePaymentSuccess(orderId: string, paymentId: string): Promise<void> {
   console.log(`[PAYMENT_SUCCESS] Processing order ${orderId}`);
 
-  await db.transaction(async (tx) => {
-    // Update payment status
-    await tx
-      .update(payments)
-      .set({
-        status: 'succeeded',
-        completedAt: new Date(),
-        updatedAt: new Date(),
-      })
-      .where(eq(payments.providerTransactionId, paymentId));
+  try {
+    // Fetch order with line items and performances
+    const order = await db.query.orders.findFirst({
+      where: eq(orders.id, orderId),
+    });
 
-    // Update order status
-    await tx
-      .update(orders)
-      .set({
-        status: 'paid',
-        updatedAt: new Date(),
-      })
-      .where(eq(orders.id, orderId));
+    const orderLineItems = await db.query.lineItems.findMany({
+      where: eq(lineItems.orderId, orderId),
+      with: {
+        performance: {
+          with: {
+            show: true,
+          },
+        },
+      },
+    });
 
-    console.log(`✅ Order ${orderId} marked as paid`);
-  });
+    const orderCouponUsages = await db.query.couponUsages.findMany({
+      where: eq(couponUsages.orderId, orderId),
+      with: {
+        coupon: true,
+      },
+    });
 
-  // TODO: Send confirmation email (non-blocking)
-  // TODO: Generate PDF tickets (queue another job)
+    if (!order || orderLineItems.length === 0) {
+      console.error(`[PAYMENT_SUCCESS] Order or line items not found for ${orderId}`);
+      return;
+    }
+
+    // Update payment and order status in transaction
+    await db.transaction(async (tx) => {
+      await tx
+        .update(payments)
+        .set({
+          status: 'succeeded',
+          completedAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(eq(payments.providerTransactionId, paymentId));
+
+      await tx
+        .update(orders)
+        .set({
+          status: 'paid',
+          updatedAt: new Date(),
+        })
+        .where(eq(orders.id, orderId));
+
+      console.log(`✅ Order ${orderId} marked as paid`);
+    });
+
+    // Generate tickets in a transaction to ensure atomicity
+    // If any ticket generation fails, all fail together
+    await db.transaction(async (tx) => {
+      console.log(
+        `[PAYMENT_SUCCESS] Generating ${orderLineItems.length} line items for order ${orderId}`,
+      );
+
+      for (const lineItem of orderLineItems) {
+        if (!lineItem.performance || !lineItem.quantity) {
+          console.warn(
+            `[PAYMENT_SUCCESS] Skipping line item ${lineItem.id}: missing performance or quantity`,
+          );
+          continue;
+        }
+
+        const createdTickets = await createTicketsForLineItem(
+          lineItem.id,
+          lineItem.performanceId,
+          orderId,
+          lineItem.quantity,
+          lineItem.performance,
+        );
+
+        console.log(`✓ Generated ${createdTickets.length} tickets for line item ${lineItem.id}`);
+      }
+    });
+
+    // Send confirmation email (non-critical - don't let email failure block ticket generation)
+    try {
+      await sendOrderConfirmationEmail(order, orderLineItems, orderCouponUsages);
+      console.log(`✅ Confirmation email sent for order ${orderId}`);
+    } catch (emailError) {
+      console.error(
+        `[PAYMENT_SUCCESS] Failed to send confirmation email for order ${orderId}:`,
+        emailError,
+      );
+      // Don't fail the entire flow if email fails
+      // Tickets were already generated and persisted in the transaction above
+    }
+
+    console.log(`✅ Payment success processing completed for order ${orderId}`);
+  } catch (error) {
+    console.error(`[PAYMENT_SUCCESS] Error processing success for ${orderId}:`, error);
+    throw error;
+  }
 }
 
 /**
