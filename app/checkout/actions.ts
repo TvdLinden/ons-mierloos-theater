@@ -7,6 +7,7 @@ import { createMolliePayment } from '@/lib/commands/payments';
 import { getUserByEmail } from '@/lib/queries/users';
 import { validateCoupon } from '@/lib/utils/couponValidation';
 import { validateCartItems, isPerformanceAvailable } from '@/lib/utils/validation';
+import { validateEmail } from '@/lib/utils/emailValidation';
 import {
   validateSeatsAvailable,
   updateAvailableSeats,
@@ -63,13 +64,16 @@ export async function processCheckout(
       }
 
       // Find user if email is provided
-      const email = formData.get('email') as string;
+      const rawEmail = formData.get('email') as string;
       let userId: string | null = null;
-      if (email) {
+      if (rawEmail) {
         try {
-          const user = await getUserByEmail(email);
-          if (user) {
-            userId = user.id;
+          const emailValidation = validateEmail(rawEmail);
+          if (emailValidation.isValid) {
+            const user = await getUserByEmail(emailValidation.normalized);
+            if (user) {
+              userId = user.id;
+            }
           }
         } catch (error) {
           // Continue without user ID
@@ -102,14 +106,23 @@ export async function processCheckout(
     }
 
     // Process checkout
-    const email = formData.get('email') as string;
+    const rawEmail = formData.get('email') as string;
     const name = formData.get('name') as string;
     const subscribeNewsletter = formData.get('subscribeNewsletter') === 'on';
     const appliedCoupon = formData.get('appliedCoupon') as string;
 
-    if (!email || !name) {
-      return { error: 'Naam en e-mailadres zijn verplicht.' };
+    // Validate name
+    if (!name || !name.trim()) {
+      return { error: 'Naam is verplicht.' };
     }
+
+    // Validate and normalize email
+    const emailValidation = validateEmail(rawEmail || '');
+    if (!emailValidation.isValid) {
+      return { error: emailValidation.error };
+    }
+
+    const email = emailValidation.normalized;
 
     // Validate that all cart items are still available
     const performanceIds = [...new Set(cartItems.map((item) => item.id))];

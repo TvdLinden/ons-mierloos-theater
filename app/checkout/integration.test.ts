@@ -103,12 +103,13 @@ describe('Payment Retry Integration - Provider Unavailability', () => {
     it('should expect correct redirect URL when job is queued', () => {
       const orderId = 'order-123';
       const email = 'test@example.com';
+      const encodedEmail = encodeURIComponent(email);
 
       // When payment job is queued, user should be redirected here
-      const expectedRedirectUrl = `/order/${orderId}?email=${encodeURIComponent(email)}`;
+      const expectedRedirectUrl = `/order/${orderId}?email=${encodedEmail}`;
 
       expect(expectedRedirectUrl).toContain('/order/');
-      expect(expectedRedirectUrl).toContain(email);
+      expect(expectedRedirectUrl).toContain(encodedEmail);
       expect(expectedRedirectUrl).not.toContain('/checkout/success');
     });
 

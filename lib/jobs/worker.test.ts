@@ -7,7 +7,18 @@ import {
   type Job,
 } from './jobProcessor';
 
-jest.mock('./jobProcessor');
+// Mock database operations but NOT the utility functions we want to test
+jest.mock('./jobProcessor', () => {
+  const actual = jest.requireActual('./jobProcessor');
+  return {
+    ...actual,
+    getNextJobs: jest.fn(),
+    updateJobStatus: jest.fn(),
+    scheduleRetry: jest.fn(),
+    markJobProcessing: jest.fn(),
+    // Keep real implementations of calculateNextRetry and other utilities
+  };
+});
 
 describe('Job Worker - Payment Creation Retry with Backoff', () => {
   beforeEach(() => {
@@ -103,8 +114,7 @@ describe('Job Worker - Payment Creation Retry with Backoff', () => {
       expect(updateJobStatus).toHaveBeenCalledWith(
         mockJob.id,
         'completed',
-        result,
-        undefined
+        result
       );
     });
 
@@ -168,7 +178,7 @@ describe('Job Worker - Payment Creation Retry with Backoff', () => {
       await updateJobStatus(jobId, 'completed', {});
 
       expect(markJobProcessing).toHaveBeenCalledWith(jobId);
-      expect(updateJobStatus).toHaveBeenCalledWith(jobId, 'completed', {}, undefined);
+      expect(updateJobStatus).toHaveBeenCalledWith(jobId, 'completed', {});
     });
 
     it('should progress through: pending -> processing -> pending (retry) -> completed', async () => {
@@ -221,8 +231,7 @@ describe('Job Worker - Payment Creation Retry with Backoff', () => {
       expect(updateJobStatus).toHaveBeenCalledWith(
         jobId,
         'completed',
-        { success: true },
-        undefined
+        { success: true }
       );
     });
 

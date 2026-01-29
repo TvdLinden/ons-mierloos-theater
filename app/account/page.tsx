@@ -110,6 +110,18 @@ export default async function AccountPage() {
                   </div>
                 </div>
 
+                {/* Retry payment button for pending orders */}
+                {order.status === 'pending' && order.payments?.[0]?.providerPaymentUrl && (
+                  <div className="mb-3">
+                    <a
+                      href={order.payments[0].providerPaymentUrl}
+                      className="inline-block bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors text-sm font-medium"
+                    >
+                      Betalen →
+                    </a>
+                  </div>
+                )}
+
                 <div className="space-y-2">
                   {order.lineItems.map((item) => (
                     <div

@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useActionState } from 'react';
 import ShoppingCart from '@/components/ShoppingCart';
 import { useCart } from '@/components/CartContext';
+import { validateEmail, normalizeEmail } from '@/lib/utils/emailValidation';
 import { processCheckout, type CheckoutState } from './actions';
 
 type CheckoutFormProps = {
@@ -18,6 +19,9 @@ export default function CheckoutForm({ userName, userEmail }: CheckoutFormProps)
     {},
   );
   const [couponCode, setCouponCode] = useState('');
+  const [email, setEmail] = useState(userEmail || '');
+  const [emailError, setEmailError] = useState<string | undefined>();
+  const [name, setName] = useState(userName || '');
 
   // Redirect to Mollie payment page when payment URL is received
   useEffect(() => {
@@ -25,6 +29,23 @@ export default function CheckoutForm({ userName, userEmail }: CheckoutFormProps)
       window.location.href = state.paymentUrl;
     }
   }, [state.paymentUrl]);
+
+  // Validate email on blur to avoid annoying users while typing
+  const handleEmailBlur = () => {
+    const result = validateEmail(email);
+    setEmailError(result.error);
+    if (result.isValid) {
+      setEmail(result.normalized);
+    }
+  };
+
+  // Clear error when user starts typing again
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEmail(e.target.value);
+    if (emailError) {
+      setEmailError(undefined);
+    }
+  };
 
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const discount = state.discountAmount || 0;
@@ -135,18 +156,32 @@ export default function CheckoutForm({ userName, userEmail }: CheckoutFormProps)
           type="text"
           name="name"
           placeholder="Naam"
-          defaultValue={userName || ''}
+          value={name}
+          onChange={(e) => setName(e.target.value)}
           required
           className="w-full p-3 border rounded"
         />
-        <input
-          type="email"
-          name="email"
-          placeholder="E-mailadres"
-          defaultValue={userEmail || ''}
-          required
-          className="w-full p-3 border rounded"
-        />
+        <div>
+          <input
+            type="email"
+            name="email"
+            placeholder="E-mailadres"
+            value={email}
+            onChange={handleEmailChange}
+            onBlur={handleEmailBlur}
+            required
+            className={`w-full p-3 border rounded ${
+              emailError ? 'border-red-500' : 'border-border'
+            }`}
+            aria-invalid={emailError ? 'true' : 'false'}
+            aria-describedby={emailError ? 'email-error' : undefined}
+          />
+          {emailError && (
+            <p id="email-error" className="mt-1 text-sm text-red-600">
+              {emailError}
+            </p>
+          )}
+        </div>
         <div className="flex items-start gap-3 p-4 bg-accent/10 rounded">
           <input
             type="checkbox"
@@ -161,7 +196,7 @@ export default function CheckoutForm({ userName, userEmail }: CheckoutFormProps)
         </div>
         <button
           type="submit"
-          disabled={isPending || items.length === 0}
+          disabled={isPending || items.length === 0 || !!emailError}
           className="px-6 py-3 bg-primary text-surface rounded font-bold hover:bg-secondary disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isPending ? 'Bezig...' : 'Naar betalen'}

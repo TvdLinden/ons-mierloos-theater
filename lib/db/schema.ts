@@ -425,7 +425,7 @@ export const couponUsages = pgTable(
       .notNull()
       .references(() => orders.id, { onDelete: 'cascade' }),
     userId: uuid('user_id').references(() => users.id),
-    discountType: couponDiscountType('discount_type').notNull(), // 'percentage', 'fixed', or 'free_tickets'
+    discountType: couponDiscountType('discount_type').notNull().default('fixed'), // 'percentage', 'fixed', or 'free_tickets'
     discountAmount: decimal('discount_amount', { precision: 10, scale: 2 }).notNull(), // Actual monetary value given to customer
     usedAt: timestamp('used_at', { withTimezone: true }).defaultNow(),
   },

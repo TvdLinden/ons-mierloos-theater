@@ -12,11 +12,12 @@ Validate cart items (date, availability)
 Group items by performance
     ↓
 TRANSACTION #1 (Checkout with Row-Level Locking):
+    ├─ Create Order (pending status)
+    ├─ Create Line Items
+    │  (FK constraint verified before locking performances)
     ├─ SELECT ... FOR UPDATE on all performances
     │  (Acquires exclusive locks on performance rows)
     ├─ Validate seat availability with locked rows
-    ├─ Create Order (pending status)
-    ├─ Create Line Items
     ├─ Decrement available_seats for each performance
     ├─ Record coupon usage (if coupon applied)
     └─ Increment coupon usage_count
@@ -143,15 +144,26 @@ TRANSACTION #6 (Orphaned Order Cleanup):
 
 **File:** `app/checkout/actions.ts::processCheckout()`
 **Locking:** `SELECT ... FOR UPDATE` on performances table
+**Operation Order:**
+1. Create order
+2. Create line items (FK constraint verified before lock acquired)
+3. Lock performances with `SELECT ... FOR UPDATE`
+4. Validate seat availability with locked rows
+5. Decrement available_seats
+6. Record coupon usage
+
 **Guarantees:**
 
-- Acquires exclusive row-level locks on all performances before validation
+- Order created AND line items created atomically (no FK lock conflicts)
+- Acquires exclusive row-level locks on all performances after FK verification
 - Validation and seat decrement are protected by locks (no race conditions)
-- Order created AND line items created AND seats decremented atomically
-- All succeed together or all fail together (rollback)
+- All operations succeed together or all fail together (rollback)
 - No orphaned orders with undecremented seats
 - No concurrent overselling possible (only one checkout per performance at a time)
 - Locks released automatically at transaction end
+- No timeout issues from nested foreign key locks
+
+**Why This Order?** Creating line items before locking performances avoids FK constraint lock conflicts that caused statement timeouts. The foreign key verification happens immediately and independently of the performance row locks.
 
 #### Transaction #2: Payment Status Update
 

@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run build:*)",
+      "Bash(npm run db:migrate:*)",
+      "Bash(git -C \"C:\\\\dev\\\\ons-mierloos-theater\" status)",
+      "Bash(git -C \"C:\\\\dev\\\\ons-mierloos-theater\" diff lib/db/schema.ts)",
+      "Bash(git -C \"C:\\\\dev\\\\ons-mierloos-theater\" log --oneline -5)",
+      "Bash(git -C \"C:\\\\dev\\\\ons-mierloos-theater\" add app/admin/page.tsx app/admin/jobs/page.tsx)",
+      "Bash(git -C \"C:\\\\dev\\\\ons-mierloos-theater\" commit -m \"$\\(cat <<''EOF''\nfeat: add jobs dashboard menu item and translate jobs page to Dutch\n\n- Add \"Achtergrondtaken\" \\(Background Tasks\\) menu item to admin dashboard\n- Translate entire jobs page to Dutch including labels, filters, table headers, and info section\n- Use Clock icon for jobs menu item\n\nCo-Authored-By: Claude Haiku 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(npm install:*)",
+      "Bash(npm test:*)"
+    ]
+  }
+}

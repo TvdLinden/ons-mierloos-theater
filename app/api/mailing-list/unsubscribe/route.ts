@@ -4,6 +4,7 @@ import {
   unsubscribeByToken,
   getSubscriberByToken,
 } from '@/lib/commands/mailingList';
+import { validateEmail } from '@/lib/utils/emailValidation';
 
 export async function POST(req: NextRequest) {
   try {
@@ -13,12 +14,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 });
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return NextResponse.json({ error: 'Invalid email address' }, { status: 400 });
+    // Validate and normalize email
+    const emailValidation = validateEmail(email);
+    if (!emailValidation.isValid) {
+      return NextResponse.json({ error: emailValidation.error }, { status: 400 });
     }
 
-    await unsubscribeFromMailingList(email.toLowerCase().trim());
+    await unsubscribeFromMailingList(emailValidation.normalized);
 
     return NextResponse.json({ success: true, message: 'Successfully unsubscribed' });
   } catch (error) {

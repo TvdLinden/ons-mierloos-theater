@@ -34,9 +34,15 @@ npm run worker:watch     # Start with auto-reload
 - Core entities: shows, performances, orders, payments, tickets, users, coupons
 
 ### Data Access Pattern
-- **Queries** (`lib/queries/`): Read operations (e.g., `getShowBySlug`, `getPerformanceById`)
+- **Queries** (`lib/queries/`): Read operations (e.g., `getShowBySlug`, `getPerformanceById`, `getUpcomingShows`)
 - **Commands** (`lib/commands/`): Write operations (e.g., `createOrder`, `updatePayment`)
 - Import db types from `@/lib/db`
+
+**Key Show Queries:**
+- `getUpcomingShows()` - Fetches shows with future performances (ordered by date)
+- `getRecentlyPassedShows()` - Fetches shows with past performances (ordered by most recent first)
+- Both support pagination (`offset`, `limit`) and tag filtering
+- Both return `ShowWithTagsAndPerformances` with tags and performances included
 
 ### Authentication
 - NextAuth with credentials provider
@@ -67,17 +73,33 @@ Shows and pages use a block-based content editor with these block types:
 
 ### Checkout Flow (`app/checkout/actions.ts`)
 1. Cart validation and coupon processing
-2. Transactional order creation with row-level locking (`SELECT ... FOR UPDATE`)
-3. Seat reservation (decrements `availableSeats`)
-4. Mollie payment creation (queued as job on failure)
-5. Redirect to payment or order status page
+2. Transactional order creation:
+   - Create order record (pending status)
+   - Create line items (FK constraint verified before locking)
+   - Lock performances with `SELECT ... FOR UPDATE`
+   - Validate seat availability within lock
+   - Decrement `availableSeats`
+   - Record coupon usage if applied
+3. Mollie payment creation (queued as job on failure)
+4. Redirect to payment or order status page
+
+**Important:** Line items are created BEFORE acquiring performance locks to avoid foreign key constraint lock conflicts that cause timeouts. All operations remain atomic within the transaction.
 
 ### Homepage (`app/page.tsx`)
 - `HeroCarousel` - Full-width image carousel with autoplay (Embla + `embla-carousel-autoplay`)
-- `FeaturedShows` - 3-column grid of show cards ("Uitgelicht" section)
+- `FeaturedShows` - 3-column grid of show cards with dynamic section title (label prop)
 - `FeaturedShowCard` - Simplified show card with thumbnail, tags, date, price
 - `NewsletterSection` - Newsletter signup wrapper using `MailingListSignup`
 - `HomeNews` - News articles carousel
+
+**Fallback Logic for Empty Seasons:**
+1. Tries to fetch upcoming shows via `getUpcomingShows()`
+2. If no upcoming shows found, fetches recently passed shows via `getRecentlyPassedShows()`
+3. If shows exist in either query, displays them with appropriate label:
+   - "Uitgelicht" for upcoming shows
+   - "Pas gespeeld" for recently performed shows
+4. If no shows at all, displays empty state message
+5. The fallback query only runs when needed (no extra DB hits if upcoming shows exist)
 
 ### Carousel System
 - Uses Embla Carousel via shadcn/ui (`components/ui/carousel.tsx`)

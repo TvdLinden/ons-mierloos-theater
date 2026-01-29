@@ -16,8 +16,7 @@ export default async function JobsDashboard({
 }: {
   searchParams: { status?: string; type?: string };
 }) {
-  const statusFilter = searchParams.status;
-  const typeFilter = searchParams.type;
+  const { status: statusFilter, type: typeFilter } = await searchParams;
 
   // Build query with filters
   const conditions = [];
@@ -51,10 +50,7 @@ export default async function JobsDashboard({
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-text-primary font-display">Achtergrondtaken</h1>
-        <Link
-          href="/admin"
-          className="text-sm text-primary hover:underline"
-        >
+        <Link href="/admin" className="text-sm text-primary hover:underline">
           ← Terug naar admin
         </Link>
       </div>
@@ -163,7 +159,10 @@ export default async function JobsDashboard({
                         })
                       : '-'}
                   </td>
-                  <td className="px-4 py-3 text-sm text-red-600 max-w-xs truncate" title={job.errorMessage || ''}>
+                  <td
+                    className="px-4 py-3 text-sm text-red-600 max-w-xs truncate"
+                    title={job.errorMessage || ''}
+                  >
                     {job.errorMessage || '-'}
                   </td>
                 </tr>
@@ -191,9 +190,14 @@ export default async function JobsDashboard({
         <h3 className="font-semibold mb-2">💡 Informatie over Achtergrondtaken</h3>
         <ul className="space-y-1 list-disc list-inside">
           <li>Taken worden elke 5 seconden verwerkt door de worker</li>
-          <li>Mislukte taken worden opnieuw geprobeerd met exponentiële vertraging (5s → 10s → 20s → 40s → 80s)</li>
+          <li>
+            Mislukte taken worden opnieuw geprobeerd met exponentiële vertraging (5s → 10s → 20s →
+            40s → 80s)
+          </li>
           <li>Maximaal 5 pogingen voordat een taak permanent als mislukt wordt gemarkeerd</li>
-          <li>Webhook-taken reageren in &lt;100ms om herhaalde pogingen van de provider te voorkomen</li>
+          <li>
+            Webhook-taken reageren in &lt;100ms om herhaalde pogingen van de provider te voorkomen
+          </li>
         </ul>
       </div>
     </div>
