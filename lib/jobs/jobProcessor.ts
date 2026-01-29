@@ -51,20 +51,37 @@ export async function createJob(
 
 /**
  * Get next pending jobs ready for processing
+ * Atomically fetches and marks jobs as 'processing' to prevent duplicate processing
+ * in horizontally scaled worker environments
  * @param limit Maximum number of jobs to fetch
- * @returns Array of pending jobs
+ * @returns Array of jobs marked as processing
  */
 export async function getNextJobs(limit = 10): Promise<Job[]> {
   const now = new Date();
 
-  return (await db.query.jobs.findMany({
-    where: and(
-      eq(jobs.status, 'pending'),
-      or(isNull(jobs.nextRetryAt), lte(jobs.nextRetryAt, now)),
-    ),
-    orderBy: (jobs, { desc, asc }) => [desc(jobs.priority), asc(jobs.createdAt)],
-    limit,
-  })) as Job[];
+  return await db.transaction(async (tx) => {
+    // Fetch pending jobs that are ready for retry
+    const nextJobs = (await tx.query.jobs.findMany({
+      where: and(
+        eq(jobs.status, 'pending'),
+        or(isNull(jobs.nextRetryAt), lte(jobs.nextRetryAt, now)),
+      ),
+      orderBy: (jobs, { desc, asc }) => [desc(jobs.priority), asc(jobs.createdAt)],
+      limit,
+    })) as Job[];
+
+    // Atomically mark all fetched jobs as processing in same transaction
+    // This prevents other workers from fetching the same jobs
+    if (nextJobs.length > 0) {
+      const jobIds = nextJobs.map((j) => j.id);
+      await tx
+        .update(jobs)
+        .set({ status: 'processing', updatedAt: new Date() })
+        .where(sql`id = ANY(${jobIds})`);
+    }
+
+    return nextJobs;
+  });
 }
 
 /**

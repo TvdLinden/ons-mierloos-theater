@@ -2,7 +2,6 @@ import {
   getNextJobs,
   updateJobStatus,
   scheduleRetry,
-  markJobProcessing,
   type Job,
 } from './jobProcessor';
 import { handlePaymentCreation } from './handlers/paymentCreationHandler';
@@ -77,9 +76,7 @@ async function processJob(job: Job): Promise<void> {
     return;
   }
 
-  // Mark as processing to prevent concurrent execution
-  await markJobProcessing(id);
-
+  // Jobs are already marked as 'processing' by getNextJobs() atomically
   try {
     let result: any;
 
