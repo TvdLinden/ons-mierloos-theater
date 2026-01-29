@@ -1,6 +1,6 @@
 import { db } from '@/lib/db';
 import { jobs } from '@/lib/db/schema';
-import { eq, and, isNull, lte, or, sql } from 'drizzle-orm';
+import { eq, and, isNull, lte, or, inArray } from 'drizzle-orm';
 
 export type JobType =
   | 'pdf_generation'
@@ -77,7 +77,7 @@ export async function getNextJobs(limit = 10): Promise<Job[]> {
       await tx
         .update(jobs)
         .set({ status: 'processing', updatedAt: new Date() })
-        .where(sql`id = ANY(${jobIds})`);
+        .where(inArray(jobs.id, jobIds));
     }
 
     return nextJobs;

@@ -1,5 +1,5 @@
 import { db } from '@/lib/db';
-import { payments, orders, lineItems, performances, coupons, couponUsages } from '@/lib/db/schema';
+import { payments, orders, lineItems, performances, coupons, couponUsages, tickets } from '@/lib/db/schema';
 import { eq, sql } from 'drizzle-orm';
 import { createTicketsForLineItem } from '@/lib/commands/tickets';
 import { sendOrderConfirmationEmail } from '@/lib/utils/email';
@@ -157,32 +157,41 @@ async function handlePaymentSuccess(orderId: string, paymentId: string): Promise
       console.log(`✅ Order ${orderId} marked as paid`);
     });
 
-    // Generate tickets in a transaction to ensure atomicity
-    // If any ticket generation fails, all fail together
-    await db.transaction(async (tx) => {
-      console.log(
-        `[PAYMENT_SUCCESS] Generating ${orderLineItems.length} line items for order ${orderId}`,
-      );
+    // Check if tickets already exist (idempotency)
+    const existingTickets = await db.query.tickets.findFirst({
+      where: eq(tickets.orderId, orderId),
+    });
 
-      for (const lineItem of orderLineItems) {
-        if (!lineItem.performance || !lineItem.quantity) {
-          console.warn(
-            `[PAYMENT_SUCCESS] Skipping line item ${lineItem.id}: missing performance or quantity`,
-          );
-          continue;
-        }
-
-        const createdTickets = await createTicketsForLineItem(
-          lineItem.id,
-          lineItem.performanceId,
-          orderId,
-          lineItem.quantity,
-          lineItem.performance,
+    if (existingTickets) {
+      console.log(`[PAYMENT_SUCCESS] Tickets already exist for order ${orderId}, skipping generation`);
+    } else {
+      // Generate tickets in a transaction to ensure atomicity
+      // If any ticket generation fails, all fail together
+      await db.transaction(async (tx) => {
+        console.log(
+          `[PAYMENT_SUCCESS] Generating ${orderLineItems.length} line items for order ${orderId}`,
         );
 
-        console.log(`✓ Generated ${createdTickets.length} tickets for line item ${lineItem.id}`);
-      }
-    });
+        for (const lineItem of orderLineItems) {
+          if (!lineItem.performance || !lineItem.quantity) {
+            console.warn(
+              `[PAYMENT_SUCCESS] Skipping line item ${lineItem.id}: missing performance or quantity`,
+            );
+            continue;
+          }
+
+          const createdTickets = await createTicketsForLineItem(
+            lineItem.id,
+            lineItem.performanceId,
+            orderId,
+            lineItem.quantity,
+            lineItem.performance,
+          );
+
+          console.log(`✓ Generated ${createdTickets.length} tickets for line item ${lineItem.id}`);
+        }
+      });
+    }
 
     // Send confirmation email (non-critical - don't let email failure block ticket generation)
     try {
