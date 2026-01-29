@@ -86,7 +86,7 @@ describe('processCheckout Integration Tests', () => {
       mockPerformancesFindMany.mockResolvedValue([
         {
           id: 'perf-1',
-          date: new Date('2026-06-01'),
+          date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
           status: 'published',
           availableSeats: 100,
         },
@@ -187,7 +187,7 @@ describe('processCheckout Integration Tests', () => {
       mockPerformancesFindMany.mockResolvedValue([
         {
           id: 'perf-1',
-          date: new Date('2026-06-01'),
+          date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
           status: 'published',
           availableSeats: 100,
         },
@@ -275,7 +275,7 @@ describe('processCheckout Integration Tests', () => {
       mockPerformancesFindMany.mockResolvedValue([
         {
           id: 'perf-1',
-          date: new Date('2026-06-01'),
+          date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
           status: 'published',
           availableSeats: 100,
         },
@@ -329,7 +329,7 @@ describe('processCheckout Integration Tests', () => {
     it('should subscribe to newsletter when checkbox is checked', async () => {
       // Setup mocks
       mockPerformancesFindMany.mockResolvedValue([
-        { id: 'perf-1', date: new Date('2026-06-01'), status: 'published', availableSeats: 100 },
+        { id: 'perf-1', date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), status: 'published', availableSeats: 100 },
       ]);
       (orderCommands.createOrder as jest.Mock).mockResolvedValue({
         id: 'order-123',
@@ -368,7 +368,7 @@ describe('processCheckout Integration Tests', () => {
     it('should not fail checkout if newsletter subscription fails', async () => {
       // Setup mocks
       mockPerformancesFindMany.mockResolvedValue([
-        { id: 'perf-1', date: new Date('2026-06-01'), status: 'published', availableSeats: 100 },
+        { id: 'perf-1', date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), status: 'published', availableSeats: 100 },
       ]);
       (orderCommands.createOrder as jest.Mock).mockResolvedValue({
         id: 'order-123',
