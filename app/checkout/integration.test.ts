@@ -447,5 +447,80 @@ describe('processCheckout Integration Tests', () => {
       expect(result.error).toContain('Naam is verplicht');
       expect(orderCommands.createOrder).not.toHaveBeenCalled();
     });
+
+    it('should reject performances with past dates', async () => {
+      // Setup: Mock performance with past date
+      mockPerformancesFindMany.mockResolvedValue([
+        {
+          id: 'perf-1',
+          date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 7 days ago
+          status: 'published',
+          availableSeats: 100,
+        },
+      ]);
+
+      const formData = new FormData();
+      formData.set('action', 'checkout');
+      formData.set('cartItems', JSON.stringify([
+        { id: 'perf-1', quantity: 1, price: 35, title: 'Past Show' },
+      ]));
+      formData.set('email', 'test@example.com');
+      formData.set('name', 'Test User');
+
+      const result = await processCheckout({}, formData);
+
+      expect(result.error).toContain('niet meer beschikbaar');
+      expect(orderCommands.createOrder).not.toHaveBeenCalled();
+    });
+
+    it('should reject performances that are not published', async () => {
+      // Setup: Mock performance with unpublished status
+      mockPerformancesFindMany.mockResolvedValue([
+        {
+          id: 'perf-1',
+          date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+          status: 'draft',
+          availableSeats: 100,
+        },
+      ]);
+
+      const formData = new FormData();
+      formData.set('action', 'checkout');
+      formData.set('cartItems', JSON.stringify([
+        { id: 'perf-1', quantity: 1, price: 35, title: 'Unpublished Show' },
+      ]));
+      formData.set('email', 'test@example.com');
+      formData.set('name', 'Test User');
+
+      const result = await processCheckout({}, formData);
+
+      expect(result.error).toContain('niet meer beschikbaar');
+      expect(orderCommands.createOrder).not.toHaveBeenCalled();
+    });
+
+    it('should reject performances with no available seats', async () => {
+      // Setup: Mock performance with zero available seats
+      mockPerformancesFindMany.mockResolvedValue([
+        {
+          id: 'perf-1',
+          date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+          status: 'published',
+          availableSeats: 0,
+        },
+      ]);
+
+      const formData = new FormData();
+      formData.set('action', 'checkout');
+      formData.set('cartItems', JSON.stringify([
+        { id: 'perf-1', quantity: 1, price: 35, title: 'Sold Out Show' },
+      ]));
+      formData.set('email', 'test@example.com');
+      formData.set('name', 'Test User');
+
+      const result = await processCheckout({}, formData);
+
+      expect(result.error).toContain('niet meer beschikbaar');
+      expect(orderCommands.createOrder).not.toHaveBeenCalled();
+    });
   });
 });
