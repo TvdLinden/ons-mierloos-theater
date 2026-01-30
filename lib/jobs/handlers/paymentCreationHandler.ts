@@ -1,6 +1,7 @@
 import { db } from '@/lib/db';
 import { payments, orders } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
+import { randomUUID } from 'crypto';
 
 const USE_MOCK_PAYMENT = process.env.USE_MOCK_PAYMENT === 'true';
 
@@ -111,7 +112,7 @@ async function handleMockPaymentCreation(
 ): Promise<{ paymentUrl: string; paymentId: string }> {
   const { orderId, amount, currency, customerEmail, customerName } = data;
 
-  const mockPaymentId = `mock_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+  const mockPaymentId = `mock_${randomUUID()}`;
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 
   console.log(`[PAYMENT_CREATION] Creating MOCK payment: ${mockPaymentId}`);
