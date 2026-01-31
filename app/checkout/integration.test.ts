@@ -6,6 +6,7 @@
  * - Retry path: Order creation + payment provider failure + job queuing
  */
 
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { processCheckout } from './actions';
 import * as paymentCommands from '@/lib/commands/payments';
 import * as jobProcessor from '@/lib/jobs/jobProcessor';
@@ -15,36 +16,36 @@ import * as ticketSalesCommands from '@/lib/commands/ticketSales';
 import * as mailingListCommands from '@/lib/commands/mailingList';
 
 // Mock all external dependencies
-jest.mock('@/lib/commands/payments');
-jest.mock('@/lib/jobs/jobProcessor');
-jest.mock('@/lib/utils/email');
-jest.mock('@/lib/commands/orders');
-jest.mock('@/lib/commands/ticketSales');
-jest.mock('@/lib/commands/mailingList');
-jest.mock('@/lib/queries/users', () => ({
-  getUserByEmail: jest.fn().mockResolvedValue(null),
+vi.mock('@/lib/commands/payments');
+vi.mock('@/lib/jobs/jobProcessor');
+vi.mock('@/lib/utils/email');
+vi.mock('@/lib/commands/orders');
+vi.mock('@/lib/commands/ticketSales');
+vi.mock('@/lib/commands/mailingList');
+vi.mock('@/lib/queries/users', () => ({
+  getUserByEmail: vi.fn().mockResolvedValue(null),
 }));
-jest.mock('@/lib/utils/couponValidation', () => ({
-  validateCoupon: jest.fn().mockResolvedValue({ valid: false }),
+vi.mock('@/lib/utils/couponValidation', () => ({
+  validateCoupon: vi.fn().mockResolvedValue({ valid: false }),
 }));
 
 // Mock database
-jest.mock('@/lib/db', () => {
-  const mockPerformancesFindMany = jest.fn();
-  const mockTransactionExecute = jest.fn();
-  const mockTransactionInsert = jest.fn().mockReturnValue({ values: jest.fn() });
+vi.mock('@/lib/db', () => {
+  const mockPerformancesFindMany = vi.fn();
+  const mockTransactionExecute = vi.fn();
+  const mockTransactionInsert = vi.fn().mockReturnValue({ values: vi.fn() });
 
   const mockTx = {
     execute: mockTransactionExecute,
     insert: mockTransactionInsert,
     query: {
       performances: {
-        findMany: jest.fn(),
+        findMany: vi.fn(),
       },
     },
   };
 
-  const mockTransaction = jest.fn((callback) => callback(mockTx));
+  const mockTransaction = vi.fn((callback) => callback(mockTx));
 
   return {
     db: {
@@ -64,19 +65,19 @@ jest.mock('@/lib/db', () => {
 });
 
 // Get mocked db and mock functions
-const dbModule = require('@/lib/db');
+const dbModule = await import('@/lib/db');
 const db = dbModule.db;
-const mockTx = dbModule.mockTx;
-const mockPerformancesFindMany = dbModule.mockPerformancesFindMany;
-const mockTransactionExecute = dbModule.mockTransactionExecute;
-const mockTransactionInsert = dbModule.mockTransactionInsert;
+const mockTx = (dbModule as any).mockTx;
+const mockPerformancesFindMany = (dbModule as any).mockPerformancesFindMany;
+const mockTransactionExecute = (dbModule as any).mockTransactionExecute;
+const mockTransactionInsert = (dbModule as any).mockTransactionInsert;
 
 describe('processCheckout Integration Tests', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockPerformancesFindMany.mockReset();
     mockTransactionExecute.mockReset();
-    mockTransactionInsert.mockReset().mockReturnValue({ values: jest.fn() });
+    mockTransactionInsert.mockReset().mockReturnValue({ values: vi.fn() });
     process.env.NEXT_PUBLIC_BASE_URL = 'http://localhost:3000';
   });
 
@@ -98,12 +99,15 @@ describe('processCheckout Integration Tests', () => {
         customerEmail: 'test@example.com',
         customerName: 'Test User',
         totalAmount: '35.00',
-        status: 'pending',
+        status: 'pending' as const,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        userId: null,
       };
-      (orderCommands.createOrder as jest.Mock).mockResolvedValue(mockOrder);
+      vi.mocked(orderCommands.createOrder).mockResolvedValue(mockOrder as any);
 
       // Setup: Mock line items creation
-      (ticketSalesCommands.createLineItems as jest.Mock).mockResolvedValue([]);
+      vi.mocked(ticketSalesCommands.createLineItems).mockResolvedValue([]);
 
       // Setup: Mock SELECT ... FOR UPDATE (locked performances)
       mockTransactionExecute.mockResolvedValueOnce({
@@ -114,7 +118,7 @@ describe('processCheckout Integration Tests', () => {
       mockTransactionExecute.mockResolvedValueOnce(undefined);
 
       // Setup: Mock successful payment creation
-      (paymentCommands.createMolliePayment as jest.Mock).mockResolvedValue({
+      vi.mocked(paymentCommands.createMolliePayment).mockResolvedValue({
         success: true,
         paymentUrl: 'https://checkout.mollie.com/payment/tr_12345',
         paymentId: 'tr_12345',
@@ -199,12 +203,15 @@ describe('processCheckout Integration Tests', () => {
         customerEmail: 'test@example.com',
         customerName: 'Test User',
         totalAmount: '35.00',
-        status: 'pending',
+        status: 'pending' as const,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        userId: null,
       };
-      (orderCommands.createOrder as jest.Mock).mockResolvedValue(mockOrder);
+      vi.mocked(orderCommands.createOrder).mockResolvedValue(mockOrder as any);
 
       // Setup: Mock line items creation
-      (ticketSalesCommands.createLineItems as jest.Mock).mockResolvedValue([]);
+      vi.mocked(ticketSalesCommands.createLineItems).mockResolvedValue([]);
 
       // Setup: Mock SELECT ... FOR UPDATE (locked performances)
       mockTransactionExecute.mockResolvedValueOnce({
@@ -215,16 +222,16 @@ describe('processCheckout Integration Tests', () => {
       mockTransactionExecute.mockResolvedValueOnce(undefined);
 
       // Setup: Mock payment provider failure
-      (paymentCommands.createMolliePayment as jest.Mock).mockResolvedValue({
+      vi.mocked(paymentCommands.createMolliePayment).mockResolvedValue({
         success: false,
         error: 'Mollie API timeout',
       });
 
       // Setup: Mock job creation
-      (jobProcessor.createJob as jest.Mock).mockResolvedValue('job-123');
+      vi.mocked(jobProcessor.createJob).mockResolvedValue('job-123');
 
       // Setup: Mock email sending
-      (emailUtils.sendQueuedPaymentEmail as jest.Mock).mockResolvedValue(undefined);
+      vi.mocked(emailUtils.sendQueuedPaymentEmail).mockResolvedValue(undefined);
 
       // Execute: Process checkout
       const formData = new FormData();
@@ -286,25 +293,28 @@ describe('processCheckout Integration Tests', () => {
         customerEmail: 'test@example.com',
         customerName: 'Test User',
         totalAmount: '35.00',
-        status: 'pending',
+        status: 'pending' as const,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        userId: null,
       };
-      (orderCommands.createOrder as jest.Mock).mockResolvedValue(mockOrder);
-      (ticketSalesCommands.createLineItems as jest.Mock).mockResolvedValue([]);
+      vi.mocked(orderCommands.createOrder).mockResolvedValue(mockOrder as any);
+      vi.mocked(ticketSalesCommands.createLineItems).mockResolvedValue([]);
 
       // Setup transaction mocks - SELECT FOR UPDATE then UPDATE seats
       mockTransactionExecute
         .mockResolvedValueOnce({ rows: [{ id: 'perf-1', available_seats: 100 }] })
         .mockResolvedValueOnce(undefined);
 
-      (paymentCommands.createMolliePayment as jest.Mock).mockResolvedValue({
+      vi.mocked(paymentCommands.createMolliePayment).mockResolvedValue({
         success: false,
         error: 'Mollie API timeout',
       });
 
-      (jobProcessor.createJob as jest.Mock).mockResolvedValue('job-123');
+      vi.mocked(jobProcessor.createJob).mockResolvedValue('job-123');
 
       // Email fails but shouldn't crash checkout
-      (emailUtils.sendQueuedPaymentEmail as jest.Mock).mockRejectedValue(
+      vi.mocked(emailUtils.sendQueuedPaymentEmail).mockRejectedValue(
         new Error('SMTP timeout')
       );
 
@@ -331,21 +341,24 @@ describe('processCheckout Integration Tests', () => {
       mockPerformancesFindMany.mockResolvedValue([
         { id: 'perf-1', date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), status: 'published', availableSeats: 100 },
       ]);
-      (orderCommands.createOrder as jest.Mock).mockResolvedValue({
+      vi.mocked(orderCommands.createOrder).mockResolvedValue({
         id: 'order-123',
         customerEmail: 'test@example.com',
         customerName: 'Test User',
         totalAmount: '35.00',
-        status: 'pending',
-      });
-      (ticketSalesCommands.createLineItems as jest.Mock).mockResolvedValue([]);
+        status: 'pending' as const,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        userId: null,
+      } as any);
+      vi.mocked(ticketSalesCommands.createLineItems).mockResolvedValue([]);
       mockTransactionExecute.mockResolvedValueOnce({ rows: [{ id: 'perf-1', available_seats: 100 }] });
       mockTransactionExecute.mockResolvedValueOnce(undefined);
-      (paymentCommands.createMolliePayment as jest.Mock).mockResolvedValue({
+      vi.mocked(paymentCommands.createMolliePayment).mockResolvedValue({
         success: true,
         paymentUrl: 'https://checkout.mollie.com/payment/tr_12345',
       });
-      (mailingListCommands.subscribeToMailingList as jest.Mock).mockResolvedValue(undefined);
+      vi.mocked(mailingListCommands.subscribeToMailingList).mockResolvedValue(undefined);
 
       const formData = new FormData();
       formData.set('action', 'checkout');
@@ -370,21 +383,24 @@ describe('processCheckout Integration Tests', () => {
       mockPerformancesFindMany.mockResolvedValue([
         { id: 'perf-1', date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), status: 'published', availableSeats: 100 },
       ]);
-      (orderCommands.createOrder as jest.Mock).mockResolvedValue({
+      vi.mocked(orderCommands.createOrder).mockResolvedValue({
         id: 'order-123',
         customerEmail: 'test@example.com',
         customerName: 'Test User',
         totalAmount: '35.00',
-        status: 'pending',
-      });
-      (ticketSalesCommands.createLineItems as jest.Mock).mockResolvedValue([]);
+        status: 'pending' as const,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        userId: null,
+      } as any);
+      vi.mocked(ticketSalesCommands.createLineItems).mockResolvedValue([]);
       mockTransactionExecute.mockResolvedValueOnce({ rows: [{ id: 'perf-1', available_seats: 100 }] });
       mockTransactionExecute.mockResolvedValueOnce(undefined);
-      (paymentCommands.createMolliePayment as jest.Mock).mockResolvedValue({
+      vi.mocked(paymentCommands.createMolliePayment).mockResolvedValue({
         success: true,
         paymentUrl: 'https://checkout.mollie.com/payment/tr_12345',
       });
-      (mailingListCommands.subscribeToMailingList as jest.Mock).mockRejectedValue(
+      vi.mocked(mailingListCommands.subscribeToMailingList).mockRejectedValue(
         new Error('Mailchimp API error')
       );
 
