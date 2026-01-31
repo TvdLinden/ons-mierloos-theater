@@ -56,8 +56,8 @@ export default function PerformanceCard({ show, href }: PerformanceCardProps) {
             src={imageUrl}
             alt={title || 'Show'}
             fill
-            unoptimized
             className="object-cover group-hover:scale-105 transition-transform duration-300"
+            sizes="(max-width: 768px) 100vw, 448px"
           />
         </div>
 

@@ -8,7 +8,16 @@
       "Bash(git commit -m \"$\\(cat <<''EOF''\nfeat: implement ticket generation and email in payment webhook handler\n\nComplete the handlePaymentWebhook implementation by restoring functionality\nfrom the old handleMollieWebhook that was being used by the mock webhook:\n\n- Generate tickets for each line item upon successful payment\n- Send order confirmation email with order details\n- Maintain transaction atomicity for ticket generation\n- Non-critical email failures don''t block the entire flow\n\nThis ensures both mock and real Mollie webhooks use identical logic\nand handlers, with full ticket generation and notification support.\n\nCo-Authored-By: Claude Haiku 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
       "Bash(git commit -m \"$\\(cat <<''EOF''\nfix: prevent duplicate job processing in horizontally scaled workers\n\nImplement atomic job fetching and marking to eliminate race condition where\nmultiple workers could fetch and process the same job concurrently.\n\nChanges:\n- getNextJobs\\(\\) now atomically fetches pending jobs AND marks them as\n  ''processing'' in a single transaction\n- Removes separate markJobProcessing\\(\\) call from worker \\(no longer needed\\)\n- Multiple workers can no longer retrieve the same job\n- Prevents duplicate webhook processing, seat releases, and email sends\n\nCritical for production with horizontally scaled worker instances, ensuring:\n- No duplicate payment webhook processing\n- No race conditions on order status updates\n- No duplicate ticket generation\n- No duplicate seat releases on payment failure\n\nCo-Authored-By: Claude Haiku 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
       "Bash(git checkout:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(npm run db:generate:*)",
+      "Bash(npm run db:migrate:*)",
+      "Bash(npx tsx:*)",
+      "Bash(cross-env NODE_ENV=development npx tsx:*)",
+      "Bash(npm install:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(npm run test:ui:*)",
+      "Bash(ls:*)",
+      "Bash(npx tsc:*)"
     ]
   }
 }

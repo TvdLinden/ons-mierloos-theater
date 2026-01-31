@@ -2,7 +2,7 @@ import ShowForm, { ShowFormState } from '@/components/ShowForm';
 import { notFound } from 'next/navigation';
 import { requireRole } from '@/lib/utils/auth';
 import { getAllTags } from '@/lib/queries/tags';
-import { getAllImageMetadata } from '@/lib/queries/images';
+import { getAllImages } from '@/lib/queries/images';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { getShowByIdWithTagsAndPerformances } from '@/lib/queries/shows';
 import { handleUpsertShow } from '../../actions';
@@ -17,7 +17,7 @@ export default async function EditShowPage(props: { params: Promise<{ id: string
 
   const [availableTags, availableImages] = await Promise.all([
     getAllTags(),
-    getAllImageMetadata(0, 1000),
+    getAllImages(0, 1000),
   ]);
 
   // Create a bound action with the show's ID and current performances

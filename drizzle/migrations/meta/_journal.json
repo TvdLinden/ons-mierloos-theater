@@ -176,6 +176,20 @@
       "when": 1769534822774,
       "tag": "0024_nappy_darkhawk",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1769801259359,
+      "tag": "0025_lively_zaladane",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1769864602851,
+      "tag": "0026_tired_mach_iv",
+      "breakpoints": true
     }
   ]
 }

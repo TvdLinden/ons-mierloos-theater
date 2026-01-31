@@ -19,6 +19,7 @@ import { BlocksArray, blocksArraySchema } from '../schemas/blocks';
 export async function getAllShows(): Promise<ShowWithTagsAndPerformances[]> {
   const result = await db.query.shows.findMany({
     with: {
+      image: true,
       performances: {
         orderBy: [asc(performances.date)],
       },
@@ -68,6 +69,7 @@ export async function getShowByIdWithPerformances(
   const result = await db.query.shows.findFirst({
     where: eq(shows.id, id),
     with: {
+      image: true,
       performances: {
         orderBy: [asc(performances.date)],
       },
@@ -86,6 +88,7 @@ export async function getShowByIdWithTagsAndPerformances(
   const result = await db.query.shows.findFirst({
     where: eq(shows.id, id),
     with: {
+      image: true,
       performances: {
         orderBy: [asc(performances.date)],
       },
@@ -144,6 +147,7 @@ export async function getShowBySlugWithPerformances(
   const result = await db.query.shows.findFirst({
     where: eq(shows.slug, slug),
     with: {
+      image: true,
       performances: {
         orderBy: [asc(performances.date)],
       },
@@ -161,6 +165,7 @@ export const getShowBySlugWithTagsAndPerformances = cache(
     const result = await db.query.shows.findFirst({
       where: eq(shows.slug, slug),
       with: {
+        image: true,
         performances: {
           orderBy: [asc(performances.date)],
         },
@@ -191,6 +196,7 @@ export async function getShowBySlugWithAvailablePerformances(
   const result = await db.query.shows.findFirst({
     where: eq(shows.slug, slug),
     with: {
+      image: true,
       performances: {
         where: and(gte(performances.date, now), eq(performances.status, 'published')),
         orderBy: [asc(performances.date)],
@@ -268,6 +274,7 @@ export async function getUpcomingShows(
   const queryConfig = {
     where: whereConditions,
     with: {
+      image: true,
       performances: {
         where: and(gte(performances.date, nowUTC), eq(performances.status, 'published')),
         orderBy: [asc(performances.date)],
@@ -313,6 +320,7 @@ export async function getRecentlyPassedShows(
   const queryConfig = {
     where: whereConditions,
     with: {
+      image: true,
       performances: {
         where: and(
           lt(performances.date, nowUTC),

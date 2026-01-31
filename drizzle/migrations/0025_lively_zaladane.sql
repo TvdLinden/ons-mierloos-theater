@@ -1,0 +1,1 @@
+ALTER TABLE "coupon_usages" ALTER COLUMN "discount_type" SET DEFAULT 'fixed';

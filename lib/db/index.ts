@@ -94,8 +94,12 @@ export type NewsArticle = typeof newsArticles.$inferSelect;
 export type SocialMediaLink = typeof socialMediaLinks.$inferSelect;
 
 export type Image = typeof images.$inferSelect;
-export type ImageContent = Pick<Image, 'imageLg' | 'imageMd' | 'imageSm'>;
-export type ImageMetadata = Omit<Image, keyof ImageContent>;
+
+/**
+ * ImageMetadata - Kept for backward compatibility during transition to R2-only
+ * @deprecated Use Image type directly instead
+ */
+export type ImageMetadata = Image;
 
 export type ClientApplication = typeof clientApplications.$inferSelect;
 export type ClientSecret = typeof clientSecrets.$inferSelect;

@@ -9,7 +9,7 @@ import { SocialMediaLinksList } from './SocialMediaLinksList';
 import { PagesList } from './PagesList';
 import { PreviewMode } from './PreviewMode';
 import { getHomepageContent, getAllNewsArticles } from '@/lib/queries/content';
-import { getAllImageMetadata } from '@/lib/queries/images';
+import { getAllImages } from '@/lib/queries/images';
 import { getAllSocialMediaLinks } from '@/lib/queries/socialMedia';
 import { getAllPages } from '@/lib/queries/pages';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
@@ -24,7 +24,7 @@ export default async function ContentManagementPage() {
       navLinksPromise,
       getHomepageContent(),
       getAllNewsArticles(),
-      getAllImageMetadata(),
+      getAllImages(),
       getAllSocialMediaLinks(),
       getAllPages(),
     ]);

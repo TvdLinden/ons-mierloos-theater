@@ -2,14 +2,14 @@ import { handleUpsertShow } from '../actions';
 import { Card } from '@/components/ui';
 import { requireRole } from '@/lib/utils/auth';
 import { getAllTags } from '@/lib/queries/tags';
-import { getAllImageMetadata } from '@/lib/queries/images';
+import { getAllImages } from '@/lib/queries/images';
 import ShowForm from '@/components/ShowForm';
 
 export default async function AddShowPage() {
   await requireRole(['admin', 'contributor']);
   const [availableTags, availableImages] = await Promise.all([
     getAllTags(),
-    getAllImageMetadata(0, 1000),
+    getAllImages(0, 1000),
   ]);
 
   // Create a bound action for creating a new show (showId = null)

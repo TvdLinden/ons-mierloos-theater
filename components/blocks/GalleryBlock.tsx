@@ -41,11 +41,10 @@ function FullscreenImageDialog({
         {imageId && (
           <div className="relative">
             <Image
-              src={getImageUrl(imageId, 'lg')} // Use 'xl' size for fullscreen
+              src={getImageUrl(imageId)}
               alt="Fullscreen image"
-              unoptimized
-              width={1600} // Example width for extra-large image
-              height={900} // Example height for extra-large image
+              width={1600}
+              height={900}
               className="object-contain"
             />
           </div>

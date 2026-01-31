@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/utils/auth';
 import { Session } from 'next-auth';
-import { generateImageVariants } from '@/lib/utils/imageProcessor';
+import sharp from 'sharp';
+import { uploadImageToR2 } from '@/lib/utils/r2ImageUploader';
 import { createImage } from '@/lib/commands/images';
 
 export async function POST(req: NextRequest) {
@@ -43,22 +44,32 @@ export async function POST(req: NextRequest) {
     // 5. Convert file to buffer
     const buffer = Buffer.from(await file.arrayBuffer());
 
-    // 6. Generate image variants (lg, md, sm)
-    const variants = await generateImageVariants(buffer);
+    // 6. Process with Sharp: rotate, resize, convert to JPEG
+    const pipeline = sharp(buffer)
+      .rotate() // Auto-rotate based on EXIF orientation
+      .resize(2400, 2400, { fit: 'inside', withoutEnlargement: true }) // Max 2400px
+      .jpeg({ quality: 90 });
 
-    // 7. Save to database with all variants
+    const processedBuffer = await pipeline.toBuffer();
+    const metadata = await sharp(buffer).metadata();
+
+    // 7. Upload to R2
+    const r2Url = await uploadImageToR2(processedBuffer, file.name, 'image/jpeg');
+
+    // 8. Save to database with R2 URL and dimensions
     const image = await createImage({
       filename: file.name,
-      mimetype: file.type,
-      imageLg: variants.lg,
-      imageMd: variants.md,
-      imageSm: variants.sm,
+      mimetype: 'image/jpeg',
+      r2Url,
+      originalWidth: metadata.width || null,
+      originalHeight: metadata.height || null,
     });
 
-    // 8. Return image ID
+    // 9. Return image ID and R2 URL
     return NextResponse.json({
       id: image.id,
       filename: image.filename,
+      r2Url: image.r2Url,
       uploadedAt: image.uploadedAt,
     });
   } catch (error) {

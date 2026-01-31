@@ -33,30 +33,41 @@ export async function getHomepageContent(): Promise<HomepageContent | null> {
 }
 
 /**
- * Get active news articles
+ * Get active news articles with image relations
  */
-export async function getActiveNewsArticles(limit = 10): Promise<NewsArticle[]> {
-  return await db
-    .select()
-    .from(newsArticles)
-    .where(eq(newsArticles.active, 1))
-    .orderBy(desc(newsArticles.publishedAt), newsArticles.displayOrder)
-    .limit(limit);
+export async function getActiveNewsArticles(limit = 10) {
+  return await db.query.newsArticles.findMany({
+    where: eq(newsArticles.active, 1),
+    with: {
+      image: true,
+    },
+    orderBy: [desc(newsArticles.publishedAt), newsArticles.displayOrder],
+    limit,
+  });
 }
 
 /**
- * Get all news articles (admin)
+ * Get all news articles with image relations (admin)
  */
-export async function getAllNewsArticles(): Promise<NewsArticle[]> {
-  return await db.select().from(newsArticles).orderBy(desc(newsArticles.createdAt));
+export async function getAllNewsArticles() {
+  return await db.query.newsArticles.findMany({
+    with: {
+      image: true,
+    },
+    orderBy: [desc(newsArticles.createdAt)],
+  });
 }
 
 /**
- * Get news article by ID
+ * Get news article by ID with image relation
  */
-export async function getNewsArticleById(id: string): Promise<NewsArticle | null> {
-  const result = await db.select().from(newsArticles).where(eq(newsArticles.id, id)).limit(1);
-  return result[0] || null;
+export async function getNewsArticleById(id: string) {
+  return await db.query.newsArticles.findFirst({
+    where: eq(newsArticles.id, id),
+    with: {
+      image: true,
+    },
+  });
 }
 
 /**

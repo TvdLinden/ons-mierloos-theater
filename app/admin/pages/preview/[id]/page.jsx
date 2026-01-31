@@ -1,13 +1,13 @@
 import { notFound } from 'next/navigation';
 import { getPageById } from '@/lib/queries/pages';
-import { getAllImageMetadata } from '@/lib/queries/images';
+import { getAllImages } from '@/lib/queries/images';
 import Prose from '@/components/Prose';
 import { BlockRenderer } from '@/components/BlockRenderer';
 
 export default async function Page({ params }) {
   const { id } = await params;
 
-  const [page, images] = await Promise.all([getPageById(id), getAllImageMetadata(0, 1000)]);
+  const [page, images] = await Promise.all([getPageById(id), getAllImages(0, 1000)]);
 
   if (!page) {
     notFound();

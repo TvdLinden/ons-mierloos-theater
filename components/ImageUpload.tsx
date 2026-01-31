@@ -30,11 +30,15 @@ export default function ImageUpload({
         className="w-full p-3 border rounded bg-surface text-accent"
       />
       {previewUrl && (
-        <Image
-          src={previewUrl}
-          alt="Preview"
-          className="mt-2 rounded border w-full max-h-48 object-cover"
-        />
+        <div className="relative w-full aspect-video mt-2 rounded border overflow-hidden max-h-48">
+          <Image
+            src={previewUrl}
+            alt="Preview"
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, 500px"
+          />
+        </div>
       )}
     </div>
   );

@@ -18,7 +18,7 @@ export function ImageBlockDisplay({ block }: { block: ImageBlock }) {
           alt={block.alt || block.caption || ''}
           fill
           className="object-contain"
-          unoptimized
+          sizes="(max-width: 768px) 100vw, 65ch"
         />
       </div>
       {block.caption && (

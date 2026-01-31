@@ -1,4 +1,4 @@
-import { db, Image, ImageMetadata } from '@/lib/db';
+import { db, Image } from '@/lib/db';
 import { images, shows, sponsors } from '@/lib/db/schema';
 import { eq, notInArray, sql, desc } from 'drizzle-orm';
 import { mime } from 'zod';
@@ -20,22 +20,6 @@ export async function getAllImages(offset = 0, limit = 20): Promise<Image[]> {
     .offset(offset);
 }
 
-/**
- * Get all images with pagination
- */
-export async function getAllImageMetadata(offset = 0, limit = 20): Promise<ImageMetadata[]> {
-  return await db
-    .select({
-      id: images.id,
-      filename: images.filename,
-      mimetype: images.mimetype,
-      uploadedAt: images.uploadedAt,
-    })
-    .from(images)
-    .orderBy(desc(images.uploadedAt))
-    .limit(limit)
-    .offset(offset);
-}
 
 /**
  * Get total count of images
@@ -97,15 +81,10 @@ import { newsArticles } from '@/lib/db/schema';
 export async function findUnusedImages(
   offset = 0,
   limit = 50,
-): Promise<Array<Omit<Image, 'imageLg' | 'imageMd' | 'imageSm' | 'data'>>> {
+): Promise<Image[]> {
   // Single SQL: NOT EXISTS subqueries for each referencing table/column.
   const rows = await db
-    .select({
-      id: images.id,
-      filename: images.filename,
-      mimetype: images.mimetype,
-      uploadedAt: images.uploadedAt,
-    })
+    .select()
     .from(images)
     .where(
       sql`NOT EXISTS (SELECT 1 FROM ${shows} WHERE ${shows.imageId} = ${images.id})

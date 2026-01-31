@@ -10,6 +10,7 @@ const nextConfig: NextConfig = {
     useCache: true,
   },
   images: {
+    formats: ['image/webp', 'image/avif'],
     localPatterns: [
       {
         pathname: '/**',
@@ -23,6 +24,10 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: 'onsmierloostheater.nl',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.r2.cloudflarestorage.com',
       },
     ],
   },

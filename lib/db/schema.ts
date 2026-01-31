@@ -212,11 +212,14 @@ export const images = pgTable('images', {
   id: uuid('id').primaryKey().defaultRandom(),
   filename: varchar('filename', { length: 255 }),
   mimetype: varchar('mimetype', { length: 100 }),
-  imageLg: bytea('image_lg'), // Nullable during migration
-  imageMd: bytea('image_md'), // Nullable during migration
-  imageSm: bytea('image_sm'), // Nullable during migration
+  r2Url: text('r2_url').notNull(), // R2 public URL (required after Phase 6)
+  originalWidth: integer('original_width'), // Original image width
+  originalHeight: integer('original_height'), // Original image height
   uploadedAt: timestamp('uploaded_at', { withTimezone: true }).defaultNow(),
 });
+
+// Images relations (no outgoing relations, but referenced by shows, sponsors, etc.)
+export const imagesRelations = relations(images, () => ({}));
 
 // Tags table for categorizing shows
 export const tags = pgTable(

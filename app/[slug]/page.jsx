@@ -1,7 +1,7 @@
 'use server';
 
 import { getPageBySlug } from '@/lib/queries/pages';
-import { getAllImageMetadata } from '@/lib/queries/images';
+import { getAllImages } from '@/lib/queries/images';
 import { getSeoSettings } from '@/lib/queries/settings';
 import { notFound } from 'next/navigation';
 import Prose from '@/components/Prose';
@@ -54,7 +54,7 @@ export async function generateMetadata({ params }) {
 export default async function Page({ params }) {
   const { slug } = await params;
 
-  const [page, images] = await Promise.all([getCachedPage(slug), getAllImageMetadata(0, 1000)]);
+  const [page, images] = await Promise.all([getCachedPage(slug), getAllImages(0, 1000)]);
 
   if (!page) {
     notFound();
