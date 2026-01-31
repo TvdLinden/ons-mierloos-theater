@@ -218,8 +218,7 @@ export const images = pgTable('images', {
   uploadedAt: timestamp('uploaded_at', { withTimezone: true }).defaultNow(),
 });
 
-// Images relations (no outgoing relations, but referenced by shows, sponsors, etc.)
-export const imagesRelations = relations(images, () => ({}));
+// Images relations will be defined at the end after all tables are declared
 
 // Tags table for categorizing shows
 export const tags = pgTable(
@@ -593,6 +592,10 @@ export const newsArticles = pgTable(
   ],
 );
 
+export const newsArticlesRelations = relations(newsArticles, ({ one }) => ({
+  image: one(images, { fields: [newsArticles.imageId], references: [images.id] }),
+}));
+
 // Social Media Links
 export const socialMediaLinks = pgTable(
   'social_media_links',
@@ -731,3 +734,11 @@ export const jobs = pgTable(
 );
 
 export const jobsRelations = relations(jobs, () => ({}));
+
+// Images relations - defined at the end to avoid forward reference issues
+export const imagesRelations = relations(images, ({ many }) => ({
+  shows: many(shows),
+  sponsors: many(sponsors),
+  newsArticles: many(newsArticles),
+  siteSettings: many(siteSettings),
+}));
