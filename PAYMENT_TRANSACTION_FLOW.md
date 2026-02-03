@@ -145,6 +145,7 @@ TRANSACTION #6 (Orphaned Order Cleanup):
 **File:** `app/checkout/actions.ts::processCheckout()`
 **Locking:** `SELECT ... FOR UPDATE` on performances table
 **Operation Order:**
+
 1. Create order
 2. Create line items (FK constraint verified before lock acquired)
 3. Lock performances with `SELECT ... FOR UPDATE`
@@ -312,16 +313,17 @@ payment.fail() [webhook called twice]
 
 The job queue system **completely replaces** the old GitHub Actions workflows:
 
-| Old (GitHub Actions) | New (Job Queue) |
-|---------------------|-----------------|
-| Hourly polling | Real-time webhooks |
-| No retry logic | Exponential backoff |
-| ❌ No seat release | ✅ Atomic seat + coupon release |
-| ❌ Cancels orders only | ✅ Releases seats + coupons |
-| Up to 1 hour delay | <5 seconds processing |
-| GitHub Actions logs | Admin dashboard `/admin/jobs` |
+| Old (GitHub Actions)   | New (Job Queue)                 |
+| ---------------------- | ------------------------------- |
+| Hourly polling         | Real-time webhooks              |
+| No retry logic         | Exponential backoff             |
+| ❌ No seat release     | ✅ Atomic seat + coupon release |
+| ❌ Cancels orders only | ✅ Releases seats + coupons     |
+| Up to 1 hour delay     | <5 seconds processing           |
+| GitHub Actions logs    | Admin dashboard `/admin/jobs`   |
 
 **Files to Delete After 1-2 Week Monitoring:**
+
 - `.github/workflows/sync-payments.yml`
 - `.github/workflows/sync-orders.yml`
 - `.github/workflows/sync-inventory.yml`
@@ -347,6 +349,7 @@ See `IMPLEMENTATION_GUIDE.md` "Deprecated: GitHub Actions for Payment Sync" sect
 **Purpose:** Allow users to check order status without login
 
 **Features:**
+
 - View order details (order number, amount, status)
 - See payment status with clear messaging
 - Click payment link if available
@@ -354,6 +357,7 @@ See `IMPLEMENTATION_GUIDE.md` "Deprecated: GitHub Actions for Payment Sync" sect
 - Works for authenticated and unauthenticated users
 
 **Security:**
+
 - Order IDs are UUIDs (hard to guess)
 - Optional email verification parameter
 - Shows limited info (no sensitive data)
@@ -372,6 +376,7 @@ See `IMPLEMENTATION_GUIDE.md` "Deprecated: GitHub Actions for Payment Sync" sect
 **Environment Variable:** `USE_MOCK_PAYMENT=true`
 
 **How It Works:**
+
 - Payment creation handler detects mock mode
 - Generates mock payment ID: `mock_1234567890_abc123`
 - Stores payment with `paymentProvider: 'mock'`
@@ -380,6 +385,7 @@ See `IMPLEMENTATION_GUIDE.md` "Deprecated: GitHub Actions for Payment Sync" sect
 - No Mollie API calls required
 
 **Benefits:**
+
 - ✅ Local testing without Mollie credentials
 - ✅ Same code paths as production
 - ✅ Full job queue testing
@@ -392,6 +398,7 @@ See `IMPLEMENTATION_GUIDE.md` "Deprecated: GitHub Actions for Payment Sync" sect
 **Purpose:** Monitor background job processing
 
 **Features:**
+
 - Real-time statistics (total, pending, processing, completed, failed, last 24h)
 - Filter by status (pending, processing, failed)
 - Filter by type (payment_creation, payment_webhook, orphaned_order_cleanup)
@@ -399,6 +406,7 @@ See `IMPLEMENTATION_GUIDE.md` "Deprecated: GitHub Actions for Payment Sync" sect
 - Shows first 100 results
 
 **Monitoring Capabilities:**
+
 - Track payment creation retries
 - Identify failed jobs and error patterns
 - Monitor webhook processing speed
@@ -406,6 +414,7 @@ See `IMPLEMENTATION_GUIDE.md` "Deprecated: GitHub Actions for Payment Sync" sect
 - Debug job queue issues
 
 **Key Metrics:**
+
 - Pending count (should be low in healthy system)
 - Failed jobs (investigate if > 5% of total)
 - Execution attempts (track retry patterns)

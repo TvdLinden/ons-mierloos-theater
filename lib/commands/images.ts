@@ -2,7 +2,7 @@ import { db, Image } from '@/lib/db';
 import { images } from '@/lib/db/schema';
 import { eq, inArray } from 'drizzle-orm';
 import { findUnusedImages } from '@/lib/queries/images';
-import { deleteImageFromR2 } from '@/lib/utils/r2ImageUploader';
+import { deleteImageFromR2 } from '@/lib/utils/r2ImageStorage';
 
 /**
  * Create a new image with all size variants or R2 URL

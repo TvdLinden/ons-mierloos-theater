@@ -22,7 +22,10 @@ export default async function OrderStatusPage({
   }
 
   // Optional: verify email matches (extra security)
-  if (searchParams.email && order.customerEmail.toLowerCase() !== searchParams.email.toLowerCase()) {
+  if (
+    searchParams.email &&
+    order.customerEmail.toLowerCase() !== searchParams.email.toLowerCase()
+  ) {
     notFound();
   }
 
@@ -73,7 +76,9 @@ export default async function OrderStatusPage({
       {/* Payment Status - Pending without payment URL (being processed) */}
       {order.status === 'pending' && !payment?.providerPaymentUrl && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
-          <h3 className="text-lg font-semibold mb-2 text-blue-900">🔄 Betaallink wordt aangemaakt</h3>
+          <h3 className="text-lg font-semibold mb-2 text-blue-900">
+            🔄 Betaallink wordt aangemaakt
+          </h3>
           <p className="text-blue-800 mb-2">
             We maken je betaallink aan. Je ontvangt binnen 5 minuten een e-mail met de link.
           </p>
@@ -104,7 +109,10 @@ export default async function OrderStatusPage({
             Deze bestelling is geannuleerd. De gereserveerde plaatsen zijn vrijgegeven.
           </p>
           <p className="text-sm text-red-700">
-            Wil je toch tickets bestellen? <Link href="/" className="underline hover:no-underline">Bekijk ons programma</Link>
+            Wil je toch tickets bestellen?{' '}
+            <Link href="/" className="underline hover:no-underline">
+              Bekijk ons programma
+            </Link>
           </p>
         </div>
       )}

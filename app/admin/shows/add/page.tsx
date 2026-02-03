@@ -7,10 +7,7 @@ import ShowForm from '@/components/ShowForm';
 
 export default async function AddShowPage() {
   await requireRole(['admin', 'contributor']);
-  const [availableTags, availableImages] = await Promise.all([
-    getAllTags(),
-    getAllImages(0, 1000),
-  ]);
+  const [availableTags, availableImages] = await Promise.all([getAllTags(), getAllImages(0, 1000)]);
 
   // Create a bound action for creating a new show (showId = null)
   const boundAction = handleUpsertShow.bind(null, null, []);

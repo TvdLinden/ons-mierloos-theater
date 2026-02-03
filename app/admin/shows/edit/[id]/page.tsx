@@ -15,10 +15,7 @@ export default async function EditShowPage(props: { params: Promise<{ id: string
   const show = await getShowByIdWithTagsAndPerformances(id);
   if (!show) return notFound();
 
-  const [availableTags, availableImages] = await Promise.all([
-    getAllTags(),
-    getAllImages(0, 1000),
-  ]);
+  const [availableTags, availableImages] = await Promise.all([getAllTags(), getAllImages(0, 1000)]);
 
   // Create a bound action with the show's ID and current performances
   const boundAction = handleUpsertShow.bind(null, id, show.performances || []);

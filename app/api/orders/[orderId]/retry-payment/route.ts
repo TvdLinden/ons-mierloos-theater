@@ -25,8 +25,7 @@ export async function GET(
   }
 
   // Verify ownership: user must own the order (by userId or matching email)
-  const isOwner =
-    order.userId === session.user.id || order.customerEmail === session.user.email;
+  const isOwner = order.userId === session.user.id || order.customerEmail === session.user.email;
 
   if (!isOwner) {
     return NextResponse.json({ error: 'Geen toegang tot deze bestelling' }, { status: 403 });

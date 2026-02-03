@@ -347,7 +347,12 @@ export function calculateNextRetry(
 #### 2. lib/utils/r2Uploader.ts (NEW)
 
 ```typescript
-import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
+import {
+  S3Client,
+  PutObjectCommand,
+  GetObjectCommand,
+  DeleteObjectCommand,
+} from '@aws-sdk/client-s3';
 import { getSignedUrl as getS3SignedUrl } from '@aws-sdk/s3-request-presigner';
 
 const accountId = process.env.R2_ACCOUNT_ID;
@@ -377,12 +382,14 @@ export async function uploadToR2(
   const client = getS3Client();
 
   try {
-    await client.send(new PutObjectCommand({
-      Bucket: bucketName,
-      Key: path,
-      Body: buffer,
-      ContentType: contentType,
-    }));
+    await client.send(
+      new PutObjectCommand({
+        Bucket: bucketName,
+        Key: path,
+        Body: buffer,
+        ContentType: contentType,
+      }),
+    );
 
     return `https://${bucketName}.${accountId}.r2.cloudflarestorage.com/${path}`;
   } catch (error) {
@@ -408,10 +415,12 @@ export async function deleteFromR2(path: string): Promise<void> {
   const client = getS3Client();
 
   try {
-    await client.send(new DeleteObjectCommand({
-      Bucket: bucketName,
-      Key: path,
-    }));
+    await client.send(
+      new DeleteObjectCommand({
+        Bucket: bucketName,
+        Key: path,
+      }),
+    );
   } catch (error) {
     console.error(`Failed to delete ${path}:`, error);
   }
@@ -1037,14 +1046,14 @@ export default async function JobsPage() {
 
 **Monthly costs for 500 orders/month (~1 order/day) with Cloudflare R2:**
 
-| Service           | Usage                                    | Cost           |
-| ----------------- | ---------------------------------------- | -------------- |
-| Worker compute    | Existing platform or container service   | ~$5-10         |
-| Database          | Using existing database                  | **$0**         |
-| R2 Storage        | ~5GB PDF storage (10GB free)             | **$0**         |
-| R2 Operations     | Class A: 1000 writes, Class B: 1000 reads| **$0**         |
-| R2 Egress         | 10GB downloads                           | **$0** ✨      |
-| **Total**         |                                          | **~$5-10/month** |
+| Service        | Usage                                     | Cost             |
+| -------------- | ----------------------------------------- | ---------------- |
+| Worker compute | Existing platform or container service    | ~$5-10           |
+| Database       | Using existing database                   | **$0**           |
+| R2 Storage     | ~5GB PDF storage (10GB free)              | **$0**           |
+| R2 Operations  | Class A: 1000 writes, Class B: 1000 reads | **$0**           |
+| R2 Egress      | 10GB downloads                            | **$0** ✨        |
+| **Total**      |                                           | **~$5-10/month** |
 
 **Cloudflare R2 Free Tier:**
 
@@ -2675,15 +2684,15 @@ These workflows used OAuth2 client credentials to authenticate with the sync end
 
 The job queue system (Bug #5 implementation) completely replaces and improves upon these workflows:
 
-| Feature                 | GitHub Actions (Old)   | Job Queue (New)                    | Winner       |
-| ----------------------- | ---------------------- | ---------------------------------- | ------------ |
-| **Payment Status Sync** | Hourly polling         | Real-time webhooks                 | ✅ Job Queue |
-| **Retry Logic**         | None (waits 1 hour)    | Exponential backoff (5s-5min)      | ✅ Job Queue |
-| **Seat Release**        | ❌ No seat handling    | ✅ Atomic seat + coupon release    | ✅ Job Queue |
-| **Order Cleanup**       | Cancels orders only    | Releases seats + coupons + cancels | ✅ Job Queue |
-| **Processing Speed**    | Up to 1 hour delay     | <5 seconds (webhook)               | ✅ Job Queue |
-| **Monitoring**          | GitHub Actions logs    | Admin dashboard `/admin/jobs`      | ✅ Job Queue |
-| **Failure Handling**    | Silent failures        | Visible in dashboard               | ✅ Job Queue |
+| Feature                 | GitHub Actions (Old)   | Job Queue (New)                         | Winner       |
+| ----------------------- | ---------------------- | --------------------------------------- | ------------ |
+| **Payment Status Sync** | Hourly polling         | Real-time webhooks                      | ✅ Job Queue |
+| **Retry Logic**         | None (waits 1 hour)    | Exponential backoff (5s-5min)           | ✅ Job Queue |
+| **Seat Release**        | ❌ No seat handling    | ✅ Atomic seat + coupon release         | ✅ Job Queue |
+| **Order Cleanup**       | Cancels orders only    | Releases seats + coupons + cancels      | ✅ Job Queue |
+| **Processing Speed**    | Up to 1 hour delay     | <5 seconds (webhook)                    | ✅ Job Queue |
+| **Monitoring**          | GitHub Actions logs    | Admin dashboard `/admin/jobs`           | ✅ Job Queue |
+| **Failure Handling**    | Silent failures        | Visible in dashboard                    | ✅ Job Queue |
 | **Cost**                | GitHub Actions minutes | Low (container platform + R2 free tier) | ✅ Job Queue |
 
 ### What the Job Queue Provides

@@ -127,9 +127,10 @@ describe('processCheckout Integration Tests', () => {
       // Execute: Process checkout
       const formData = new FormData();
       formData.set('action', 'checkout');
-      formData.set('cartItems', JSON.stringify([
-        { id: 'perf-1', quantity: 1, price: 35, title: 'Test Show' },
-      ]));
+      formData.set(
+        'cartItems',
+        JSON.stringify([{ id: 'perf-1', quantity: 1, price: 35, title: 'Test Show' }]),
+      );
       formData.set('email', 'test@example.com');
       formData.set('name', 'Test User');
 
@@ -236,9 +237,10 @@ describe('processCheckout Integration Tests', () => {
       // Execute: Process checkout
       const formData = new FormData();
       formData.set('action', 'checkout');
-      formData.set('cartItems', JSON.stringify([
-        { id: 'perf-1', quantity: 1, price: 35, title: 'Test Show' },
-      ]));
+      formData.set(
+        'cartItems',
+        JSON.stringify([{ id: 'perf-1', quantity: 1, price: 35, title: 'Test Show' }]),
+      );
       formData.set('email', 'test@example.com');
       formData.set('name', 'Test User');
 
@@ -314,15 +316,14 @@ describe('processCheckout Integration Tests', () => {
       vi.mocked(jobProcessor.createJob).mockResolvedValue('job-123');
 
       // Email fails but shouldn't crash checkout
-      vi.mocked(emailUtils.sendQueuedPaymentEmail).mockRejectedValue(
-        new Error('SMTP timeout')
-      );
+      vi.mocked(emailUtils.sendQueuedPaymentEmail).mockRejectedValue(new Error('SMTP timeout'));
 
       const formData = new FormData();
       formData.set('action', 'checkout');
-      formData.set('cartItems', JSON.stringify([
-        { id: 'perf-1', quantity: 1, price: 35, title: 'Test Show' },
-      ]));
+      formData.set(
+        'cartItems',
+        JSON.stringify([{ id: 'perf-1', quantity: 1, price: 35, title: 'Test Show' }]),
+      );
       formData.set('email', 'test@example.com');
       formData.set('name', 'Test User');
 
@@ -339,7 +340,12 @@ describe('processCheckout Integration Tests', () => {
     it('should subscribe to newsletter when checkbox is checked', async () => {
       // Setup mocks
       mockPerformancesFindMany.mockResolvedValue([
-        { id: 'perf-1', date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), status: 'published', availableSeats: 100 },
+        {
+          id: 'perf-1',
+          date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+          status: 'published',
+          availableSeats: 100,
+        },
       ]);
       vi.mocked(orderCommands.createOrder).mockResolvedValue({
         id: 'order-123',
@@ -352,7 +358,9 @@ describe('processCheckout Integration Tests', () => {
         userId: null,
       } as any);
       vi.mocked(ticketSalesCommands.createLineItems).mockResolvedValue([]);
-      mockTransactionExecute.mockResolvedValueOnce({ rows: [{ id: 'perf-1', available_seats: 100 }] });
+      mockTransactionExecute.mockResolvedValueOnce({
+        rows: [{ id: 'perf-1', available_seats: 100 }],
+      });
       mockTransactionExecute.mockResolvedValueOnce(undefined);
       vi.mocked(paymentCommands.createMolliePayment).mockResolvedValue({
         success: true,
@@ -362,9 +370,10 @@ describe('processCheckout Integration Tests', () => {
 
       const formData = new FormData();
       formData.set('action', 'checkout');
-      formData.set('cartItems', JSON.stringify([
-        { id: 'perf-1', quantity: 1, price: 35, title: 'Test Show' },
-      ]));
+      formData.set(
+        'cartItems',
+        JSON.stringify([{ id: 'perf-1', quantity: 1, price: 35, title: 'Test Show' }]),
+      );
       formData.set('email', 'test@example.com');
       formData.set('name', 'Test User');
       formData.set('subscribeNewsletter', 'on');
@@ -374,14 +383,19 @@ describe('processCheckout Integration Tests', () => {
       // Assert: Newsletter subscription was attempted
       expect(mailingListCommands.subscribeToMailingList).toHaveBeenCalledWith(
         'test@example.com',
-        'Test User'
+        'Test User',
       );
     });
 
     it('should not fail checkout if newsletter subscription fails', async () => {
       // Setup mocks
       mockPerformancesFindMany.mockResolvedValue([
-        { id: 'perf-1', date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), status: 'published', availableSeats: 100 },
+        {
+          id: 'perf-1',
+          date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+          status: 'published',
+          availableSeats: 100,
+        },
       ]);
       vi.mocked(orderCommands.createOrder).mockResolvedValue({
         id: 'order-123',
@@ -394,21 +408,24 @@ describe('processCheckout Integration Tests', () => {
         userId: null,
       } as any);
       vi.mocked(ticketSalesCommands.createLineItems).mockResolvedValue([]);
-      mockTransactionExecute.mockResolvedValueOnce({ rows: [{ id: 'perf-1', available_seats: 100 }] });
+      mockTransactionExecute.mockResolvedValueOnce({
+        rows: [{ id: 'perf-1', available_seats: 100 }],
+      });
       mockTransactionExecute.mockResolvedValueOnce(undefined);
       vi.mocked(paymentCommands.createMolliePayment).mockResolvedValue({
         success: true,
         paymentUrl: 'https://checkout.mollie.com/payment/tr_12345',
       });
       vi.mocked(mailingListCommands.subscribeToMailingList).mockRejectedValue(
-        new Error('Mailchimp API error')
+        new Error('Mailchimp API error'),
       );
 
       const formData = new FormData();
       formData.set('action', 'checkout');
-      formData.set('cartItems', JSON.stringify([
-        { id: 'perf-1', quantity: 1, price: 35, title: 'Test Show' },
-      ]));
+      formData.set(
+        'cartItems',
+        JSON.stringify([{ id: 'perf-1', quantity: 1, price: 35, title: 'Test Show' }]),
+      );
       formData.set('email', 'test@example.com');
       formData.set('name', 'Test User');
       formData.set('subscribeNewsletter', 'on');
@@ -437,9 +454,10 @@ describe('processCheckout Integration Tests', () => {
     it('should reject invalid email', async () => {
       const formData = new FormData();
       formData.set('action', 'checkout');
-      formData.set('cartItems', JSON.stringify([
-        { id: 'perf-1', quantity: 1, price: 35, title: 'Test Show' },
-      ]));
+      formData.set(
+        'cartItems',
+        JSON.stringify([{ id: 'perf-1', quantity: 1, price: 35, title: 'Test Show' }]),
+      );
       formData.set('email', 'invalid-email');
       formData.set('name', 'Test User');
 
@@ -452,9 +470,10 @@ describe('processCheckout Integration Tests', () => {
     it('should reject missing name', async () => {
       const formData = new FormData();
       formData.set('action', 'checkout');
-      formData.set('cartItems', JSON.stringify([
-        { id: 'perf-1', quantity: 1, price: 35, title: 'Test Show' },
-      ]));
+      formData.set(
+        'cartItems',
+        JSON.stringify([{ id: 'perf-1', quantity: 1, price: 35, title: 'Test Show' }]),
+      );
       formData.set('email', 'test@example.com');
       formData.set('name', '');
 
@@ -477,9 +496,10 @@ describe('processCheckout Integration Tests', () => {
 
       const formData = new FormData();
       formData.set('action', 'checkout');
-      formData.set('cartItems', JSON.stringify([
-        { id: 'perf-1', quantity: 1, price: 35, title: 'Past Show' },
-      ]));
+      formData.set(
+        'cartItems',
+        JSON.stringify([{ id: 'perf-1', quantity: 1, price: 35, title: 'Past Show' }]),
+      );
       formData.set('email', 'test@example.com');
       formData.set('name', 'Test User');
 
@@ -502,9 +522,10 @@ describe('processCheckout Integration Tests', () => {
 
       const formData = new FormData();
       formData.set('action', 'checkout');
-      formData.set('cartItems', JSON.stringify([
-        { id: 'perf-1', quantity: 1, price: 35, title: 'Unpublished Show' },
-      ]));
+      formData.set(
+        'cartItems',
+        JSON.stringify([{ id: 'perf-1', quantity: 1, price: 35, title: 'Unpublished Show' }]),
+      );
       formData.set('email', 'test@example.com');
       formData.set('name', 'Test User');
 
@@ -527,9 +548,10 @@ describe('processCheckout Integration Tests', () => {
 
       const formData = new FormData();
       formData.set('action', 'checkout');
-      formData.set('cartItems', JSON.stringify([
-        { id: 'perf-1', quantity: 1, price: 35, title: 'Sold Out Show' },
-      ]));
+      formData.set(
+        'cartItems',
+        JSON.stringify([{ id: 'perf-1', quantity: 1, price: 35, title: 'Sold Out Show' }]),
+      );
       formData.set('email', 'test@example.com');
       formData.set('name', 'Test User');
 

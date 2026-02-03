@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/utils/auth';
 import { Session } from 'next-auth';
 import sharp from 'sharp';
-import { uploadImageToR2 } from '@/lib/utils/r2ImageUploader';
+import { uploadImageToR2 } from '@/lib/utils/r2ImageStorage';
 import { createImage } from '@/lib/commands/images';
 
 export async function POST(req: NextRequest) {

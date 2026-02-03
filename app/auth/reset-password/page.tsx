@@ -1,8 +1,5 @@
 import { redirect, notFound } from 'next/navigation';
-import {
-  hashPassword,
-  validateResetToken,
-} from '@/lib/utils/auth';
+import { hashPassword, validateResetToken } from '@/lib/utils/auth';
 import { isPasswordPolicyCompliant, getPasswordPolicyText } from '@/lib/utils/password-policy';
 import { resetUserPassword } from '@/lib/commands/users';
 import ResetPasswordForm from './reset-password-form';

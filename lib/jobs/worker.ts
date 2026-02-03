@@ -1,9 +1,4 @@
-import {
-  getNextJobs,
-  updateJobStatus,
-  scheduleRetry,
-  type Job,
-} from './jobProcessor';
+import { getNextJobs, updateJobStatus, scheduleRetry, type Job } from './jobProcessor';
 import { handlePaymentCreation } from './handlers/paymentCreationHandler';
 import { handlePaymentWebhook } from './handlers/paymentWebhookHandler';
 import { handleOrphanedOrderCleanup } from './handlers/orphanedOrderCleanupHandler';
@@ -67,7 +62,9 @@ export async function startWorker() {
 async function processJob(job: Job): Promise<void> {
   const { id, type, data, executionCount } = job;
 
-  console.log(`[JOB_START] ${id} - Type: ${type}, Attempt: ${executionCount + 1}/${MAX_EXECUTION_ATTEMPTS}`);
+  console.log(
+    `[JOB_START] ${id} - Type: ${type}, Attempt: ${executionCount + 1}/${MAX_EXECUTION_ATTEMPTS}`,
+  );
 
   // Check if max attempts exceeded
   if (executionCount >= MAX_EXECUTION_ATTEMPTS) {

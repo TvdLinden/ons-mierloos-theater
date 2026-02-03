@@ -300,4 +300,3 @@ export async function setMockPaymentStatus(
     })
     .where(eq(payments.id, payment.id));
 }
-

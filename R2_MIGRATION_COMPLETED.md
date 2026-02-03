@@ -5,32 +5,38 @@ All 7 phases of the R2 migration have been successfully implemented!
 ## Summary of All Phases
 
 ### Phase 1: Foundation Setup ✓
+
 - Installed `@aws-sdk/client-s3`
 - Created R2 uploader utility (`lib/utils/r2ImageUploader.ts`)
 - Added R2 fields to database schema
 - Configured Next.js for R2 image serving
 
 ### Phase 2: Dual-Mode Upload Flow ✓
+
 - Updated upload endpoint to use Sharp processing
 - Integrated R2 uploads
 - Updated image commands for R2 deletion
 - Updated `lib/utils/imageUpload.ts` for R2
 
 ### Phase 3: Migration Script ✓
+
 - Created automated migration script (`scripts/migrate-images-to-r2.ts`)
 - Batch processing with dry-run support
 - Added NPM script: `npm run migrate:images-to-r2`
 
 ### Phase 4: Hybrid Image Serving ✓
+
 - Updated `/api/images/[id]` to redirect R2 URLs
 - Created hybrid URL utility (`lib/utils/image-url.ts`)
 
 ### Phase 5: Component Updates ✓
+
 - Removed `unoptimized` flag from 4 image components
 - Added responsive `sizes` attributes
 - Updated `components/ImageUpload.tsx` for optimization
 
 ### Phase 6: Finalization ✓
+
 - Updated ALL show queries to include image relations:
   - `lib/queries/shows.ts` - 9 functions updated
   - `lib/queries/content.ts` - 3 news article functions updated
@@ -44,6 +50,7 @@ All 7 phases of the R2 migration have been successfully implemented!
 - Simplified `/api/images/[id]` to R2-only redirect
 
 ### Phase 7: Cleanup ✓
+
 - Deleted obsolete `lib/utils/imageProcessor.ts`
 
 ## Files Created
@@ -59,22 +66,27 @@ All 7 phases of the R2 migration have been successfully implemented!
 ## Files Modified (22 total)
 
 **Database & Schema:**
+
 - `lib/db/schema.ts` - Updated image table (R2 required, removed bytea)
 - `lib/db/index.ts` - Updated types (kept ImageMetadata for compatibility)
 
 **Queries:**
+
 - `lib/queries/shows.ts` - 9 functions updated with image relations
 - `lib/queries/content.ts` - 3 functions updated with image relations
 
 **Upload & Processing:**
+
 - `app/api/upload/route.ts` - R2 upload with Sharp processing
 - `lib/utils/imageUpload.ts` - R2 integration
 - `lib/commands/images.ts` - R2 deletion support
 
 **Image Serving:**
+
 - `app/api/images/[id]/route.ts` - R2-only redirect
 
 **Components:**
+
 - `components/blocks/ImageBlock.tsx` - Removed unoptimized
 - `components/blocks/GalleryBlock.tsx` - Removed unoptimized
 - `components/PerformanceCard.tsx` - Removed unoptimized
@@ -83,6 +95,7 @@ All 7 phases of the R2 migration have been successfully implemented!
 - `lib/utils/image-url.ts` - New hybrid URL utility
 
 **Configuration:**
+
 - `next.config.ts` - R2 domain + WebP/AVIF formats
 - `package.json` - Added migration script
 
@@ -95,11 +108,13 @@ All 7 phases of the R2 migration have been successfully implemented!
 Before deploying to production, run these steps:
 
 ### 1. Apply Database Migrations
+
 ```bash
 npm run db:migrate
 ```
 
 ### 2. Configure R2
+
 - Create R2 bucket: `ons-mierloos-theater-images`
 - Set public access
 - Generate API token with Edit permissions
@@ -112,6 +127,7 @@ npm run db:migrate
   ```
 
 ### 3. Migrate Existing Images
+
 ```bash
 # Test first (no changes)
 npm run migrate:images-to-r2 -- --dry-run
@@ -121,6 +137,7 @@ npm run migrate:images-to-r2
 ```
 
 ### 4. Verify Migration Complete
+
 ```sql
 -- Should return 0 (all images migrated)
 SELECT COUNT(*) FROM images WHERE r2_url IS NULL;
@@ -130,6 +147,7 @@ SELECT COUNT(*) FROM images WHERE r2_url IS NOT NULL;
 ```
 
 ### 5. Test in Staging
+
 - [ ] Upload new images → verify in R2
 - [ ] View show detail pages → check image loading
 - [ ] Check Network tab → verify WebP/AVIF serving
@@ -137,6 +155,7 @@ SELECT COUNT(*) FROM images WHERE r2_url IS NOT NULL;
 - [ ] Check image dimensions are stored
 
 ### 6. Deploy & Monitor
+
 - Deploy to production
 - Monitor logs for any image 404 errors
 - Check Cloudflare R2 dashboard for upload activity
@@ -201,6 +220,7 @@ User Upload
 ## Query Updates Summary
 
 ### Shows (9 functions updated):
+
 1. `getAllShows()` ✓
 2. `getShowByIdWithPerformances()` ✓
 3. `getShowByIdWithTagsAndPerformances()` ✓
@@ -212,11 +232,13 @@ User Upload
 9. `getPerformanceByIdWithShow()` ✓
 
 ### News Articles (3 functions updated):
+
 1. `getActiveNewsArticles()` ✓
 2. `getAllNewsArticles()` ✓
 3. `getNewsArticleById()` ✓
 
 ### Sponsors (already complete):
+
 - Already using `with: { logo: true }` ✓
 
 ## Next Steps
@@ -232,6 +254,7 @@ User Upload
 ## Support & Rollback
 
 If issues arise:
+
 1. R2 images remain in bucket as backup
 2. API endpoint still works (redirects to R2)
 3. Can revert database migrations (keep r2_url column)

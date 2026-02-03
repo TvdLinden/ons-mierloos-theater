@@ -14,7 +14,12 @@ interface TestResult {
 async function testConcurrentCheckout() {
   // Import db AFTER dotenv loads
   const { db } = await import('@/lib/db');
-  const { performances, orders, lineItems: lineItemsTable, shows } = await import('@/lib/db/schema');
+  const {
+    performances,
+    orders,
+    lineItems: lineItemsTable,
+    shows,
+  } = await import('@/lib/db/schema');
   const { eq, sql, desc } = await import('drizzle-orm');
 
   console.log('🧪 Testing concurrent checkout race condition prevention\n');
@@ -26,11 +31,14 @@ async function testConcurrentCheckout() {
     // 1. Create a test show
     console.log('📝 Setting up test environment...');
 
-    const [testShow] = await db.insert(shows).values({
-      title: `Test Show - Race Condition ${Date.now()}`,
-      slug: `test-race-${Date.now()}`,
-      status: 'published',
-    }).returning({ id: shows.id });
+    const [testShow] = await db
+      .insert(shows)
+      .values({
+        title: `Test Show - Race Condition ${Date.now()}`,
+        slug: `test-race-${Date.now()}`,
+        status: 'published',
+      })
+      .returning({ id: shows.id });
 
     createdShowId = testShow.id;
     console.log(`✅ Created test show: ${createdShowId}`);
@@ -40,16 +48,19 @@ async function testConcurrentCheckout() {
     futureDate.setDate(futureDate.getDate() + 7); // 7 days from now
     futureDate.setHours(19, 0, 0, 0); // Set time to 19:00
 
-    const [testPerf] = await db.insert(performances).values({
-      showId: createdShowId,
-      date: futureDate,
-      rows: 1,
-      seatsPerRow: 5,
-      totalSeats: 5,
-      availableSeats: 5,
-      price: '20.00',
-      status: 'published',
-    }).returning({ id: performances.id, availableSeats: performances.availableSeats });
+    const [testPerf] = await db
+      .insert(performances)
+      .values({
+        showId: createdShowId,
+        date: futureDate,
+        rows: 1,
+        seatsPerRow: 5,
+        totalSeats: 5,
+        availableSeats: 5,
+        price: '20.00',
+        status: 'published',
+      })
+      .returning({ id: performances.id, availableSeats: performances.availableSeats });
 
     createdPerfId = testPerf.id;
     console.log(`✅ Created test performance with 5 seats: ${createdPerfId}\n`);
@@ -78,12 +89,15 @@ async function testConcurrentCheckout() {
         // Simulate checkout transaction
         const result = await db.transaction(async (tx) => {
           // Create order
-          const orderResult = await tx.insert(orders).values({
-            customerEmail: 'user1@test.com',
-            customerName: 'Test User 1',
-            totalAmount: '60.00',
-            status: 'pending',
-          }).returning();
+          const orderResult = await tx
+            .insert(orders)
+            .values({
+              customerEmail: 'user1@test.com',
+              customerName: 'Test User 1',
+              totalAmount: '60.00',
+              status: 'pending',
+            })
+            .returning();
 
           const orderId = orderResult[0].id;
           checkout1OrderId = orderId;
@@ -109,9 +123,7 @@ async function testConcurrentCheckout() {
           const available = lockedPerf.rows[0]?.available_seats || 0;
 
           if (available < 3) {
-            throw new Error(
-              `Not enough seats available (need 3, have ${available})`
-            );
+            throw new Error(`Not enough seats available (need 3, have ${available})`);
           }
 
           // Reserve seats
@@ -142,12 +154,15 @@ async function testConcurrentCheckout() {
       try {
         const result = await db.transaction(async (tx) => {
           // Create order
-          const orderResult = await tx.insert(orders).values({
-            customerEmail: 'user2@test.com',
-            customerName: 'Test User 2',
-            totalAmount: '60.00',
-            status: 'pending',
-          }).returning();
+          const orderResult = await tx
+            .insert(orders)
+            .values({
+              customerEmail: 'user2@test.com',
+              customerName: 'Test User 2',
+              totalAmount: '60.00',
+              status: 'pending',
+            })
+            .returning();
 
           const orderId = orderResult[0].id;
           checkout2OrderId = orderId;
@@ -173,9 +188,7 @@ async function testConcurrentCheckout() {
           const available = lockedPerf.rows[0]?.available_seats || 0;
 
           if (available < 3) {
-            throw new Error(
-              `Not enough seats available (need 3, have ${available})`
-            );
+            throw new Error(`Not enough seats available (need 3, have ${available})`);
           }
 
           // Reserve seats
@@ -277,15 +290,11 @@ async function testConcurrentCheckout() {
     console.log('\n🧹 Cleaning up test data...');
 
     if (checkout1OrderId) {
-      await db.delete(lineItemsTable).where(
-        eq(lineItemsTable.orderId, checkout1OrderId)
-      );
+      await db.delete(lineItemsTable).where(eq(lineItemsTable.orderId, checkout1OrderId));
       await db.delete(orders).where(eq(orders.id, checkout1OrderId));
     }
     if (checkout2OrderId) {
-      await db.delete(lineItemsTable).where(
-        eq(lineItemsTable.orderId, checkout2OrderId)
-      );
+      await db.delete(lineItemsTable).where(eq(lineItemsTable.orderId, checkout2OrderId));
       await db.delete(orders).where(eq(orders.id, checkout2OrderId));
     }
 

@@ -311,7 +311,7 @@ export async function getRecentlyPassedShows(
   const now = new Date();
   const nowUTC = new Date(now.toISOString());
 
-  let whereConditions = and(
+  const whereConditions = and(
     eq(shows.status, 'published'),
     or(isNull(shows.publicationDate), lte(shows.publicationDate, nowUTC)),
     or(isNull(shows.depublicationDate), gte(shows.depublicationDate, nowUTC)),
@@ -322,10 +322,7 @@ export async function getRecentlyPassedShows(
     with: {
       image: true,
       performances: {
-        where: and(
-          lt(performances.date, nowUTC),
-          eq(performances.status, 'published'),
-        ),
+        where: and(lt(performances.date, nowUTC), eq(performances.status, 'published')),
         orderBy: [desc(performances.date)],
       },
       showTags: {

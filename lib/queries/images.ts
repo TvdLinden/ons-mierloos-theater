@@ -20,7 +20,6 @@ export async function getAllImages(offset = 0, limit = 20): Promise<Image[]> {
     .offset(offset);
 }
 
-
 /**
  * Get total count of images
  */
@@ -78,10 +77,7 @@ export async function getImageUsage(imageId: string): Promise<{
  */
 import { newsArticles } from '@/lib/db/schema';
 
-export async function findUnusedImages(
-  offset = 0,
-  limit = 50,
-): Promise<Image[]> {
+export async function findUnusedImages(offset = 0, limit = 50): Promise<Image[]> {
   // Single SQL: NOT EXISTS subqueries for each referencing table/column.
   const rows = await db
     .select()

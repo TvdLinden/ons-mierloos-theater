@@ -7,7 +7,9 @@ This document describes the test suite for the payment creation retry flow when 
 The test suite covers two main scenarios:
 
 ### Happy Path (37 tests)
+
 When Mollie payment API is available and succeeds immediately:
+
 1. Order is created with correct total amount
 2. Seats are reserved via transaction lock
 3. Payment succeeds on first attempt
@@ -16,7 +18,9 @@ When Mollie payment API is available and succeeds immediately:
 6. User completes payment and returns
 
 ### Retry Flow (31 tests)
+
 When Mollie payment API is unavailable:
+
 1. A `payment_creation` job is queued in the database
 2. The user receives a queued payment email
 3. The user is redirected to an order status page
@@ -27,9 +31,11 @@ When Mollie payment API is unavailable:
 ## Test Files
 
 ### 1. `app/checkout/happy-path.test.ts` ✅ ALL 37 PASSING
+
 Tests for when everything works: Mollie payment succeeds immediately without job queuing.
 
 **Key test cases (37 tests):**
+
 - ✅ Payment response structure validation
 - ✅ Amount formatting and currency validation
 - ✅ Payment request details (redirectUrl, webhookUrl, metadata)
@@ -50,9 +56,11 @@ npm test -- happy-path.test.ts
 ```
 
 ### 2. `lib/jobs/worker.test.ts` ✅ ALL 17 PASSING
+
 Tests the job worker that processes queued jobs with exponential backoff retry logic.
 
 **Key test cases (17 tests):**
+
 - ✅ Exponential backoff calculation (5s → 10s → 20s → ... → 5min cap)
 - ✅ Jobs are fetched and marked as processing
 - ✅ Job completes successfully and is marked completed
@@ -67,9 +75,11 @@ npm test -- worker.test.ts
 ```
 
 ### 3. `app/checkout/integration.test.ts` ✅ ALL 14 PASSING
+
 Integration test validating the contract/expectations for payment retry flow.
 
 **Key test cases (14 tests):**
+
 - ✅ Job creation payload structure validation
 - ✅ Exponential backoff pattern verification
 - ✅ Order state expectations when payment fails
@@ -91,9 +101,11 @@ npm test -- integration.test.ts
 **Why this approach?** Rather than trying to mock complex interactions between modules, this test validates the critical contract: the data structures, state transitions, and business logic rules that your system must follow. This is more robust and maintainable.
 
 ### 3. `lib/jobs/handlers/paymentCreationHandler.test.ts`
+
 Tests the payment creation handler that runs when a `payment_creation` job is processed.
 
 **Test cases:**
+
 - Payment creation succeeds and stores payment in database
 - Mollie API unreachable error triggers retry
 - Mollie timeout error triggers retry
@@ -106,9 +118,11 @@ npm test -- paymentCreationHandler.test.ts
 ```
 
 ### 4. `app/checkout/actions.test.ts`
+
 Tests the checkout action where payment creation can fail and trigger job queuing.
 
 **Test cases:**
+
 - When Mollie API is unavailable, `payment_creation` job is created
 - When payment creation throws exception, job is queued
 - Queued payment email is sent to customer
@@ -124,27 +138,32 @@ npm test -- actions.test.ts
 ## Running Tests
 
 ### Summary
+
 - **Total: 68 passing tests** across 5 test files
   - 37 happy path tests ✅
   - 17 worker/retry tests ✅
   - 14 integration tests ✅
 
 ### Run all tests
+
 ```bash
 npm test
 ```
 
 ### Run tests in watch mode (re-run on file changes)
+
 ```bash
 npm test:watch
 ```
 
 ### Run tests with coverage report
+
 ```bash
 npm test:coverage
 ```
 
 ### Run specific test file
+
 ```bash
 npm test -- happy-path.test.ts
 npm test -- worker.test.ts
@@ -153,6 +172,7 @@ npm test -- paymentCreationHandler.test.ts
 ```
 
 ### Run tests matching a pattern
+
 ```bash
 npm test -- --testNamePattern="should redirect to payment URL"
 npm test -- --testNamePattern="exponential backoff"
@@ -171,6 +191,7 @@ The tests use Jest mocks to isolate components:
 4. **Utility mocks**: `sendQueuedPaymentEmail()`
 
 This allows testing without requiring:
+
 - Live database connection
 - Active Mollie API account
 - Real email service
@@ -197,6 +218,7 @@ This allows testing without requiring:
 ## Scenario Testing
 
 ### Scenario 1: Happy Path (No Retries)
+
 ```
 User Checkout → Mollie Available → Payment Created → Redirect to Payment URL
                                             ↓
@@ -204,6 +226,7 @@ User Checkout → Mollie Available → Payment Created → Redirect to Payment U
 ```
 
 ### Scenario 2: Temporary Unavailability (Retried and Recovered)
+
 ```
 User Checkout → Mollie Unavailable → Job Created → Email Sent → Redirect to Order Page
                                             ↓
@@ -215,6 +238,7 @@ User Checkout → Mollie Unavailable → Job Created → Email Sent → Redirect
 ```
 
 ### Scenario 3: Persistent Failure (Max Retries)
+
 ```
 User Checkout → Mollie Unavailable → Job Created
                                             ↓
@@ -244,6 +268,7 @@ The checkout action (`app/checkout/actions.ts:335-398`) shows the actual integra
    - Returns redirect to order status page
 
 The worker (`lib/jobs/worker.ts`) processes these jobs:
+
 - Fetches pending jobs
 - Routes to `handlePaymentCreation()`
 - Retries with exponential backoff if it fails
@@ -252,6 +277,7 @@ The worker (`lib/jobs/worker.ts`) processes these jobs:
 ## Environment Variables Used in Tests
 
 From `jest.setup.js`:
+
 ```
 NEXTAUTH_SECRET = 'test-secret'
 NEXTAUTH_URL = 'http://localhost:3000'
@@ -265,13 +291,12 @@ USE_MOCK_PAYMENT = 'false'
 To add more test cases:
 
 1. **Test a new API error type:**
+
    ```typescript
    it('should handle rate limiting error', async () => {
-     (createMollieClient).mockReturnValue({
+     createMollieClient.mockReturnValue({
        payments: {
-         create: jest.fn().mockRejectedValue(
-           new Error('Rate limited: 429 Too Many Requests')
-         ),
+         create: jest.fn().mockRejectedValue(new Error('Rate limited: 429 Too Many Requests')),
        },
      });
      // Assert retry behavior
@@ -279,6 +304,7 @@ To add more test cases:
    ```
 
 2. **Test payment method selection:**
+
    ```typescript
    it('should store selected payment method in database', async () => {
      // Mock Mollie with payment method data
@@ -298,17 +324,20 @@ To add more test cases:
 ## Debugging Tests
 
 ### View detailed output
+
 ```bash
 npm test -- --verbose
 ```
 
 ### Debug a specific test
+
 ```bash
 node --inspect-brk node_modules/.bin/jest --runInBand paymentCreationHandler.test.ts
 # Then open chrome://inspect
 ```
 
 ### Check what's being mocked
+
 ```typescript
 // Add to test
 console.log(jest.mock.calls); // See all mock calls

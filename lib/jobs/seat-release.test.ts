@@ -26,11 +26,7 @@ describe('Seat Release on Payment Failure', () => {
         availableSeats: 50,
       };
 
-      const reservations = [
-        { quantity: 3 },
-        { quantity: 7 },
-        { quantity: 2 },
-      ];
+      const reservations = [{ quantity: 3 }, { quantity: 7 }, { quantity: 2 }];
 
       let totalReserved = 0;
       for (const res of reservations) {
@@ -198,7 +194,7 @@ describe('Seat Release on Payment Failure', () => {
         ticket.status = 'cancelled';
       }
 
-      expect(tickets.every(t => t.status === 'cancelled')).toBe(true);
+      expect(tickets.every((t) => t.status === 'cancelled')).toBe(true);
     });
   });
 
@@ -305,14 +301,14 @@ describe('Seat Release on Payment Failure', () => {
 
       // Payment for order-456 failed - must delete usage record
       const beforeDelete = couponUsages.length;
-      const filtered = couponUsages.filter(u => u.orderId !== 'order-456');
+      const filtered = couponUsages.filter((u) => u.orderId !== 'order-456');
 
       expect(beforeDelete).toBe(3);
       expect(filtered.length).toBe(2);
-      expect(filtered.some(u => u.orderId === 'order-456')).toBe(false);
+      expect(filtered.some((u) => u.orderId === 'order-456')).toBe(false);
 
       // CRITICAL for analytics: only successful orders show in usage stats
-      const successfulUsages = couponUsages.filter(u => u.status === 'successful');
+      const successfulUsages = couponUsages.filter((u) => u.status === 'successful');
       expect(successfulUsages.length).toBe(2);
     });
 
@@ -359,7 +355,7 @@ describe('Seat Release on Payment Failure', () => {
       expect(releasedCoupons).toContain('coupon-2');
     });
 
-    it('CRITICAL: Should not affect other orders\' coupon usage', () => {
+    it("CRITICAL: Should not affect other orders' coupon usage", () => {
       const coupons = [
         { id: 'coupon-a', usedCount: 5 }, // Used by 5 successful orders
       ];
@@ -379,12 +375,12 @@ describe('Seat Release on Payment Failure', () => {
       coupons[0].usedCount -= 1;
 
       // Delete only the failed order\s usage record
-      const afterCleanup = couponUsages.filter(u => u.orderId !== 'order-failed-1');
+      const afterCleanup = couponUsages.filter((u) => u.orderId !== 'order-failed-1');
 
       expect(beforeCleanup).toBe(5);
       expect(coupons[0].usedCount).toBe(4); // Decremented by 1
       expect(afterCleanup.length).toBe(5); // 6 - 1 = 5
-      expect(afterCleanup.every(u => u.couponId === 'coupon-a')).toBe(true);
+      expect(afterCleanup.every((u) => u.couponId === 'coupon-a')).toBe(true);
     });
   });
 

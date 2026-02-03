@@ -17,7 +17,13 @@
       "Bash(npm uninstall:*)",
       "Bash(npm run test:ui:*)",
       "Bash(ls:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(npm run lint)",
+      "Bash(npx eslint:*)",
+      "Bash(npx prettier:*)",
+      "Bash(npx vitest:*)",
+      "Bash(npm run lint:fix:*)",
+      "Bash(npm run format:*)"
     ]
   }
 }

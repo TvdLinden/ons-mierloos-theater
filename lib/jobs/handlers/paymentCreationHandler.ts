@@ -27,9 +27,20 @@ export async function handlePaymentCreation(
   jobId: string,
   data: PaymentCreationJobData,
 ): Promise<{ paymentUrl: string; paymentId: string }> {
-  const { orderId, amount, currency, customerEmail, customerName, description, redirectUrl, webhookUrl } = data;
+  const {
+    orderId,
+    amount,
+    currency,
+    customerEmail,
+    customerName,
+    description,
+    redirectUrl,
+    webhookUrl,
+  } = data;
 
-  console.log(`[PAYMENT_CREATION] Creating payment for order ${orderId}, amount: ${amount} ${currency}`);
+  console.log(
+    `[PAYMENT_CREATION] Creating payment for order ${orderId}, amount: ${amount} ${currency}`,
+  );
 
   // Use mock payment for testing
   if (USE_MOCK_PAYMENT) {

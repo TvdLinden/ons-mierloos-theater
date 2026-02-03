@@ -161,7 +161,10 @@ export async function scheduleRetry(
  * @param jobId Job ID
  */
 export async function markJobProcessing(jobId: string): Promise<void> {
-  await db.update(jobs).set({ status: 'processing', updatedAt: new Date() }).where(eq(jobs.id, jobId));
+  await db
+    .update(jobs)
+    .set({ status: 'processing', updatedAt: new Date() })
+    .where(eq(jobs.id, jobId));
 }
 
 /**

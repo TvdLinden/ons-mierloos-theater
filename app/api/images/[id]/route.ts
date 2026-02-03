@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getImageById } from '@/lib/queries/images';
+import { getImageFromR2 } from '@/lib/utils/r2ImageStorage';
 
 /**
  * Phase 6: R2-only image serving
@@ -26,8 +27,18 @@ export async function GET(request: NextRequest, props: { params: Promise<{ id: s
       return NextResponse.json({ error: 'Image URL not found' }, { status: 404 });
     }
 
-    // Redirect to R2 URL
-    return NextResponse.redirect(image.r2Url, { status: 307 });
+    // Stream the image from R2 using authenticated client
+    const stream = await getImageFromR2(image.r2Url);
+
+    // Set headers for public asset caching and content type (optionally add more headers as needed)
+    const headers = new Headers();
+    headers.set('Cache-Control', 'public, max-age=31536000, immutable');
+    headers.set('Content-Type', 'image/jpeg'); // Optionally detect type dynamically
+
+    return new NextResponse(stream as any, {
+      status: 200,
+      headers,
+    });
   } catch (error) {
     console.error('Error serving image:', error);
     return NextResponse.json({ error: 'Failed to load image' }, { status: 500 });

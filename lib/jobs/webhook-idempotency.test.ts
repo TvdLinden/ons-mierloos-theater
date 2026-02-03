@@ -63,7 +63,7 @@ describe('Webhook Idempotency - Payment Processing', () => {
 
       // Second webhook: should NOT generate more tickets
       // (checked by verifying tickets already exist)
-      const existingTickets = tickets.filter(t => t.orderId === orderId);
+      const existingTickets = tickets.filter((t) => t.orderId === orderId);
       const shouldGenerateAgain = existingTickets.length === 0;
 
       expect(shouldGenerateAgain).toBe(false); // Already exist
@@ -237,7 +237,9 @@ describe('Webhook Idempotency - Payment Processing', () => {
         const timestamp = new Date();
 
         // Check if already processed
-        const alreadyProcessed = transactionLog.some(t => t.paymentId === paymentId && t.action === 'process');
+        const alreadyProcessed = transactionLog.some(
+          (t) => t.paymentId === paymentId && t.action === 'process',
+        );
 
         if (!alreadyProcessed) {
           transactionLog.push({ action: 'process', timestamp, paymentId });
@@ -251,9 +253,9 @@ describe('Webhook Idempotency - Payment Processing', () => {
       processWebhook('mollie_tr_race', 2);
 
       // Should only have processed once
-      const processActions = transactionLog.filter(t => t.action === 'process');
-      const ticketActions = transactionLog.filter(t => t.action === 'generate_tickets');
-      const emailActions = transactionLog.filter(t => t.action === 'send_email');
+      const processActions = transactionLog.filter((t) => t.action === 'process');
+      const ticketActions = transactionLog.filter((t) => t.action === 'generate_tickets');
+      const emailActions = transactionLog.filter((t) => t.action === 'send_email');
 
       expect(processActions.length).toBe(1);
       expect(ticketActions.length).toBe(1);
@@ -354,12 +356,10 @@ describe('Webhook Idempotency - Payment Processing', () => {
     });
 
     it('should not create duplicate payment records', () => {
-      const payments = [
-        { id: 'payment-1', providerTransactionId: 'mollie_tr_12345' },
-      ];
+      const payments = [{ id: 'payment-1', providerTransactionId: 'mollie_tr_12345' }];
 
       // Second webhook tries to create new payment record
-      const existingPayment = payments.find(p => p.providerTransactionId === 'mollie_tr_12345');
+      const existingPayment = payments.find((p) => p.providerTransactionId === 'mollie_tr_12345');
       const shouldCreateNew = !existingPayment;
 
       expect(shouldCreateNew).toBe(false);
@@ -375,8 +375,9 @@ describe('Webhook Idempotency - Payment Processing', () => {
       ];
 
       for (const scenario of scenarios) {
-        const isConsistent = scenario.paymentStatus === scenario.orderStatus ||
-                            (scenario.paymentStatus === 'succeeded' && scenario.orderStatus === 'paid');
+        const isConsistent =
+          scenario.paymentStatus === scenario.orderStatus ||
+          (scenario.paymentStatus === 'succeeded' && scenario.orderStatus === 'paid');
         expect(isConsistent).toBe(scenario.shouldMatch);
       }
     });
@@ -432,8 +433,8 @@ describe('Webhook Idempotency - Payment Processing', () => {
       const orderId = 'order-complete';
 
       // Initial state
-      let payment = { status: 'pending', completedAt: null };
-      let order = { status: 'pending' };
+      const payment = { status: 'pending', completedAt: null };
+      const order = { status: 'pending' };
       let tickets: string[] = [];
       let emailsSent = 0;
 
@@ -471,8 +472,8 @@ describe('Webhook Idempotency - Payment Processing', () => {
       const orderId = 'order-fail';
 
       // Initial state with reserved seats
-      let payment = { status: 'pending' };
-      let order = { status: 'pending' };
+      const payment = { status: 'pending' };
+      const order = { status: 'pending' };
       let performance1Seats = 97; // 100 - 3 reserved
       let performance2Seats = 98; // 100 - 2 reserved
       let couponUsageCount = 1; // Coupon was used

@@ -9,6 +9,7 @@ const nextConfig: NextConfig = {
     },
     useCache: true,
   },
+
   images: {
     formats: ['image/webp', 'image/avif'],
     localPatterns: [

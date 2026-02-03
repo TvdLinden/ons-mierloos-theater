@@ -1,4 +1,10 @@
-import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
+import {
+  S3Client,
+  PutObjectCommand,
+  DeleteObjectCommand,
+  GetObjectCommand,
+} from '@aws-sdk/client-s3';
+import { Readable } from 'stream';
 
 /**
  * Initialize Cloudflare R2 client
@@ -11,7 +17,7 @@ const createR2Client = () => {
 
   if (!accountId || !accessKeyId || !secretAccessKey) {
     throw new Error(
-      'Missing R2 configuration: R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY required'
+      'Missing R2 configuration: R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY required',
     );
   }
 
@@ -35,7 +41,7 @@ const createR2Client = () => {
 export async function uploadImageToR2(
   buffer: Buffer,
   filename: string,
-  contentType: string
+  contentType: string,
 ): Promise<string> {
   const client = createR2Client();
   const bucketName = process.env.R2_IMAGES_BUCKET_NAME;
@@ -73,7 +79,9 @@ export async function uploadImageToR2(
     return r2Url;
   } catch (error) {
     console.error('Error uploading image to R2:', error);
-    throw new Error(`Failed to upload image to R2: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error(
+      `Failed to upload image to R2: ${error instanceof Error ? error.message : 'Unknown error'}`,
+    );
   }
 }
 
@@ -109,6 +117,37 @@ export async function deleteImageFromR2(r2Url: string): Promise<void> {
     await client.send(command);
   } catch (error) {
     console.error('Error deleting image from R2:', error);
-    throw new Error(`Failed to delete image from R2: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error(
+      `Failed to delete image from R2: ${error instanceof Error ? error.message : 'Unknown error'}`,
+    );
   }
+}
+
+export async function getImageFromR2(r2Url: string): Promise<Readable> {
+  const client = createR2Client();
+  const bucketName = process.env.R2_IMAGES_BUCKET_NAME;
+
+  if (!bucketName) {
+    throw new Error('Missing R2_IMAGES_BUCKET_NAME environment variable');
+  }
+
+  // Extract key from URL
+  // URL format: https://[bucket-name].[account-id].r2.cloudflarestorage.com/[key]
+  const urlPattern = new RegExp(`https://${bucketName}\\..*\\.r2\\.cloudflarestorage\\.com/(.+)$`);
+  const match = r2Url.match(urlPattern);
+
+  if (!match || !match[1]) {
+    throw new Error(`Invalid R2 URL format: ${r2Url}`);
+  }
+
+  const key = match[1];
+
+  const data = await client.send(
+    new GetObjectCommand({
+      Bucket: bucketName,
+      Key: key,
+    }),
+  );
+
+  return data.Body as Readable;
 }

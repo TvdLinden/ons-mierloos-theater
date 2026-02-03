@@ -1,6 +1,6 @@
 import { readFormFile } from './image';
 import sharp from 'sharp';
-import { uploadImageToR2 } from './r2ImageUploader';
+import { uploadImageToR2 } from './r2ImageStorage';
 import { createImage } from '../commands/images';
 
 export type ImageUploadResult = {

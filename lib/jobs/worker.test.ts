@@ -1,10 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import {
-  getNextJobs,
-  updateJobStatus,
-  calculateNextRetry,
-  type Job,
-} from './jobProcessor';
+import { getNextJobs, updateJobStatus, calculateNextRetry, type Job } from './jobProcessor';
 
 // Note: calculateNextRetry is a pure utility function that doesn't need mocking
 // We test it directly
@@ -107,7 +102,7 @@ describe('Job Worker - Payment Creation Retry with Backoff', () => {
   describe('Job Retry Lifecycle', () => {
     it('should progress from pending to processing to completed', () => {
       let jobStatus = 'pending';
-      let executionCount = 0;
+      const executionCount = 0;
 
       // Fetch job (still pending)
       expect(jobStatus).toBe('pending');
@@ -209,9 +204,9 @@ describe('Job Worker - Payment Creation Retry with Backoff', () => {
         { id: 'job-3', status: 'pending' },
       ];
 
-      const completed = jobs.filter(j => j.status === 'completed');
-      const failed = jobs.filter(j => j.status === 'failed');
-      const pending = jobs.filter(j => j.status === 'pending');
+      const completed = jobs.filter((j) => j.status === 'completed');
+      const failed = jobs.filter((j) => j.status === 'failed');
+      const pending = jobs.filter((j) => j.status === 'pending');
 
       expect(completed).toHaveLength(1);
       expect(failed).toHaveLength(1);
@@ -237,10 +232,12 @@ describe('Job Worker - Payment Creation Retry with Backoff', () => {
       const retriableError = 'Connection timeout';
       const permanentError = 'Invalid API key';
 
-      const isRetriable = retriableError.toLowerCase().includes('timeout') ||
-                          retriableError.toLowerCase().includes('connection');
-      const isPermanent = permanentError.toLowerCase().includes('invalid') ||
-                          permanentError.toLowerCase().includes('unauthorized');
+      const isRetriable =
+        retriableError.toLowerCase().includes('timeout') ||
+        retriableError.toLowerCase().includes('connection');
+      const isPermanent =
+        permanentError.toLowerCase().includes('invalid') ||
+        permanentError.toLowerCase().includes('unauthorized');
 
       expect(isRetriable).toBe(true);
       expect(isPermanent).toBe(true);
