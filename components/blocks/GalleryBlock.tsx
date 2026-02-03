@@ -7,7 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { NumberInput } from '@/components/ui/number-input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui';
-import { ImageIcon, X } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { ImageIcon, X, ChevronDown } from 'lucide-react';
 import {
   Carousel,
   CarouselContent,
@@ -112,6 +113,7 @@ interface GalleryBlockEditProps {
 
 export function GalleryBlockEdit({ block, availableImages, onChange }: GalleryBlockEditProps) {
   const [showPicker, setShowPicker] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const selectedImages = availableImages.filter((img) => block.imageIds.includes(img.id));
 
   const handleToggleImage = (imageId: string) => {
@@ -129,14 +131,15 @@ export function GalleryBlockEdit({ block, availableImages, onChange }: GalleryBl
   };
 
   return (
-    <div className="space-y-4">
-      <div className="space-y-2">
+    <div className="space-y-3">
+      <div>
         <Label>Galerij afbeeldingen (max 10)</Label>
         <Button
           type="button"
           variant="outline"
           onClick={() => setShowPicker(true)}
           aria-label="Selecteer afbeeldingen voor galerij"
+          className="w-full"
         >
           <ImageIcon className="mr-2 h-4 w-4" />
           Selecteer afbeeldingen ({block.imageIds.length}/10)
@@ -168,47 +171,61 @@ export function GalleryBlockEdit({ block, availableImages, onChange }: GalleryBl
         </div>
       )}
 
-      <div className="space-y-2">
-        <Label htmlFor={`block-${block.id}-caption`}>Bijschrift (optioneel)</Label>
-        <Input
-          id={`block-${block.id}-caption`}
-          value={block.caption || ''}
-          onChange={(e) => onChange({ caption: e.target.value })}
-          placeholder="Voer een bijschrift in..."
-          aria-label="Bijschrift voor galerij"
-        />
-      </div>
+      <Collapsible open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
+        <CollapsibleTrigger asChild>
+          <Button type="button" variant="ghost" size="sm" className="w-full justify-between">
+            Geavanceerde instellingen
+            <ChevronDown
+              className={`h-4 w-4 transition-transform ${isSettingsOpen ? 'rotate-180' : ''}`}
+            />
+          </Button>
+        </CollapsibleTrigger>
+        <CollapsibleContent className="space-y-3 pt-3">
+          <div>
+            <Label htmlFor={`block-${block.id}-caption`}>Bijschrift (optioneel)</Label>
+            <Input
+              id={`block-${block.id}-caption`}
+              value={block.caption || ''}
+              onChange={(e) => onChange({ caption: e.target.value })}
+              placeholder="Voer een bijschrift in..."
+              aria-label="Bijschrift voor galerij"
+            />
+          </div>
 
-      <div className="space-y-2">
-        <Label htmlFor={`block-${block.id}-imageSize`}>Afbeeldingsgrootte</Label>
-        <Select
-          value={block.imageSize || 'md'}
-          onValueChange={(value) => onChange({ imageSize: value as GalleryBlock['imageSize'] })}
-        >
-          <SelectTrigger id={`block-${block.id}-imageSize`}>
-            <SelectValue placeholder="Kies grootte" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="xs">Extra Klein</SelectItem>
-            <SelectItem value="sm">Klein</SelectItem>
-            <SelectItem value="md">Middel</SelectItem>
-            <SelectItem value="lg">Groot</SelectItem>
-            <SelectItem value="xl">Extra Groot</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+          <div>
+            <Label htmlFor={`block-${block.id}-imageSize`}>Afbeeldingsgrootte</Label>
+            <Select
+              value={block.imageSize || 'md'}
+              onValueChange={(value) => onChange({ imageSize: value as GalleryBlock['imageSize'] })}
+            >
+              <SelectTrigger id={`block-${block.id}-imageSize`}>
+                <SelectValue placeholder="Kies grootte" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="xs">Extra Klein</SelectItem>
+                <SelectItem value="sm">Klein</SelectItem>
+                <SelectItem value="md">Middel</SelectItem>
+                <SelectItem value="lg">Groot</SelectItem>
+                <SelectItem value="xl">Extra Groot</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-      <div className="space-y-2">
-        <Label htmlFor={`block-${block.id}-visibleImages`}>Zichtbare afbeeldingen per keer</Label>
-        <NumberInput
-          id={`block-${block.id}-visibleImages`}
-          min={1}
-          max={10}
-          value={block.visibleImages || 1}
-          onChange={(value) => onChange({ visibleImages: value })}
-          aria-label="Aantal zichtbare afbeeldingen per keer"
-        />
-      </div>
+          <div>
+            <Label htmlFor={`block-${block.id}-visibleImages`}>
+              Zichtbare afbeeldingen per keer
+            </Label>
+            <NumberInput
+              id={`block-${block.id}-visibleImages`}
+              min={1}
+              max={10}
+              value={block.visibleImages || 1}
+              onChange={(value) => onChange({ visibleImages: value })}
+              aria-label="Aantal zichtbare afbeeldingen per keer"
+            />
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
 
       <Dialog open={showPicker} onOpenChange={setShowPicker}>
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">

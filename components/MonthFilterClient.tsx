@@ -7,7 +7,10 @@ type MonthFilterClientProps = {
   selectedMonth: string | null;
 };
 
-export default function MonthFilterClient({ availableMonths, selectedMonth }: MonthFilterClientProps) {
+export default function MonthFilterClient({
+  availableMonths,
+  selectedMonth,
+}: MonthFilterClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
 

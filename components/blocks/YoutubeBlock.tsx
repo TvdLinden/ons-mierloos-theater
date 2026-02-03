@@ -1,7 +1,11 @@
 'use client';
 
+import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { ChevronDown } from 'lucide-react';
 import type { YoutubeBlock } from '@/lib/schemas/blocks';
 
 export function YoutubeBlockDisplay({ block }: { block: YoutubeBlock }) {
@@ -33,9 +37,11 @@ interface YoutubeBlockEditProps {
 
 export function YoutubeBlockEdit({ block, onChange }: YoutubeBlockEditProps) {
   const embedUrl = getYoutubeEmbedUrl(block.url);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
   return (
-    <div className="space-y-4">
-      <div className="space-y-2">
+    <div className="space-y-3">
+      <div>
         <Label htmlFor={`block-${block.id}-url`}>YouTube URL</Label>
         <Input
           id={`block-${block.id}-url`}
@@ -43,16 +49,6 @@ export function YoutubeBlockEdit({ block, onChange }: YoutubeBlockEditProps) {
           value={block.url}
           onChange={(e) => onChange({ url: e.target.value })}
           placeholder="https://www.youtube.com/watch?v=..."
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor={`block-${block.id}-title`}>Titel (optioneel)</Label>
-        <Input
-          id={`block-${block.id}-title`}
-          value={block.title || ''}
-          onChange={(e) => onChange({ title: e.target.value })}
-          placeholder="Voer een titel in..."
         />
       </div>
 
@@ -70,6 +66,28 @@ export function YoutubeBlockEdit({ block, onChange }: YoutubeBlockEditProps) {
           </div>
         </div>
       )}
+
+      <Collapsible open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
+        <CollapsibleTrigger asChild>
+          <Button type="button" variant="ghost" size="sm" className="w-full justify-between">
+            Geavanceerde instellingen
+            <ChevronDown
+              className={`h-4 w-4 transition-transform ${isSettingsOpen ? 'rotate-180' : ''}`}
+            />
+          </Button>
+        </CollapsibleTrigger>
+        <CollapsibleContent className="space-y-3 pt-3">
+          <div>
+            <Label htmlFor={`block-${block.id}-title`}>Titel (optioneel)</Label>
+            <Input
+              id={`block-${block.id}-title`}
+              value={block.title || ''}
+              onChange={(e) => onChange({ title: e.target.value })}
+              placeholder="Voer een titel in..."
+            />
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
     </div>
   );
 }

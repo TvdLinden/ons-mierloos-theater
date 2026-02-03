@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import WysiwygEditor, { WysiwygEditorRef } from '@/components/WysiwygEditor';
 import type { TextBlock } from '@/lib/schemas/blocks';
 import { cn } from '@/lib/utils';
@@ -12,7 +12,12 @@ import {
   SelectItem,
   Input,
   SelectValue,
+  Button,
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
 } from '@/components/ui';
+import { ChevronDown } from 'lucide-react';
 
 interface TextBlockComponentProps {
   block: TextBlock;
@@ -42,6 +47,7 @@ export function TextBlockEditMode({
   onChange?: (content: Partial<TextBlock>) => void;
 }) {
   const editorRef = useRef<WysiwygEditorRef>(null);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const handleBlur = () => {
     if (editorRef.current && onChange) {
@@ -51,7 +57,7 @@ export function TextBlockEditMode({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <div>
         <Label htmlFor={`block-${block.id}-content`}>Tekstinhoud</Label>
         <div onBlur={handleBlur}>
@@ -62,50 +68,64 @@ export function TextBlockEditMode({
           />
         </div>
       </div>
-      <div>
-        <Label htmlFor={`block-${block.id}-alignment`}>Tekstuitlijning</Label>
-        <Select
-          value={block.textAlignment || 'text-left'}
-          onValueChange={(value) =>
-            onChange && onChange({ textAlignment: value as TextBlock['textAlignment'] })
-          }
-        >
-          <SelectTrigger id={`block-${block.id}-alignment`}>
-            <SelectValue placeholder="Kies uitlijning" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="text-left">Links</SelectItem>
-            <SelectItem value="text-center">Midden</SelectItem>
-            <SelectItem value="text-right">Rechts</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      <div>
-        <Label htmlFor={`block-${block.id}-prose-variant`}>Prose Variant</Label>
-        <Select
-          value={block.proseVariant || 'prose'}
-          onValueChange={(value) =>
-            onChange && onChange({ proseVariant: value as TextBlock['proseVariant'] })
-          }
-        >
-          <SelectTrigger id={`block-${block.id}-prose-variant`}>
-            <SelectValue placeholder="Kies formaat" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="prose">Standaard</SelectItem>
-            <SelectItem value="prose-lg">Groot</SelectItem>
-            <SelectItem value="prose-sm">Klein</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      <div>
-        <Label htmlFor={`block-${block.id}-class-name`}>Aangepaste klassen</Label>
-        <Input
-          id={`block-${block.id}-class-name`}
-          value={block.className || ''}
-          onChange={(e) => onChange && onChange({ className: e.target.value })}
-        />
-      </div>
+
+      <Collapsible open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
+        <CollapsibleTrigger asChild>
+          <Button type="button" variant="ghost" size="sm" className="w-full justify-between">
+            Geavanceerde instellingen
+            <ChevronDown
+              className={`h-4 w-4 transition-transform ${isSettingsOpen ? 'rotate-180' : ''}`}
+            />
+          </Button>
+        </CollapsibleTrigger>
+        <CollapsibleContent className="space-y-3 pt-3">
+          <div>
+            <Label htmlFor={`block-${block.id}-alignment`}>Tekstuitlijning</Label>
+            <Select
+              value={block.textAlignment || 'text-left'}
+              onValueChange={(value) =>
+                onChange && onChange({ textAlignment: value as TextBlock['textAlignment'] })
+              }
+            >
+              <SelectTrigger id={`block-${block.id}-alignment`}>
+                <SelectValue placeholder="Kies uitlijning" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="text-left">Links</SelectItem>
+                <SelectItem value="text-center">Midden</SelectItem>
+                <SelectItem value="text-right">Rechts</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label htmlFor={`block-${block.id}-prose-variant`}>Tekstgrootte</Label>
+            <Select
+              value={block.proseVariant || 'prose'}
+              onValueChange={(value) =>
+                onChange && onChange({ proseVariant: value as TextBlock['proseVariant'] })
+              }
+            >
+              <SelectTrigger id={`block-${block.id}-prose-variant`}>
+                <SelectValue placeholder="Kies formaat" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="prose">Standaard</SelectItem>
+                <SelectItem value="prose-lg">Groot</SelectItem>
+                <SelectItem value="prose-sm">Klein</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label htmlFor={`block-${block.id}-class-name`}>Aangepaste klassen</Label>
+            <Input
+              id={`block-${block.id}-class-name`}
+              value={block.className || ''}
+              onChange={(e) => onChange && onChange({ className: e.target.value })}
+              placeholder="Bijv. mt-4 mb-2"
+            />
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
     </div>
   );
 }

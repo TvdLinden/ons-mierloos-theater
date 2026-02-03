@@ -26,6 +26,17 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import {
   GripVertical,
   Plus,
@@ -38,7 +49,10 @@ import {
   ArrowDown,
   Columns3,
   Rows3,
+  Eye,
+  Pencil,
 } from 'lucide-react';
+import { BlockRenderer } from '@/components/BlockRenderer';
 import { TextBlockComponent } from '@/components/blocks/TextBlock';
 import { ImageBlockComponent } from '@/components/blocks/ImageBlock';
 import { YoutubeBlockComponent } from '@/components/blocks/YoutubeBlock';
@@ -73,6 +87,7 @@ function SortableBlock({
   onMoveUp,
   onMoveDown,
 }: SortableBlockProps) {
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: block.id,
   });
@@ -81,6 +96,11 @@ function SortableBlock({
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
+  };
+
+  const handleDelete = () => {
+    onDelete(block.id);
+    setIsDeleteOpen(false);
   };
 
   const renderBlock = () => {
@@ -152,59 +172,80 @@ function SortableBlock({
   };
 
   return (
-    <div ref={setNodeRef} style={style}>
-      <Card className="p-4">
-        <div className="flex items-start gap-3">
-          <button
-            type="button"
-            className="mt-2 cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground"
-            {...attributes}
-            {...listeners}
-          >
-            <GripVertical className="h-5 w-5" />
-          </button>
+    <>
+      <div ref={setNodeRef} style={style}>
+        <Card className="p-2">
+          <div className="flex items-start gap-2">
+            <button
+              type="button"
+              className="mt-1 cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground"
+              {...attributes}
+              {...listeners}
+            >
+              <GripVertical className="h-4 w-4" />
+            </button>
 
-          <div className="flex-1 space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-muted-foreground">
-                {blockTypeLabels[block.type]}
-              </span>
-              <div className="flex gap-1">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={onMoveUp}
-                  title="Move block up"
-                  disabled={block.order === 0}
-                >
-                  <ArrowUp className="h-4 w-4" />
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={onMoveDown}
-                  title="Move block down"
-                >
-                  <ArrowDown className="h-4 w-4" />
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onDelete(block.id)}
-                  className="text-destructive hover:text-destructive"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+            <div className="flex-1 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">{blockTypeLabels[block.type]}</span>
+                <div className="flex gap-1">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={onMoveUp}
+                    title="Move block up"
+                    disabled={block.order === 0}
+                  >
+                    <ArrowUp className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={onMoveDown}
+                    title="Move block down"
+                  >
+                    <ArrowDown className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setIsDeleteOpen(true)}
+                    className="text-destructive hover:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
+              {renderBlock()}
             </div>
-            {renderBlock()}
           </div>
-        </div>
-      </Card>
-    </div>
+        </Card>
+      </div>
+
+      <AlertDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Blok verwijderen</AlertDialogTitle>
+            <AlertDialogDescription>
+              Weet je zeker dat je dit {blockTypeLabels[block.type].toLowerCase()} blok wilt
+              verwijderen? Dit kan niet ongedaan gemaakt worden.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuleren</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Verwijderen
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
 
@@ -216,6 +257,7 @@ export function BlockEditor({
   allowedBlockTypes,
 }: BlockEditorProps) {
   const [blocks, setBlocks] = useState<BlocksArray>(initialBlocks);
+  const [isPreview, setIsPreview] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -308,80 +350,114 @@ export function BlockEditor({
   const serializedBlocks = JSON.stringify(blocks);
 
   return (
-    <div className="space-y-4">
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-        <SortableContext items={blocks.map((b) => b.id)} strategy={verticalListSortingStrategy}>
-          <div className="space-y-4">
-            {blocks.map((block) => (
-              <SortableBlock
-                key={block.id}
-                block={block}
-                availableImages={availableImages}
-                onUpdate={updateBlock}
-                onDelete={deleteBlock}
-                onMoveUp={() => moveBlock(block.id, 'up')}
-                onMoveDown={() => moveBlock(block.id, 'down')}
-              />
-            ))}
-          </div>
-        </SortableContext>
-      </DndContext>
+    <div className="space-y-3">
+      <Tabs
+        value={isPreview ? 'preview' : 'edit'}
+        onValueChange={(v) => setIsPreview(v === 'preview')}
+      >
+        <TabsList className="w-full">
+          <TabsTrigger value="edit" className="flex-1">
+            <Pencil className="mr-1.5 h-3.5 w-3.5" />
+            Bewerken
+          </TabsTrigger>
+          <TabsTrigger value="preview" className="flex-1">
+            <Eye className="mr-1.5 h-3.5 w-3.5" />
+            Voorbeeld
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
 
-      {blocks.length === 0 && (
-        <div className="text-center py-12 border-2 border-dashed rounded-lg">
-          <p className="text-muted-foreground mb-4">Geen blokken toegevoegd</p>
-          <p className="text-sm text-muted-foreground">
-            Klik op &quot;Blok toevoegen&quot; om te beginnen
-          </p>
+      {!isPreview ? (
+        <>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext items={blocks.map((b) => b.id)} strategy={verticalListSortingStrategy}>
+              <div className="space-y-2">
+                {blocks.map((block) => (
+                  <SortableBlock
+                    key={block.id}
+                    block={block}
+                    availableImages={availableImages}
+                    onUpdate={updateBlock}
+                    onDelete={deleteBlock}
+                    onMoveUp={() => moveBlock(block.id, 'up')}
+                    onMoveDown={() => moveBlock(block.id, 'down')}
+                  />
+                ))}
+              </div>
+            </SortableContext>
+          </DndContext>
+
+          {blocks.length === 0 && (
+            <div className="text-center py-8 border-2 border-dashed rounded-lg">
+              <p className="text-muted-foreground mb-2">Geen blokken toegevoegd</p>
+              <p className="text-sm text-muted-foreground">
+                Klik op &quot;Blok toevoegen&quot; om te beginnen
+              </p>
+            </div>
+          )}
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button type="button" variant="outline" className="w-full">
+                <Plus className="mr-2 h-4 w-4" />
+                Blok toevoegen
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-56">
+              {(!allowedBlockTypes || allowedBlockTypes.includes('text')) && (
+                <DropdownMenuItem onClick={() => addBlock('text')}>
+                  <Type className="mr-2 h-4 w-4" />
+                  Tekst
+                </DropdownMenuItem>
+              )}
+              {(!allowedBlockTypes || allowedBlockTypes.includes('image')) && (
+                <DropdownMenuItem onClick={() => addBlock('image')}>
+                  <ImageIcon className="mr-2 h-4 w-4" />
+                  Afbeelding
+                </DropdownMenuItem>
+              )}
+              {(!allowedBlockTypes || allowedBlockTypes.includes('youtube')) && (
+                <DropdownMenuItem onClick={() => addBlock('youtube')}>
+                  <Youtube className="mr-2 h-4 w-4" />
+                  YouTube video
+                </DropdownMenuItem>
+              )}
+              {(!allowedBlockTypes || allowedBlockTypes.includes('gallery')) && (
+                <DropdownMenuItem onClick={() => addBlock('gallery')}>
+                  <Images className="mr-2 h-4 w-4" />
+                  Galerij
+                </DropdownMenuItem>
+              )}
+              {(!allowedBlockTypes || allowedBlockTypes.includes('column')) && (
+                <DropdownMenuItem onClick={() => addBlock('column')}>
+                  <Rows3 className="mr-2 h-4 w-4" />
+                  Kolom
+                </DropdownMenuItem>
+              )}
+              {(!allowedBlockTypes || allowedBlockTypes.includes('row')) && (
+                <DropdownMenuItem onClick={() => addBlock('row')}>
+                  <Columns3 className="mr-2 h-4 w-4" />
+                  Rij
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </>
+      ) : (
+        <div className="py-2">
+          {blocks.length > 0 ? (
+            <BlockRenderer blocks={blocks} />
+          ) : (
+            <p className="text-center text-muted-foreground py-8">
+              Geen blokken om voor te vertonen
+            </p>
+          )}
         </div>
       )}
-
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button type="button" variant="outline" className="w-full">
-            <Plus className="mr-2 h-4 w-4" />
-            Blok toevoegen
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-56">
-          {(!allowedBlockTypes || allowedBlockTypes.includes('text')) && (
-            <DropdownMenuItem onClick={() => addBlock('text')}>
-              <Type className="mr-2 h-4 w-4" />
-              Tekst
-            </DropdownMenuItem>
-          )}
-          {(!allowedBlockTypes || allowedBlockTypes.includes('image')) && (
-            <DropdownMenuItem onClick={() => addBlock('image')}>
-              <ImageIcon className="mr-2 h-4 w-4" />
-              Afbeelding
-            </DropdownMenuItem>
-          )}
-          {(!allowedBlockTypes || allowedBlockTypes.includes('youtube')) && (
-            <DropdownMenuItem onClick={() => addBlock('youtube')}>
-              <Youtube className="mr-2 h-4 w-4" />
-              YouTube video
-            </DropdownMenuItem>
-          )}
-          {(!allowedBlockTypes || allowedBlockTypes.includes('gallery')) && (
-            <DropdownMenuItem onClick={() => addBlock('gallery')}>
-              <Images className="mr-2 h-4 w-4" />
-              Galerij
-            </DropdownMenuItem>
-          )}
-          {(!allowedBlockTypes || allowedBlockTypes.includes('column')) && (
-            <DropdownMenuItem onClick={() => addBlock('column')}>
-              <Rows3 className="mr-2 h-4 w-4" />
-              Kolom
-            </DropdownMenuItem>
-          )}
-          {(!allowedBlockTypes || allowedBlockTypes.includes('row')) && (
-            <DropdownMenuItem onClick={() => addBlock('row')}>
-              <Columns3 className="mr-2 h-4 w-4" />
-              Rij
-            </DropdownMenuItem>
-          )}
-        </DropdownMenuContent>
-      </DropdownMenu>
 
       {/* Hidden input for form submission */}
       <input type="hidden" name={name} value={serializedBlocks} />

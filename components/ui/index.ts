@@ -114,3 +114,9 @@ export { DatePicker } from './date-picker';
 
 // DateTimePicker
 export { DateTimePicker } from './date-time-picker';
+
+// Collapsible
+export { Collapsible, CollapsibleTrigger, CollapsibleContent } from './collapsible';
+
+// Tabs
+export { Tabs, TabsList, TabsTrigger, TabsContent } from './tabs';
