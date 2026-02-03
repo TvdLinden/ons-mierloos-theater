@@ -1,5 +1,13 @@
 import { db } from '@/lib/db';
-import { payments, orders, lineItems, performances, coupons, couponUsages, tickets } from '@/lib/db/schema';
+import {
+  payments,
+  orders,
+  lineItems,
+  performances,
+  coupons,
+  couponUsages,
+  tickets,
+} from '@/lib/db/schema';
 import { eq, sql } from 'drizzle-orm';
 import { createTicketsForLineItem } from '@/lib/commands/tickets';
 import { sendOrderConfirmationEmail } from '@/lib/utils/email';
@@ -43,7 +51,9 @@ export async function handlePaymentWebhook(
 
   // Check idempotency - don't reprocess if already in final state
   if (paymentRecord.status === 'succeeded' || paymentRecord.status === 'failed') {
-    console.log(`[PAYMENT_WEBHOOK] Payment ${paymentId} already in final state: ${paymentRecord.status}`);
+    console.log(
+      `[PAYMENT_WEBHOOK] Payment ${paymentId} already in final state: ${paymentRecord.status}`,
+    );
     return { success: true, orderId, status: paymentRecord.status };
   }
 
@@ -163,7 +173,9 @@ async function handlePaymentSuccess(orderId: string, paymentId: string): Promise
     });
 
     if (existingTickets) {
-      console.log(`[PAYMENT_SUCCESS] Tickets already exist for order ${orderId}, skipping generation`);
+      console.log(
+        `[PAYMENT_SUCCESS] Tickets already exist for order ${orderId}, skipping generation`,
+      );
     } else {
       // Generate tickets in a transaction to ensure atomicity
       // If any ticket generation fails, all fail together
@@ -172,7 +184,12 @@ async function handlePaymentSuccess(orderId: string, paymentId: string): Promise
           `[PAYMENT_SUCCESS] Generating ${orderLineItems.length} line items for order ${orderId}`,
         );
 
-        for (const lineItem of orderLineItems) {
+        // Sort: non-wheelchair first to keep wheelchair zones open
+        const sortedLineItems = [...orderLineItems].sort(
+          (a, b) => (a.wheelchairAccess ? 1 : 0) - (b.wheelchairAccess ? 1 : 0),
+        );
+
+        for (const lineItem of sortedLineItems) {
           if (!lineItem.performance || !lineItem.quantity) {
             console.warn(
               `[PAYMENT_SUCCESS] Skipping line item ${lineItem.id}: missing performance or quantity`,
@@ -186,6 +203,7 @@ async function handlePaymentSuccess(orderId: string, paymentId: string): Promise
             orderId,
             lineItem.quantity,
             lineItem.performance,
+            lineItem.wheelchairAccess,
           );
 
           console.log(`✓ Generated ${createdTickets.length} tickets for line item ${lineItem.id}`);
@@ -217,7 +235,11 @@ async function handlePaymentSuccess(orderId: string, paymentId: string): Promise
  * Handle failed payment
  * Releases seats, releases coupons, marks order as failed
  */
-async function handlePaymentFailure(orderId: string, paymentId: string, reason: string): Promise<void> {
+async function handlePaymentFailure(
+  orderId: string,
+  paymentId: string,
+  reason: string,
+): Promise<void> {
   console.log(`[PAYMENT_FAILURE] Processing order ${orderId}, reason: ${reason}`);
 
   await db.transaction(async (tx) => {

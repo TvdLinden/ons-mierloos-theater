@@ -106,6 +106,7 @@ export const lineItems = pgTable(
     quantity: integer('quantity'),
     pricePerTicket: decimal('price_per_ticket', { precision: 8, scale: 2 }),
     purchaseDate: timestamp('purchase_date', { withTimezone: true }).defaultNow(),
+    wheelchairAccess: boolean('wheelchair_access').notNull().default(false),
   },
   (table) => [
     index('line_items_order_id_idx').on(table.orderId),

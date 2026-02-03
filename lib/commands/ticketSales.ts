@@ -7,6 +7,7 @@ export type CreateLineItem = {
   orderId?: string | null;
   quantity: number;
   pricePerTicket?: string;
+  wheelchairAccess?: boolean;
 };
 
 /**
@@ -21,6 +22,7 @@ export async function createLineItem(item: CreateLineItem): Promise<LineItem> {
       orderId: item.orderId || null,
       quantity: item.quantity,
       pricePerTicket: item.pricePerTicket || null,
+      wheelchairAccess: item.wheelchairAccess ?? false,
     })
     .returning();
 
@@ -44,6 +46,7 @@ export async function createLineItems(items: CreateLineItem[]): Promise<LineItem
         orderId: item.orderId || null,
         quantity: item.quantity,
         pricePerTicket: item.pricePerTicket || null,
+        wheelchairAccess: item.wheelchairAccess ?? false,
       })),
     )
     .returning();

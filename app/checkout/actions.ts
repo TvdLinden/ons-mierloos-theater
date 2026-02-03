@@ -231,6 +231,7 @@ export async function processCheckout(
             quantity: item.quantity,
             orderId: createdOrder.id,
             pricePerTicket: item.price.toFixed(2),
+            wheelchairAccess: item.wheelchairAccess || false,
           })),
         );
 
@@ -333,7 +334,9 @@ export async function processCheckout(
 
       if (!paymentResult.success || !paymentResult.paymentUrl) {
         // Payment creation failed - queue for retry
-        console.warn(`[PAYMENT_FAILURE] Mollie payment creation failed for order ${order.id}, queueing job for retry`);
+        console.warn(
+          `[PAYMENT_FAILURE] Mollie payment creation failed for order ${order.id}, queueing job for retry`,
+        );
 
         await createJob('payment_creation', {
           orderId: order.id,
@@ -369,7 +372,10 @@ export async function processCheckout(
       };
     } catch (error) {
       // Unexpected error during payment creation - queue for retry
-      console.error(`[PAYMENT_ERROR] Unexpected error creating payment for order ${order.id}:`, error);
+      console.error(
+        `[PAYMENT_ERROR] Unexpected error creating payment for order ${order.id}:`,
+        error,
+      );
 
       await createJob('payment_creation', {
         orderId: order.id,

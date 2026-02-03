@@ -190,6 +190,13 @@
       "when": 1769864602851,
       "tag": "0026_tired_mach_iv",
       "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1770146028118,
+      "tag": "0027_worthless_ultimatum",
+      "breakpoints": true
     }
   ]
 }

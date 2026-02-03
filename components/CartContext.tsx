@@ -11,6 +11,7 @@ type CartContextType = {
   addToCart: (item: CartItem) => void;
   removeFromCart: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
+  updateWheelchairAccess: (id: string, wheelchairAccess: boolean) => void;
   clearCart: () => void;
 };
 
@@ -85,12 +86,28 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     [setItems],
   );
 
+  const updateWheelchairAccess = useCallback(
+    (id: string, wheelchairAccess: boolean) => {
+      setItems((prev) => prev.map((i) => (i.id === id ? { ...i, wheelchairAccess } : i)));
+    },
+    [setItems],
+  );
+
   const clearCart = useCallback(() => {
     setItems([]);
   }, [setItems]);
 
   return (
-    <CartContext.Provider value={{ items, addToCart, removeFromCart, updateQuantity, clearCart }}>
+    <CartContext.Provider
+      value={{
+        items,
+        addToCart,
+        removeFromCart,
+        updateQuantity,
+        updateWheelchairAccess,
+        clearCart,
+      }}
+    >
       {children}
     </CartContext.Provider>
   );

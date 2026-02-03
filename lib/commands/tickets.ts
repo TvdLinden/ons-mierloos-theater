@@ -6,8 +6,11 @@ export type CreateTicket = Omit<Ticket, 'id' | 'qrToken' | 'createdAt' | 'scanne
   qrToken?: string;
 };
 
+import { assignSeats } from '@/lib/utils/seatAssignment';
+
 /**
- * Create individual tickets for a line item with sequential seat assignments
+ * Create individual tickets for a line item with smart seat assignment.
+ * Queries actually-occupied seats to handle non-sequential assignment correctly.
  */
 export async function createTicketsForLineItem(
   lineItemId: string,
@@ -15,38 +18,45 @@ export async function createTicketsForLineItem(
   orderId: string,
   quantity: number,
   performance: Performance,
+  wheelchairAccess: boolean = false,
 ): Promise<Ticket[]> {
   const seatsPerRow = performance.seatsPerRow || 20;
   const rows = performance.rows || 5;
-  const totalCapacity = rows * seatsPerRow;
 
-  // Calculate how many seats are already assigned
-  const seatsAlreadyAssigned = totalCapacity - (performance.availableSeats || 0);
+  // Query actually occupied seats for this performance
+  const existingTickets = await db
+    .select({ rowLetter: tickets.rowLetter, seatNumber: tickets.seatNumber })
+    .from(tickets)
+    .where(eq(tickets.performanceId, performanceId));
 
-  const ticketsToCreate: CreateTicket[] = [];
+  const occupiedSeats = new Set<string>();
+  for (const t of existingTickets) {
+    const rowIndex = t.rowLetter.charCodeAt(0) - 65; // A=0, B=1, ...
+    occupiedSeats.add(`${rowIndex}-${t.seatNumber}`);
+  }
 
-  for (let i = 0; i < quantity; i++) {
-    const seatIndex = seatsAlreadyAssigned + i;
+  // Assign seats using the smart algorithm
+  const assignedSeats = assignSeats(occupiedSeats, rows, seatsPerRow, quantity, wheelchairAccess);
 
-    // Calculate row and seat number
-    const rowIndex = Math.floor(seatIndex / seatsPerRow);
-    const rowLetter = String.fromCharCode(65 + rowIndex); // A, B, C, ...
-    const seatNumber = (seatIndex % seatsPerRow) + 1; // 1-20
+  if (assignedSeats.length < quantity) {
+    throw new Error(
+      `Kon maar ${assignedSeats.length} van ${quantity} plaatsen toewijzen voor deze voorstelling.`,
+    );
+  }
 
-    // Generate ticket number: SHOW-PERF-RijStoel
+  const ticketsToCreate: CreateTicket[] = assignedSeats.map(({ rowIndex, seatNumber }) => {
+    const rowLetter = String.fromCharCode(65 + rowIndex);
     const ticketNumber = `${performance.showId.substring(0, 4).toUpperCase()}-${performanceId.substring(0, 4).toUpperCase()}-${rowLetter}${seatNumber}`;
-
-    ticketsToCreate.push({
+    return {
       lineItemId,
       performanceId,
       orderId,
       ticketNumber,
       rowLetter,
       seatNumber,
-    });
-  }
+    };
+  });
 
-  // Insert all tickets
   const createdTickets = await db.insert(tickets).values(ticketsToCreate).returning();
 
   return createdTickets;

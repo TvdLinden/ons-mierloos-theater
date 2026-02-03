@@ -10,12 +10,14 @@ export type CartItem = {
   quantity: number;
   performanceDate?: Date;
   addedAt?: Date;
+  wheelchairAccess?: boolean;
 };
 
 export type ShoppingCartProps = {
   items: CartItem[];
   onRemove?: (id: string) => void;
   onChangeQuantity?: (id: string, quantity: number) => void;
+  onChangeWheelchairAccess?: (id: string, value: boolean) => void;
   showCheckoutButton?: boolean;
   showTotal?: boolean;
   showTitle?: boolean;
@@ -25,6 +27,7 @@ export default function ShoppingCart({
   items,
   onRemove,
   onChangeQuantity,
+  onChangeWheelchairAccess,
   showCheckoutButton = true,
   showTotal = true,
   showTitle = true,
@@ -75,6 +78,23 @@ export default function ShoppingCart({
               <div>
                 <span className="font-semibold text-gray-900">{item.title}</span>
                 <span className="ml-2 text-gray-600">€{item.price.toFixed(2)}</span>
+                {onChangeWheelchairAccess && (
+                  <div className="flex items-center gap-2 mt-1">
+                    <input
+                      type="checkbox"
+                      id={`wheelchair-${item.id}`}
+                      checked={item.wheelchairAccess || false}
+                      onChange={(e) => onChangeWheelchairAccess(item.id, e.target.checked)}
+                      className="w-4 h-4 rounded"
+                    />
+                    <label
+                      htmlFor={`wheelchair-${item.id}`}
+                      className="text-sm text-gray-600 cursor-pointer"
+                    >
+                      Ik heb een rolstoel nodig
+                    </label>
+                  </div>
+                )}
               </div>
               <div className="flex items-center gap-2">
                 <NumberInput

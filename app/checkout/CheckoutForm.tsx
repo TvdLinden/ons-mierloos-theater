@@ -13,7 +13,7 @@ type CheckoutFormProps = {
 };
 
 export default function CheckoutForm({ userName, userEmail }: CheckoutFormProps) {
-  const { items, removeFromCart, updateQuantity } = useCart();
+  const { items, removeFromCart, updateQuantity, updateWheelchairAccess } = useCart();
   const [state, formAction, isPending] = useActionState<CheckoutState, FormData>(
     processCheckout,
     {},
@@ -59,6 +59,7 @@ export default function CheckoutForm({ userName, userEmail }: CheckoutFormProps)
         items={items}
         onRemove={removeFromCart}
         onChangeQuantity={updateQuantity}
+        onChangeWheelchairAccess={updateWheelchairAccess}
         showCheckoutButton={false}
         showTotal={false}
         showTitle={false}

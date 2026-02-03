@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { requireRole } from '@/lib/utils/auth';
 import { db } from '@/lib/db';
-import { performances, shows, lineItems, orders } from '@/lib/db/schema';
+import { performances, shows, lineItems, orders, tickets } from '@/lib/db/schema';
 import { eq, and, desc } from 'drizzle-orm';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { DataTable, EmptyRow } from '@/components/admin/DataTable';
@@ -39,6 +39,7 @@ export default async function ShowSalesDetailPage({ params }: ShowSalesPageProps
       customerEmail: orders.customerEmail,
       quantity: lineItems.quantity,
       pricePerTicket: lineItems.pricePerTicket,
+      wheelchairAccess: lineItems.wheelchairAccess,
       status: orders.status,
       createdAt: orders.createdAt,
     })
@@ -52,6 +53,35 @@ export default async function ShowSalesDetailPage({ params }: ShowSalesPageProps
     (sum, order) => sum + Number(order.quantity || 0) * Number(order.pricePerTicket || 0),
     0,
   );
+
+  const wheelchairCount = performanceOrders.filter((o) => o.wheelchairAccess).length;
+
+  // Fetch wheelchair seat assignments (tickets already generated at this point)
+  const wheelchairBookings = await db
+    .select({
+      customerName: orders.customerName,
+      rowLetter: tickets.rowLetter,
+      seatNumber: tickets.seatNumber,
+    })
+    .from(lineItems)
+    .innerJoin(orders, eq(lineItems.orderId, orders.id))
+    .innerJoin(tickets, eq(tickets.lineItemId, lineItems.id))
+    .where(
+      and(
+        eq(lineItems.performanceId, performanceId),
+        eq(lineItems.wheelchairAccess, true),
+        eq(orders.status, 'paid'),
+      ),
+    )
+    .orderBy(tickets.rowLetter, tickets.seatNumber);
+
+  const wheelchairByCustomer = new Map<string, string[]>();
+  for (const booking of wheelchairBookings) {
+    const seat = `${booking.rowLetter}${booking.seatNumber}`;
+    const existing = wheelchairByCustomer.get(booking.customerName) || [];
+    existing.push(seat);
+    wheelchairByCustomer.set(booking.customerName, existing);
+  }
 
   return (
     <div className="max-w-7xl mx-auto py-12 px-6">
@@ -67,11 +97,28 @@ export default async function ShowSalesDetailPage({ params }: ShowSalesPageProps
       <AdminPageHeader title={`Verkopen: ${performance.show.title}`} />
 
       {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <StatCard label="Totaal Tickets Verkocht" value={totalTickets} />
         <StatCard label="Totale Omzet" value={`€${totalRevenue}`} />
         <StatCard label="Aantal Bestellingen" value={performanceOrders.length} />
+        <StatCard label="Rolstoel" value={wheelchairCount} />
       </div>
+
+      {/* Wheelchair bookings */}
+      {wheelchairByCustomer.size > 0 && (
+        <div className="bg-white rounded-lg shadow mb-8 p-6">
+          <h2 className="text-lg font-semibold mb-3">Rolstoel plaatsen</h2>
+          <div className="space-y-2">
+            {Array.from(wheelchairByCustomer.entries()).map(([name, seats]) => (
+              <div key={name} className="flex items-center gap-3">
+                <span className="font-mono font-medium text-sm">{seats.join(', ')}</span>
+                <span className="text-zinc-400">—</span>
+                <span className="text-zinc-600 text-sm">{name}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Performance Details */}
       <div className="bg-white rounded-lg shadow mb-8 p-6">
@@ -115,6 +162,11 @@ export default async function ShowSalesDetailPage({ params }: ShowSalesPageProps
               <td className="px-6 py-4">
                 <div className="font-medium text-primary">{order.customerName}</div>
                 <div className="text-sm text-zinc-500">{order.customerEmail}</div>
+                {order.wheelchairAccess && (
+                  <span className="inline-block mt-1 px-2 py-0.5 bg-blue-100 text-blue-800 text-xs rounded font-medium">
+                    Rolstoel
+                  </span>
+                )}
               </td>
               <td className="px-6 py-4 text-sm text-zinc-600">
                 {order.createdAt

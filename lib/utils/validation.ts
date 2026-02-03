@@ -16,6 +16,7 @@ export interface CartItem {
   quantity: number;
   performanceDate?: Date;
   addedAt?: Date;
+  wheelchairAccess?: boolean;
 }
 
 /**
