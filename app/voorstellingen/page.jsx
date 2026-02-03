@@ -1,7 +1,8 @@
-import { getUpcomingShows } from '@/lib/queries/shows';
+import { getUpcomingShows, getUpcomingShowsCount, getUpcomingMonths } from '@/lib/queries/shows';
 import { getAllTags } from '@/lib/queries/tags';
 import PerformanceCard from '@/components/PerformanceCard';
 import TagFilterClient from '@/components/TagFilterClient';
+import MonthFilterClient from '@/components/MonthFilterClient';
 import {
   Pagination,
   PaginationContent,
@@ -18,34 +19,29 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export default async function ShowsPage({ searchParams }) {
-  const tags = await getAllTags();
   const search = await searchParams;
   const selectedTags = search?.tags ? search.tags.split(',') : [];
+  const selectedMonth = search?.month || null;
   const page = search?.page ? parseInt(search.page, 10) : 1;
 
-  // Calculate offset for database query
   const offset = (page - 1) * ITEMS_PER_PAGE;
+  const tagFilter = selectedTags.length > 0 ? selectedTags : undefined;
 
-  // Fetch shows with pagination and filters using database-level query
-  const shows = await getUpcomingShows(
-    offset,
-    ITEMS_PER_PAGE,
-    selectedTags.length > 0 ? selectedTags : undefined,
-  );
+  // Fetch everything in parallel
+  const [tags, availableMonths, shows, totalCount] = await Promise.all([
+    getAllTags(),
+    getUpcomingMonths(),
+    getUpcomingShows(offset, ITEMS_PER_PAGE, tagFilter, selectedMonth),
+    getUpcomingShowsCount(tagFilter, selectedMonth),
+  ]);
 
-  // Also fetch total count for pagination (without limit/offset)
-  const allShows = await getUpcomingShows(
-    undefined,
-    undefined,
-    selectedTags.length > 0 ? selectedTags : undefined,
-  );
-
-  const totalPages = Math.ceil(allShows.length / ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
 
   // Build query string helper
   const buildHref = (newPage) => {
     const params = new URLSearchParams();
     if (selectedTags.length > 0) params.set('tags', selectedTags.join(','));
+    if (selectedMonth) params.set('month', selectedMonth);
     if (newPage > 1) params.set('page', newPage.toString());
     return `/voorstellingen${params.toString() ? `?${params.toString()}` : ''}`;
   };
@@ -92,6 +88,14 @@ export default async function ShowsPage({ searchParams }) {
             <div className="mb-8">
               <p className="text-sm font-semibold text-foreground mb-3">Filter op categorie:</p>
               <TagFilterClient tags={tags} selectedTags={selectedTags} />
+            </div>
+          )}
+
+          {/* Month Filter */}
+          {availableMonths.length > 0 && (
+            <div className="mb-8">
+              <p className="text-sm font-semibold text-foreground mb-3">Filter op maand:</p>
+              <MonthFilterClient availableMonths={availableMonths} selectedMonth={selectedMonth} />
             </div>
           )}
 

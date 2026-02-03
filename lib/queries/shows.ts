@@ -9,7 +9,7 @@ import {
   PerformanceWithShow,
 } from '@/lib/db';
 import { shows, performances, showTags, tags } from '@/lib/db/schema';
-import { eq, and, desc, asc, or, lte, isNull, gte, inArray, lt } from 'drizzle-orm';
+import { eq, and, desc, asc, or, lte, isNull, gte, inArray, lt, count, exists } from 'drizzle-orm';
 import { getTagsForShow } from './tags';
 import { BlocksArray, blocksArraySchema } from '../schemas/blocks';
 
@@ -216,12 +216,64 @@ export async function getShowBySlugWithAvailablePerformances(
 }
 
 /**
+ * Resolve a tag filter (mix of slugs and UUIDs) into matching show IDs.
+ * Returns null when no shows match, so callers can short-circuit.
+ */
+async function resolveTagShowIds(tagFilter: string[]): Promise<string[] | null> {
+  const ids: string[] = [];
+  const slugs: string[] = [];
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  for (const t of tagFilter) {
+    if (uuidRegex.test(t)) ids.push(t);
+    else slugs.push(t.toLowerCase());
+  }
+
+  const tagIds = [...ids];
+  if (slugs.length > 0) {
+    const matchedTags = await db.select().from(tags).where(inArray(tags.slug, slugs));
+    for (const mt of matchedTags) {
+      if (mt.id) tagIds.push(String(mt.id));
+    }
+  }
+
+  if (tagIds.length === 0) return null;
+
+  const matched = await db
+    .select({ showId: showTags.showId })
+    .from(showTags)
+    .where(inArray(showTags.tagId, tagIds));
+
+  const showIds = Array.from(new Set(matched.map((m) => String(m.showId))));
+  return showIds.length > 0 ? showIds : null;
+}
+
+/**
+ * Get distinct months that have upcoming published performances.
+ * Returns sorted array of "YYYY-MM" strings.
+ */
+export async function getUpcomingMonths(): Promise<string[]> {
+  const now = new Date();
+  const rows = await db
+    .select({ date: performances.date })
+    .from(performances)
+    .where(and(gte(performances.date, now), eq(performances.status, 'published')));
+
+  const months = new Set<string>();
+  for (const row of rows) {
+    const d = new Date(row.date);
+    months.add(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
+  }
+  return [...months].sort();
+}
+
+/**
  * Get all published shows with upcoming performances
  */
 export async function getUpcomingShows(
   offset?: number,
   limit?: number,
   tagFilter?: string[],
+  monthFilter?: string, // "YYYY-MM"
 ): Promise<ShowWithTagsAndPerformances[]> {
   const now = new Date();
   const nowUTC = new Date(now.toISOString());
@@ -235,39 +287,21 @@ export async function getUpcomingShows(
 
   // Apply tag filtering if provided
   if (tagFilter && tagFilter.length > 0) {
-    // Separate ids from slugs
-    const ids: string[] = [];
-    const slugs: string[] = [];
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    for (const t of tagFilter) {
-      if (uuidRegex.test(t)) ids.push(t);
-      else slugs.push(t.toLowerCase());
-    }
-
-    // Resolve slugs to tag ids
-    const tagIds = [...ids];
-    if (slugs.length > 0) {
-      const matchedTags = await db.select().from(tags).where(inArray(tags.slug, slugs));
-      for (const mt of matchedTags) {
-        if (mt.id) tagIds.push(String(mt.id));
-      }
-    }
-
-    if (tagIds.length === 0) {
-      return [];
-    }
-
-    // Find show IDs that have any of the tagIds
-    const matched = await db
-      .select({ showId: showTags.showId })
-      .from(showTags)
-      .where(inArray(showTags.tagId, tagIds));
-
-    const showIds = Array.from(new Set(matched.map((m) => String(m.showId))));
-    if (showIds.length === 0) return [];
-
-    // Add show ID filter to where conditions
+    const showIds = await resolveTagShowIds(tagFilter);
+    if (!showIds) return [];
     whereConditions = and(whereConditions, inArray(shows.id, showIds));
+  }
+
+  // Build performance date filter — narrow to a specific month if requested
+  let perfDateFilter;
+  if (monthFilter) {
+    const [year, month] = monthFilter.split('-').map(Number);
+    const monthStart = new Date(Date.UTC(year, month - 1, 1));
+    const monthEnd = new Date(Date.UTC(year, month, 1)); // first day of next month
+    const effectiveStart = monthStart > nowUTC ? monthStart : nowUTC;
+    perfDateFilter = and(gte(performances.date, effectiveStart), lt(performances.date, monthEnd));
+  } else {
+    perfDateFilter = gte(performances.date, nowUTC);
   }
 
   // Build the query with conditional limit and offset
@@ -276,7 +310,7 @@ export async function getUpcomingShows(
     with: {
       image: true,
       performances: {
-        where: and(gte(performances.date, nowUTC), eq(performances.status, 'published')),
+        where: and(perfDateFilter, eq(performances.status, 'published')),
         orderBy: [asc(performances.date)],
       },
       showTags: {
@@ -298,6 +332,65 @@ export async function getUpcomingShows(
       ...show,
       tags: show.showTags.map((st: any) => st.tag).filter(Boolean),
     })) as ShowWithTagsAndPerformances[];
+}
+
+/**
+ * Count published shows that have at least one upcoming performance matching
+ * the given filters.  Lightweight alternative to getUpcomingShows for pagination.
+ */
+export async function getUpcomingShowsCount(
+  tagFilter?: string[],
+  monthFilter?: string,
+): Promise<number> {
+  const now = new Date();
+  const nowUTC = new Date(now.toISOString());
+
+  let whereConditions = and(
+    eq(shows.status, 'published'),
+    or(isNull(shows.publicationDate), lte(shows.publicationDate, nowUTC)),
+    or(isNull(shows.depublicationDate), gte(shows.depublicationDate, nowUTC)),
+  );
+
+  if (tagFilter && tagFilter.length > 0) {
+    const showIds = await resolveTagShowIds(tagFilter);
+    if (!showIds) return 0;
+    whereConditions = and(whereConditions, inArray(shows.id, showIds));
+  }
+
+  // Build performance date filter
+  let perfDateFilter;
+  if (monthFilter) {
+    const [year, month] = monthFilter.split('-').map(Number);
+    const monthStart = new Date(Date.UTC(year, month - 1, 1));
+    const monthEnd = new Date(Date.UTC(year, month, 1));
+    const effectiveStart = monthStart > nowUTC ? monthStart : nowUTC;
+    perfDateFilter = and(gte(performances.date, effectiveStart), lt(performances.date, monthEnd));
+  } else {
+    perfDateFilter = gte(performances.date, nowUTC);
+  }
+
+  const result = await db
+    .select({ total: count() })
+    .from(shows)
+    .where(
+      and(
+        whereConditions,
+        exists(
+          db
+            .select()
+            .from(performances)
+            .where(
+              and(
+                eq(performances.showId, shows.id),
+                eq(performances.status, 'published'),
+                perfDateFilter,
+              ),
+            ),
+        ),
+      ),
+    );
+
+  return result[0].total;
 }
 
 /**
