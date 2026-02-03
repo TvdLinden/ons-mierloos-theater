@@ -25,7 +25,7 @@ export default function FeaturedShowCard({ show }: FeaturedShowCardProps) {
     <Link href={`/voorstellingen/${slug}`} className="group block">
       <div className="bg-surface rounded-lg overflow-hidden shadow hover:shadow-lg transition-all duration-300">
         {/* Thumbnail */}
-        <div className="relative aspect-[4/3] overflow-hidden">
+        <div className="relative aspect-4/3 overflow-hidden">
           <Image
             src={imageUrl}
             alt={title}
