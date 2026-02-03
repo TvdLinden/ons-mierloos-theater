@@ -18,17 +18,6 @@ const nextConfig: NextConfig = {
       },
       {
         pathname: '/api/images/:path*',
-        search: '{size}',
-      },
-    ],
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'onsmierloostheater.nl',
-      },
-      {
-        protocol: 'https',
-        hostname: '*.r2.cloudflarestorage.com',
       },
     ],
   },

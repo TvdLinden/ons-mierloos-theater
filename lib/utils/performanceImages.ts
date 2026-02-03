@@ -7,7 +7,7 @@ import { Show } from '@/lib/db';
  */
 export function getShowImageUrl(show: Show, size: 'lg' | 'md' | 'sm' = 'lg'): string {
   if (show.imageId) {
-    return `/api/images/${show.imageId}?size=${size}`;
+    return `/api/images/${show.imageId}`;
   }
   // Fallback placeholder image
   return '/placeholder-performance.svg';
@@ -19,7 +19,7 @@ export function getShowImageUrl(show: Show, size: 'lg' | 'md' | 'sm' = 'lg'): st
  */
 export function getShowThumbnailUrl(show: Show): string {
   if (show.imageId) {
-    return `/api/images/${show.imageId}?size=sm`;
+    return `/api/images/${show.imageId}`;
   }
   return '/placeholder-performance.svg';
 }

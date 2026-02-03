@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import Autoplay from 'embla-carousel-autoplay';
 import { ShowWithTagsAndPerformances } from '@/lib/db';
 import { getShowImageUrl } from '@/lib/utils/performanceImages';
@@ -65,13 +66,17 @@ export default function HeroCarousel({ shows, autoplayDelay = 5000 }: HeroCarous
         className="w-full"
       >
         <CarouselContent>
-          {showsWithImages.map((show) => (
+          {showsWithImages.map((show, index) => (
             <CarouselItem key={show.id}>
               <div className="relative aspect-[4/3] md:aspect-[21/9] w-full overflow-hidden">
-                {/* Background Image */}
-                <div
-                  className="absolute inset-0 bg-cover bg-center"
-                  style={{ backgroundImage: `url(${getShowImageUrl(show, 'lg')})` }}
+                {/* Hero Image */}
+                <Image
+                  src={getShowImageUrl(show, 'lg')}
+                  alt={show.title}
+                  fill
+                  sizes="100vw"
+                  priority={index === 0}
+                  className="object-cover"
                 />
 
                 {/* Gradient Overlay */}

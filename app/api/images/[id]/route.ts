@@ -28,14 +28,14 @@ export async function GET(request: NextRequest, props: { params: Promise<{ id: s
     }
 
     // Stream the image from R2 using authenticated client
-    const stream = await getImageFromR2(image.r2Url);
+    const r2File = await getImageFromR2(image.r2Url);
 
     // Set headers for public asset caching and content type (optionally add more headers as needed)
     const headers = new Headers();
     headers.set('Cache-Control', 'public, max-age=31536000, immutable');
-    headers.set('Content-Type', 'image/jpeg'); // Optionally detect type dynamically
+    headers.set('Content-Type', r2File.contentType || 'image/jpeg'); // Optionally detect type dynamically
 
-    return new NextResponse(stream as any, {
+    return new NextResponse(r2File.stream as any, {
       status: 200,
       headers,
     });

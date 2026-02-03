@@ -123,7 +123,12 @@ export async function deleteImageFromR2(r2Url: string): Promise<void> {
   }
 }
 
-export async function getImageFromR2(r2Url: string): Promise<Readable> {
+type R2FileStream = {
+  stream: Readable;
+  contentType: string;
+};
+
+export async function getImageFromR2(r2Url: string): Promise<R2FileStream> {
   const client = createR2Client();
   const bucketName = process.env.R2_IMAGES_BUCKET_NAME;
 
@@ -149,5 +154,8 @@ export async function getImageFromR2(r2Url: string): Promise<Readable> {
     }),
   );
 
-  return data.Body as Readable;
+  return {
+    stream: data.Body as Readable,
+    contentType: data.ContentType || 'application/octet-stream',
+  };
 }

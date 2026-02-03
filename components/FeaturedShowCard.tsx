@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { ShowWithTagsAndPerformances } from '@/lib/db';
 import { getShowImageUrl } from '@/lib/utils/performanceImages';
 import TagsContainer from './TagsContainer';
@@ -25,9 +26,12 @@ export default function FeaturedShowCard({ show }: FeaturedShowCardProps) {
       <div className="bg-surface rounded-lg overflow-hidden shadow hover:shadow-lg transition-all duration-300">
         {/* Thumbnail */}
         <div className="relative aspect-[4/3] overflow-hidden">
-          <div
-            className="absolute inset-0 bg-cover bg-center transition-transform duration-300 group-hover:scale-105"
-            style={{ backgroundImage: `url(${imageUrl})` }}
+          <Image
+            src={imageUrl}
+            alt={title}
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
           />
         </div>
 
