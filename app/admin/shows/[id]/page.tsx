@@ -166,12 +166,13 @@ export default async function ShowDetailPage({ params }: Props) {
         ) : (
           <div className="space-y-2">
             {show.performances.slice(0, 5).map((performance) => (
-              <div
+              <Link
                 key={performance.id}
-                className="flex items-center justify-between py-2 border-b border-zinc-100 last:border-0"
+                href={`/admin/shows/${id}/performances/${performance.id}`}
+                className="flex items-center justify-between py-2 border-b border-zinc-100 last:border-0 hover:bg-zinc-50 -mx-2 px-2 rounded"
               >
                 <div>
-                  <p className="text-sm font-medium">
+                  <p className="text-sm font-medium text-primary">
                     {new Date(performance.date).toLocaleString('nl-NL', {
                       dateStyle: 'long',
                       timeStyle: 'short',
@@ -199,7 +200,7 @@ export default async function ShowDetailPage({ params }: Props) {
                   {performance.status === 'cancelled' && 'Geannuleerd'}
                   {performance.status === 'archived' && 'Gearchiveerd'}
                 </span>
-              </div>
+              </Link>
             ))}
             {show.performances.length > 5 && (
               <Link

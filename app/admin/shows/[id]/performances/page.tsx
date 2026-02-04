@@ -101,8 +101,11 @@ export default async function ShowPerformancesPage({ params }: Props) {
                 key={performance.id}
                 className="border rounded-lg p-4 flex justify-between items-center"
               >
-                <div>
-                  <p className="font-medium">
+                <Link
+                  href={`/admin/shows/${id}/performances/${performance.id}`}
+                  className="flex-1 min-w-0"
+                >
+                  <p className="font-medium text-primary hover:underline">
                     {new Date(performance.date).toLocaleString('nl-NL', {
                       dateStyle: 'long',
                       timeStyle: 'short',
@@ -134,14 +137,7 @@ export default async function ShowPerformancesPage({ params }: Props) {
                   {performance.notes && (
                     <p className="text-sm text-gray-500 mt-1">{performance.notes}</p>
                   )}
-                </div>
-                <div className="flex gap-2">
-                  <Link href={`/admin/performances/edit/${performance.id}`}>
-                    <Button variant="secondary" size="sm">
-                      Bewerk
-                    </Button>
-                  </Link>
-                </div>
+                </Link>
               </div>
             ))}
           </div>
