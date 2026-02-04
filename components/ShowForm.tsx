@@ -140,230 +140,238 @@ export default function ShowForm({
 
   return (
     <>
-      <form action={formAction} className="space-y-6">
-        {state.error && <Alert variant="destructive">{state.error}</Alert>}
+      <form action={formAction} className="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-6">
+        {state.error && <Alert variant="destructive" className="lg:col-span-2">{state.error}</Alert>}
 
-        {/* Voorstelling details */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold mb-4">Voorstelling details</h2>
-          <div className="space-y-4">
-            <SimpleFormField label="Titel" htmlFor="title" required>
-              <Input id="title" name="title" type="text" defaultValue={initial?.title} required />
-            </SimpleFormField>
-            <SimpleFormField label="Ondertitel" htmlFor="subtitle">
-              <Input id="subtitle" name="subtitle" type="text" defaultValue={initial?.subtitle} />
-            </SimpleFormField>
-            <SimpleFormField label="Slug" htmlFor="slug" required>
-              <div className="flex gap-2">
-                <Input
-                  id="slug"
-                  name="slug"
-                  type="text"
-                  defaultValue={initial?.slug}
-                  pattern="[a-z0-9-]+"
-                  placeholder="bijv: eaque-nam-ab-quidem"
+        {/* Left column */}
+        <div className="space-y-6">
+          {/* Voorstelling details */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-lg font-semibold mb-4">Voorstelling details</h2>
+            <div className="space-y-4">
+              <SimpleFormField label="Titel" htmlFor="title" required>
+                <Input id="title" name="title" type="text" defaultValue={initial?.title} required />
+              </SimpleFormField>
+              <SimpleFormField label="Ondertitel" htmlFor="subtitle">
+                <Input id="subtitle" name="subtitle" type="text" defaultValue={initial?.subtitle} />
+              </SimpleFormField>
+              <SimpleFormField label="Slug" htmlFor="slug" required>
+                <div className="flex gap-2">
+                  <Input
+                    id="slug"
+                    name="slug"
+                    type="text"
+                    defaultValue={initial?.slug}
+                    pattern="[a-z0-9-]+"
+                    placeholder="bijv: eaque-nam-ab-quidem"
+                    required
+                  />
+                  <Button type="button" onClick={handleGenerateSlug} variant="outline">
+                    Genereer
+                  </Button>
+                </div>
+                <p className="text-xs text-zinc-600 mt-1">
+                  URL-vriendelijke naam: alleen kleine letters, cijfers en streepjes.
+                </p>
+              </SimpleFormField>
+              <SimpleFormField label="Prijs (€)" htmlFor="price" required>
+                <NumberInput
+                  id="price"
+                  name="price"
+                  step={0.01}
+                  ref={priceRef}
+                  defaultValue={Number(initial?.price)}
                   required
                 />
-                <Button type="button" onClick={handleGenerateSlug} variant="outline">
-                  Genereer
-                </Button>
-              </div>
-              <p className="text-xs text-zinc-600 mt-1">
-                URL-vriendelijke naam: alleen kleine letters, cijfers en streepjes.
-              </p>
-            </SimpleFormField>
-            <SimpleFormField label="Prijs (€)" htmlFor="price" required>
-              <NumberInput
-                id="price"
-                name="price"
-                step={0.01}
-                ref={priceRef}
-                defaultValue={Number(initial?.price)}
-                required
-              />
-              <p className="text-xs text-zinc-600 mt-1">
-                Standaard prijs voor voorstellingen (kan per voorstelling overschreven worden).
-              </p>
-            </SimpleFormField>
-          </div>
-        </div>
-
-        {/* Inhoud */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold mb-4">Inhoud</h2>
-          <BlockEditor
-            name="blocks"
-            initialBlocks={initial?.blocks}
-            availableImages={availableImages}
-          />
-        </div>
-
-        {/* Publicatie */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold mb-4">Publicatie</h2>
-          <div className="space-y-4">
-            <SimpleFormField label="Publicatiedatum" htmlFor="publicationDate">
-              <div className="flex gap-2">
-                <Input
-                  id="publicationDate"
-                  name="publicationDate"
-                  type="datetime-local"
-                  defaultValue={initial?.publicationDate}
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    const input = document.getElementById('publicationDate') as HTMLInputElement;
-                    if (input) input.value = '';
-                  }}
-                  className="px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors text-sm"
-                >
-                  Wissen
-                </button>
-              </div>
-              <p className="text-xs text-zinc-600 mt-1">
-                Optioneel: wanneer deze show zichtbaar moet worden.
-              </p>
-            </SimpleFormField>
-            <SimpleFormField label="Depublicatiedatum" htmlFor="depublicationDate">
-              <div className="flex gap-2">
-                <Input
-                  id="depublicationDate"
-                  name="depublicationDate"
-                  type="datetime-local"
-                  defaultValue={initial?.depublicationDate}
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    const input = document.getElementById('depublicationDate') as HTMLInputElement;
-                    if (input) input.value = '';
-                  }}
-                  className="px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors text-sm"
-                >
-                  Wissen
-                </button>
-              </div>
-              <p className="text-xs text-zinc-600 mt-1">
-                Optioneel: wanneer deze show verborgen moet worden.
-              </p>
-            </SimpleFormField>
-          </div>
-        </div>
-
-        {/* Afbeelding & Tags */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold mb-4">Afbeelding & Tags</h2>
-          <div className="space-y-4">
-            <ImageSelector
-              label="Afbeelding"
-              selectedImageId={selectedImageId}
-              availableImages={availableImages}
-              onSelect={(imageId) => {
-                setSelectedImageId(imageId);
-                if (imageId) {
-                  const hiddenInput =
-                    document.querySelector<HTMLInputElement>('input[name="imageId"]');
-                  if (hiddenInput) {
-                    hiddenInput.value = imageId;
-                  }
-                }
-              }}
-              imageSize="medium"
-            />
-            <input type="hidden" name="imageId" value={selectedImageId || ''} />
-            {availableTags.length > 0 && (
-              <SimpleFormField label="Tags" htmlFor="tags">
-                <TagSelector
-                  availableTags={availableTags}
-                  selectedTagIds={initial?.tagIds}
-                  name="tagIds"
-                />
+                <p className="text-xs text-zinc-600 mt-1">
+                  Standaard prijs voor voorstellingen (kan per voorstelling overschreven worden).
+                </p>
               </SimpleFormField>
-            )}
+            </div>
+          </div>
+
+          {/* Publicatie */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-lg font-semibold mb-4">Publicatie</h2>
+            <div className="space-y-4">
+              <SimpleFormField label="Publicatiedatum" htmlFor="publicationDate">
+                <div className="flex gap-2">
+                  <Input
+                    id="publicationDate"
+                    name="publicationDate"
+                    type="datetime-local"
+                    defaultValue={initial?.publicationDate}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const input = document.getElementById('publicationDate') as HTMLInputElement;
+                      if (input) input.value = '';
+                    }}
+                    className="px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors text-sm"
+                  >
+                    Wissen
+                  </button>
+                </div>
+                <p className="text-xs text-zinc-600 mt-1">
+                  Optioneel: wanneer deze show zichtbaar moet worden.
+                </p>
+              </SimpleFormField>
+              <SimpleFormField label="Depublicatiedatum" htmlFor="depublicationDate">
+                <div className="flex gap-2">
+                  <Input
+                    id="depublicationDate"
+                    name="depublicationDate"
+                    type="datetime-local"
+                    defaultValue={initial?.depublicationDate}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const input = document.getElementById('depublicationDate') as HTMLInputElement;
+                      if (input) input.value = '';
+                    }}
+                    className="px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors text-sm"
+                  >
+                    Wissen
+                  </button>
+                </div>
+                <p className="text-xs text-zinc-600 mt-1">
+                  Optioneel: wanneer deze show verborgen moet worden.
+                </p>
+              </SimpleFormField>
+            </div>
+          </div>
+
+          {/* Afbeelding & Tags */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-lg font-semibold mb-4">Afbeelding & Tags</h2>
+            <div className="space-y-4">
+              <ImageSelector
+                label="Afbeelding"
+                selectedImageId={selectedImageId}
+                availableImages={availableImages}
+                onSelect={(imageId) => {
+                  setSelectedImageId(imageId);
+                  if (imageId) {
+                    const hiddenInput =
+                      document.querySelector<HTMLInputElement>('input[name="imageId"]');
+                    if (hiddenInput) {
+                      hiddenInput.value = imageId;
+                    }
+                  }
+                }}
+                imageSize="medium"
+              />
+              <input type="hidden" name="imageId" value={selectedImageId || ''} />
+              {availableTags.length > 0 && (
+                <SimpleFormField label="Tags" htmlFor="tags">
+                  <TagSelector
+                    availableTags={availableTags}
+                    selectedTagIds={initial?.tagIds}
+                    name="tagIds"
+                  />
+                </SimpleFormField>
+              )}
+            </div>
+          </div>
+
+          {/* Speeltijden */}
+          <DataTable
+            title="Speeltijden"
+            headers={['Datum & Tijd', 'Prijs', 'Zitplaatsen', 'Beschikbaar', 'Status', 'Acties']}
+            onAddClickedAction={handleAddPerformance}
+            addButtonLabel="Toevoegen"
+          >
+            <>
+              {performances.map((performance, index) => {
+                const totalSeats = performance.rows * performance.seatsPerRow;
+                return (
+                  <Row key={index}>
+                    <td className="px-6 py-4">
+                      {new Date(performance.date).toLocaleString('nl-NL', {
+                        dateStyle: 'medium',
+                        timeStyle: 'short',
+                      })}
+                    </td>
+                    <td className="px-6 py-4">€{performance.price}</td>
+                    <td className="px-6 py-4">
+                      {performance.rows} rijen × {performance.seatsPerRow} stoelen
+                    </td>
+                    <td className="px-6 py-4">
+                      {performance.availableSeats} / {totalSeats}
+                    </td>
+                    <td className="px-6 py-4">
+                      <span
+                        className={`px-2 py-1 rounded text-xs ${
+                          performance.status === 'published'
+                            ? 'bg-green-100 text-green-800'
+                            : performance.status === 'sold_out'
+                              ? 'bg-orange-100 text-orange-800'
+                              : performance.status === 'cancelled'
+                                ? 'bg-red-100 text-red-800'
+                                : 'bg-gray-100 text-gray-800'
+                        }`}
+                      >
+                        {performance.status === 'draft' && 'Concept'}
+                        {performance.status === 'published' && 'Gepubliceerd'}
+                        {performance.status === 'sold_out' && 'Uitverkocht'}
+                        {performance.status === 'cancelled' && 'Geannuleerd'}
+                        {performance.status === 'archived' && 'Gearchiveerd'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-right space-x-2">
+                      <button
+                        type="button"
+                        onClick={() => handleEditPerformance(index)}
+                        className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                      >
+                        Bewerk
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeletePerformance(index)}
+                        className="text-red-600 hover:text-red-800 text-sm font-medium"
+                      >
+                        Verwijder
+                      </button>
+                    </td>
+                  </Row>
+                );
+              })}
+            </>
+          </DataTable>
+
+          {/* Hidden inputs to pass performances data to server action */}
+          {performances.map((perf, index) => (
+            <input
+              key={`perf-${index}`}
+              type="hidden"
+              name="performances"
+              value={JSON.stringify(perf)}
+            />
+          ))}
+
+        </div>
+
+        {/* Right column — Inhoud (sticky) */}
+        <div>
+          <div className="sticky top-6">
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-lg font-semibold mb-4">Inhoud</h2>
+              <BlockEditor
+                name="blocks"
+                initialBlocks={initial?.blocks}
+                availableImages={availableImages}
+              />
+            </div>
           </div>
         </div>
 
-        {/* Speeltijden */}
-        <DataTable
-          title="Speeltijden"
-          headers={['Datum & Tijd', 'Prijs', 'Zitplaatsen', 'Beschikbaar', 'Status', 'Acties']}
-          onAddClickedAction={handleAddPerformance}
-          addButtonLabel="Toevoegen"
-        >
-          <>
-            {performances.map((performance, index) => {
-              const totalSeats = performance.rows * performance.seatsPerRow;
-              return (
-                <Row key={index}>
-                  <td className="px-6 py-4">
-                    {new Date(performance.date).toLocaleString('nl-NL', {
-                      dateStyle: 'medium',
-                      timeStyle: 'short',
-                    })}
-                  </td>
-                  <td className="px-6 py-4">€{performance.price}</td>
-                  <td className="px-6 py-4">
-                    {performance.rows} rijen × {performance.seatsPerRow} stoelen
-                  </td>
-                  <td className="px-6 py-4">
-                    {performance.availableSeats} / {totalSeats}
-                  </td>
-                  <td className="px-6 py-4">
-                    <span
-                      className={`px-2 py-1 rounded text-xs ${
-                        performance.status === 'published'
-                          ? 'bg-green-100 text-green-800'
-                          : performance.status === 'sold_out'
-                            ? 'bg-orange-100 text-orange-800'
-                            : performance.status === 'cancelled'
-                              ? 'bg-red-100 text-red-800'
-                              : 'bg-gray-100 text-gray-800'
-                      }`}
-                    >
-                      {performance.status === 'draft' && 'Concept'}
-                      {performance.status === 'published' && 'Gepubliceerd'}
-                      {performance.status === 'sold_out' && 'Uitverkocht'}
-                      {performance.status === 'cancelled' && 'Geannuleerd'}
-                      {performance.status === 'archived' && 'Gearchiveerd'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-right space-x-2">
-                    <button
-                      type="button"
-                      onClick={() => handleEditPerformance(index)}
-                      className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                    >
-                      Bewerk
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleDeletePerformance(index)}
-                      className="text-red-600 hover:text-red-800 text-sm font-medium"
-                    >
-                      Verwijder
-                    </button>
-                  </td>
-                </Row>
-              );
-            })}
-          </>
-        </DataTable>
-
-        {/* Hidden inputs to pass performances data to server action */}
-        {performances.map((perf, index) => (
-          <input
-            key={`perf-${index}`}
-            type="hidden"
-            name="performances"
-            value={JSON.stringify(perf)}
-          />
-        ))}
-
-        {/* Submit */}
-        <div className="bg-white rounded-lg shadow p-6">
+        {/* Submit — spans both columns */}
+        <div className="lg:col-span-2 bg-white rounded-lg shadow p-6">
           <div className="flex gap-3">
-            <Button type="submit" className="flex-1" disabled={isPending}>
+            <Button type="submit" disabled={isPending}>
               {isPending ? 'Opslaan...' : 'Opslaan'}
             </Button>
             <Link href={cancelHref}>
