@@ -6,6 +6,7 @@ import { PageForm } from '../page-form';
 import { getAllImages } from '@/lib/queries/images';
 import { blocksArraySchema } from '@/lib/schemas/blocks';
 import type { FormActionResult, InitialFormValues } from '../page-form';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 
 export default async function AddPage() {
   const images = await getAllImages(0, 1000);
@@ -49,9 +50,15 @@ export default async function AddPage() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto py-12 px-6">
-      <h1 className="text-2xl font-semibold mb-6">Nieuwe pagina toevoegen</h1>
+    <>
+      <AdminPageHeader
+        title="Nieuwe pagina toevoegen"
+        breadcrumbs={[
+          { label: "Pagina's", href: '/admin/pages' },
+          { label: 'Toevoegen' },
+        ]}
+      />
       <PageForm initialValues={null} action={handleSubmit} availableImages={images} />
-    </div>
+    </>
   );
 }

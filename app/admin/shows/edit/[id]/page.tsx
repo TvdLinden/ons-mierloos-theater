@@ -40,8 +40,14 @@ export default async function EditShowPage(props: { params: Promise<{ id: string
   };
 
   return (
-    <div className="max-w-4xl mx-auto py-12 px-6">
-      <AdminPageHeader title="Voorstelling Bewerken" />
+    <>
+      <AdminPageHeader
+        title="Voorstelling Bewerken"
+        breadcrumbs={[
+          { label: 'Voorstellingen', href: '/admin/shows' },
+          { label: show.title },
+        ]}
+      />
       <div className="bg-surface rounded-lg shadow p-8">
         <ShowForm
           action={boundAction}
@@ -50,6 +56,6 @@ export default async function EditShowPage(props: { params: Promise<{ id: string
           availableImages={availableImages}
         />
       </div>
-    </div>
+    </>
   );
 }

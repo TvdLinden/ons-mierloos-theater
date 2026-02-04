@@ -5,6 +5,7 @@ import { Card, Button } from '@/components/ui';
 import Link from 'next/link';
 import { insertPerformance } from '@/lib/commands/shows';
 import AddPerformanceToShowForm from '@/components/AddPerformanceToShowForm';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -65,24 +66,23 @@ export default async function ShowPerformancesPage({ params }: Props) {
   }
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <div className="mb-8">
-        <Link href="/admin/shows" className="text-primary hover:underline">
-          ← Terug naar voorstellingen
-        </Link>
-      </div>
-
-      <Card className="mb-8 p-6">
-        <div className="flex justify-between items-start">
-          <div>
-            <h1 className="text-3xl font-bold text-primary">{show.title}</h1>
-            {show.subtitle && <p className="text-lg text-gray-600 mt-1">{show.subtitle}</p>}
-            <p className="text-sm text-gray-500 mt-2">Basisprijs: €{show.basePrice}</p>
-          </div>
+    <>
+      <AdminPageHeader
+        title={show.title}
+        subtitle={show.subtitle || undefined}
+        breadcrumbs={[
+          { label: 'Voorstellingen', href: '/admin/shows' },
+          { label: 'Speeltijden' },
+        ]}
+        action={
           <Link href={`/admin/shows/edit/${id}`}>
             <Button variant="secondary">Bewerk voorstelling</Button>
           </Link>
-        </div>
+        }
+      />
+
+      <Card className="mb-8 p-6">
+        <p className="text-sm text-gray-500">Basisprijs: €{show.basePrice}</p>
       </Card>
 
       <Card className="mb-8 p-6">
@@ -150,6 +150,6 @@ export default async function ShowPerformancesPage({ params }: Props) {
           <p className="text-gray-500">Nog geen speeltijden toegevoegd.</p>
         )}
       </Card>
-    </div>
+    </>
   );
 }

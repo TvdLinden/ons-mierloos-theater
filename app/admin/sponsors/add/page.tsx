@@ -52,11 +52,17 @@ async function handleAddSponsor(
 
 export default function AddSponsorPage() {
   return (
-    <div className="max-w-4xl mx-auto py-12 px-6">
-      <AdminPageHeader title="Sponsor toevoegen" backHref="/admin/sponsors" />
+    <>
+      <AdminPageHeader
+        title="Sponsor toevoegen"
+        breadcrumbs={[
+          { label: 'Sponsors', href: '/admin/sponsors' },
+          { label: 'Toevoegen' },
+        ]}
+      />
       <div className="bg-surface rounded-lg shadow p-8">
         <SponsorForm action={handleAddSponsor} submitLabel="Sponsor toevoegen" />
       </div>
-    </div>
+    </>
   );
 }

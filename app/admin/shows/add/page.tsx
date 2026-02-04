@@ -4,6 +4,7 @@ import { requireRole } from '@/lib/utils/auth';
 import { getAllTags } from '@/lib/queries/tags';
 import { getAllImages } from '@/lib/queries/images';
 import ShowForm from '@/components/ShowForm';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 
 export default async function AddShowPage() {
   await requireRole(['admin', 'contributor']);
@@ -13,13 +14,21 @@ export default async function AddShowPage() {
   const boundAction = handleUpsertShow.bind(null, null, []);
 
   return (
-    <Card className="max-w-4xl mx-auto py-12 px-6">
-      <h1 className="text-3xl font-bold mb-8 text-primary">Nieuwe voorstelling toevoegen</h1>
-      <ShowForm
-        action={boundAction}
-        availableTags={availableTags}
-        availableImages={availableImages}
+    <>
+      <AdminPageHeader
+        title="Nieuwe voorstelling toevoegen"
+        breadcrumbs={[
+          { label: 'Voorstellingen', href: '/admin/shows' },
+          { label: 'Toevoegen' },
+        ]}
       />
-    </Card>
+      <Card className="p-6">
+        <ShowForm
+          action={boundAction}
+          availableTags={availableTags}
+          availableImages={availableImages}
+        />
+      </Card>
+    </>
   );
 }

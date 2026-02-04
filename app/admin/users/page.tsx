@@ -18,8 +18,11 @@ export default async function UsersManagementPage({
   const users = await getAllUsers(search);
 
   return (
-    <div className="max-w-7xl mx-auto py-12 px-6">
-      <AdminPageHeader title="Gebruikers Beheer" />
+    <>
+      <AdminPageHeader
+        title="Gebruikers Beheer"
+        breadcrumbs={[{ label: 'Gebruikers' }]}
+      />
 
       <div className="mb-6">
         <UserSearch />
@@ -59,6 +62,6 @@ export default async function UsersManagementPage({
           ))
         )}
       </DataTable>
-    </div>
+    </>
   );
 }

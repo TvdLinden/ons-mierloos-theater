@@ -18,9 +18,10 @@ export default async function AdminTagsPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto py-12 px-6">
+    <>
       <AdminPageHeader
         title="Tags Beheer"
+        breadcrumbs={[{ label: 'Tags' }]}
         action={{
           href: '/admin/tags/add',
           label: 'Nieuwe tag toevoegen',
@@ -57,6 +58,6 @@ export default async function AdminTagsPage() {
           ))
         )}
       </DataTable>
-    </div>
+    </>
   );
 }

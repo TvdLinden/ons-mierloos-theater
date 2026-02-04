@@ -84,17 +84,14 @@ export default async function ShowSalesDetailPage({ params }: ShowSalesPageProps
   }
 
   return (
-    <div className="max-w-7xl mx-auto py-12 px-6">
-      {/* Breadcrumbs */}
-      <div className="flex items-center gap-2 text-sm text-zinc-600 mb-6">
-        <Link href="/admin/sales" className="hover:text-primary hover:underline">
-          Verkopen & Bestellingen
-        </Link>
-        <span>/</span>
-        <span>{performance.show.title}</span>
-      </div>
-
-      <AdminPageHeader title={`Verkopen: ${performance.show.title}`} />
+    <>
+      <AdminPageHeader
+        title={`Verkopen: ${performance.show.title}`}
+        breadcrumbs={[
+          { label: 'Verkopen', href: '/admin/sales' },
+          { label: performance.show.title },
+        ]}
+      />
 
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -185,6 +182,6 @@ export default async function ShowSalesDetailPage({ params }: ShowSalesPageProps
           ))
         )}
       </DataTable>
-    </div>
+    </>
   );
 }

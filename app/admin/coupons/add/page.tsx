@@ -50,11 +50,17 @@ export default async function AddCouponPage() {
   await requireRole(['admin']);
 
   return (
-    <div className="max-w-4xl mx-auto py-12 px-6">
-      <AdminPageHeader title="Coupon toevoegen" backHref="/admin/coupons" />
+    <>
+      <AdminPageHeader
+        title="Coupon toevoegen"
+        breadcrumbs={[
+          { label: 'Coupons', href: '/admin/coupons' },
+          { label: 'Toevoegen' },
+        ]}
+      />
       <div className="bg-surface rounded-lg shadow p-8">
         <CouponForm action={handleAddCoupon} submitLabel="Coupon toevoegen" />
       </div>
-    </div>
+    </>
   );
 }

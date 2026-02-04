@@ -13,11 +13,17 @@ export default async function EditTagPage(props: { params: Promise<{ id: string 
   if (!tag) return notFound();
 
   return (
-    <div className="max-w-4xl mx-auto py-12 px-6">
-      <AdminPageHeader title="Tag Bewerken" />
+    <>
+      <AdminPageHeader
+        title="Tag Bewerken"
+        breadcrumbs={[
+          { label: 'Tags', href: '/admin/tags' },
+          { label: tag.name },
+        ]}
+      />
       <div className="bg-surface rounded-lg shadow p-8">
         <TagForm action={editTag.bind(null, params.id)} initialData={tag} />
       </div>
-    </div>
+    </>
   );
 }

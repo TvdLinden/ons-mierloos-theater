@@ -13,9 +13,10 @@ export default async function AdminCouponsPage() {
   const inactiveCoupons = coupons.filter((c) => c.isActive === 0);
 
   return (
-    <div className="max-w-7xl mx-auto py-12 px-6">
+    <>
       <AdminPageHeader
         title="Coupons Beheer"
+        breadcrumbs={[{ label: 'Coupons' }]}
         action={{
           href: '/admin/coupons/add',
           label: 'Nieuwe coupon toevoegen',
@@ -36,7 +37,7 @@ export default async function AdminCouponsPage() {
           </div>
         </>
       )}
-    </div>
+    </>
   );
 }
 

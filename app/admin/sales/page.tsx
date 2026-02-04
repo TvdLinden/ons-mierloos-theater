@@ -16,8 +16,11 @@ export default async function SalesPage() {
   ]);
 
   return (
-    <div className="max-w-7xl mx-auto py-12 px-6">
-      <AdminPageHeader title="Verkopen & Bestellingen" />
+    <>
+      <AdminPageHeader
+        title="Verkopen & Bestellingen"
+        breadcrumbs={[{ label: 'Verkopen' }]}
+      />
 
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -64,6 +67,6 @@ export default async function SalesPage() {
 
       {/* Orders List */}
       <OrderSearchClient />
-    </div>
+    </>
   );
 }

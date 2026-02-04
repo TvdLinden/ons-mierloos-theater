@@ -33,10 +33,13 @@ export default async function ContentManagementPage() {
   const footerLinks = navLinks.filter((l) => l.location === 'footer');
 
   return (
-    <div className="container mx-auto py-8 px-4 space-y-8">
+    <div className="space-y-8">
       <div className="flex justify-between items-start">
         <div>
-          <AdminPageHeader title="Content Beheer" />
+          <AdminPageHeader
+            title="Content Beheer"
+            breadcrumbs={[{ label: 'Content' }]}
+          />
           <p className="text-muted-foreground">
             Beheer de inhoud van header, footer, pagina&apos;s en homepagina
           </p>

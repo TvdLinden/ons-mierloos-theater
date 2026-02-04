@@ -3,6 +3,7 @@ import { jobs } from '@/lib/db/schema';
 import { desc, eq, and, gte } from 'drizzle-orm';
 import { Metadata } from 'next';
 import Link from 'next/link';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 
 export const dynamic = 'force-dynamic';
 
@@ -47,13 +48,11 @@ export default async function JobsDashboard({
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-text-primary font-display">Achtergrondtaken</h1>
-        <Link href="/admin" className="text-sm text-primary hover:underline">
-          ← Terug naar admin
-        </Link>
-      </div>
+    <>
+      <AdminPageHeader
+        title="Achtergrondtaken"
+        breadcrumbs={[{ label: 'Achtergrondtaken' }]}
+      />
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
@@ -200,7 +199,7 @@ export default async function JobsDashboard({
           </li>
         </ul>
       </div>
-    </div>
+    </>
   );
 }
 

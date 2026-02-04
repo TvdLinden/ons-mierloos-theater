@@ -16,10 +16,10 @@ export default async function SponsorsAdminPage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto py-12 px-6">
+    <>
       <AdminPageHeader
         title="Sponsors Beheer"
-        backHref="/admin"
+        breadcrumbs={[{ label: 'Sponsors' }]}
         action={
           <Link
             href="/admin/sponsors/add"
@@ -99,6 +99,6 @@ export default async function SponsorsAdminPage() {
           ))
         )}
       </DataTable>
-    </div>
+    </>
   );
 }

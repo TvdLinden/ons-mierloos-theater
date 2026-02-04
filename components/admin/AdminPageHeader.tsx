@@ -1,11 +1,12 @@
 import Link from 'next/link';
 import { ReactNode } from 'react';
 import { Button } from '../ui';
+import { AdminBreadcrumbs, BreadcrumbItemData } from './Breadcrumbs';
 
 type AdminPageHeaderProps = {
   title: string;
   subtitle?: string;
-  backHref?: string;
+  breadcrumbs?: BreadcrumbItemData[];
   action?:
     | {
         href: string;
@@ -17,17 +18,12 @@ type AdminPageHeaderProps = {
 export function AdminPageHeader({
   title,
   subtitle,
-  backHref = '/admin',
+  breadcrumbs = [],
   action,
 }: AdminPageHeaderProps) {
   return (
     <div className="mb-8">
-      <Link
-        href={backHref}
-        className="text-primary hover:text-secondary font-medium mb-4 inline-block"
-      >
-        ← Terug naar dashboard
-      </Link>
+      <AdminBreadcrumbs items={breadcrumbs} />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-4xl font-bold text-primary">{title}</h1>
@@ -36,10 +32,7 @@ export function AdminPageHeader({
         {action && (
           <>
             {typeof action === 'object' && 'href' in action ? (
-              <Link
-                href={action.href}
-                // className="px-4 py-2 bg-accent text-surface rounded font-semibold hover:bg-secondary shadow transition-colors"
-              >
+              <Link href={action.href}>
                 <Button variant="secondary">{action.label}</Button>
               </Link>
             ) : (

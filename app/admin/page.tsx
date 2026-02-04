@@ -117,7 +117,7 @@ export default async function AdminOverview() {
   const visibleFeatures = features.filter((f) => !f.adminOnly || isAdmin);
 
   return (
-    <div className="max-w-6xl mx-auto py-12 px-6">
+    <>
       <h1 className="text-4xl font-bold mb-2 text-foreground">Dashboard Beheer</h1>
       <p className="text-muted-foreground mb-8">Beheer alle aspecten van het theater</p>
 
@@ -138,6 +138,6 @@ export default async function AdminOverview() {
           );
         })}
       </div>
-    </div>
+    </>
   );
 }

@@ -70,8 +70,14 @@ export default async function EditSponsorPage({ params }: { params: Promise<{ id
   const boundDeleteAction = handleDeleteSponsor.bind(null, id);
 
   return (
-    <div className="max-w-4xl mx-auto py-12 px-6">
-      <AdminPageHeader title="Sponsor bewerken" backHref="/admin/sponsors" />
+    <>
+      <AdminPageHeader
+        title="Sponsor bewerken"
+        breadcrumbs={[
+          { label: 'Sponsors', href: '/admin/sponsors' },
+          { label: sponsor.name },
+        ]}
+      />
       <div className="bg-surface rounded-lg shadow p-8">
         <SponsorForm
           initialData={{
@@ -101,6 +107,6 @@ export default async function EditSponsorPage({ params }: { params: Promise<{ id
           </form>
         </div>
       </div>
-    </div>
+    </>
   );
 }

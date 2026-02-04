@@ -67,8 +67,14 @@ export default async function EditCouponPage({ params }: { params: Promise<{ id:
   const boundDeleteAction = handleDeleteCoupon.bind(null, id);
 
   return (
-    <div className="max-w-4xl mx-auto py-12 px-6">
-      <AdminPageHeader title="Coupon bewerken" backHref="/admin/coupons" />
+    <>
+      <AdminPageHeader
+        title="Coupon bewerken"
+        breadcrumbs={[
+          { label: 'Coupons', href: '/admin/coupons' },
+          { label: coupon.code },
+        ]}
+      />
       <div className="bg-surface rounded-lg shadow p-8">
         <CouponForm
           initialData={coupon}
@@ -92,6 +98,6 @@ export default async function EditCouponPage({ params }: { params: Promise<{ id:
           </form>
         </div>
       </div>
-    </div>
+    </>
   );
 }

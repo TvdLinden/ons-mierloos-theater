@@ -40,8 +40,11 @@ export default async function MailingListPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto py-12 px-6">
-      <AdminPageHeader title="Nieuwsbrief Versturen" />
+    <>
+      <AdminPageHeader
+        title="Nieuwsbrief Versturen"
+        breadcrumbs={[{ label: 'Nieuwsbrief' }]}
+      />
 
       <div className="mb-8">
         <StatCard label="Actieve Abonnees" value={subscriberCount} valueColor="text-primary" />
@@ -50,6 +53,6 @@ export default async function MailingListPage() {
       <div className="bg-surface rounded-lg shadow p-8">
         <MailingListForm action={handleSendEmail} subscriberCount={subscriberCount} />
       </div>
-    </div>
+    </>
   );
 }

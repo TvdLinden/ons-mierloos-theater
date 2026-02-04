@@ -390,7 +390,7 @@ export default function ApplicationsPage() {
   if (loading) return <div className="p-4">Applicaties laden...</div>;
 
   return (
-    <div className="grid grid-cols-1 gap-6 p-6 lg:grid-cols-3">
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
       {/* Applications List */}
       <div className="lg:col-span-1">
         <div className="rounded-lg border p-4">

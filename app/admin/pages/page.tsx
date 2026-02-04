@@ -25,9 +25,10 @@ export default async function AdminPageOverview() {
   const pages = await getAllPages();
 
   return (
-    <div className="max-w-7xl mx-auto py-12 px-6">
+    <>
       <AdminPageHeader
         title="Pagina's Beheer"
+        breadcrumbs={[{ label: "Pagina's" }]}
         action={{ href: '/admin/pages/add', label: 'Nieuwe pagina toevoegen' }}
       />
 
@@ -82,6 +83,6 @@ export default async function AdminPageOverview() {
           })}
         </DataTable>
       )}
-    </div>
+    </>
   );
 }

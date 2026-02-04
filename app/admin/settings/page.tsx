@@ -17,10 +17,11 @@ export default async function SettingsPage() {
   ]);
 
   return (
-    <div className="container mx-auto py-8 px-4">
+    <>
       <AdminPageHeader
         title="Site Instellingen"
         subtitle="Beheer algemene site instellingen, SEO en metadata"
+        breadcrumbs={[{ label: 'Instellingen' }]}
       />
 
       <Tabs defaultValue="general" className="w-full">
@@ -55,6 +56,6 @@ export default async function SettingsPage() {
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
+    </>
   );
 }

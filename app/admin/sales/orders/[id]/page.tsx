@@ -36,24 +36,21 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
   };
 
   return (
-    <div className="max-w-7xl mx-auto py-12 px-6">
-      {/* Breadcrumbs */}
-      <div className="flex items-center gap-2 text-sm text-zinc-600 mb-6">
-        <Link href="/admin/sales" className="hover:text-primary hover:underline">
-          Verkopen & Bestellingen
-        </Link>
-        <span>/</span>
-        <span>Bestelling {order.id.substring(0, 8)}...</span>
-      </div>
-
-      <div className="flex items-center justify-between mb-6">
-        <AdminPageHeader title={`Bestelling: ${order.id.substring(0, 8)}...`} />
-        <span
-          className={`inline-flex px-3 py-1 text-sm font-semibold rounded-full ${status.color}`}
-        >
-          {status.label}
-        </span>
-      </div>
+    <>
+      <AdminPageHeader
+        title={`Bestelling: ${order.id.substring(0, 8)}...`}
+        breadcrumbs={[
+          { label: 'Verkopen', href: '/admin/sales' },
+          { label: `Bestelling ${order.id.substring(0, 8)}...` },
+        ]}
+        action={
+          <span
+            className={`inline-flex px-3 py-1 text-sm font-semibold rounded-full ${status.color}`}
+          >
+            {status.label}
+          </span>
+        }
+      />
 
       {/* Order Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -227,6 +224,6 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
           </DataTable>
         </div>
       )}
-    </div>
+    </>
   );
 }

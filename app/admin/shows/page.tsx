@@ -14,9 +14,10 @@ export default async function AdminPerformanceOverview() {
   const unpublishedPerformances = shows.filter((performance) => performance.status !== 'published');
 
   return (
-    <div className="max-w-7xl mx-auto py-12 px-6">
+    <>
       <AdminPageHeader
         title="Voorstellingen Beheer"
+        breadcrumbs={[{ label: 'Voorstellingen' }]}
         action={{
           href: '/admin/shows/add',
           label: 'Nieuwe voorstelling toevoegen',
@@ -36,7 +37,7 @@ export default async function AdminPerformanceOverview() {
           </div>
         </>
       )}
-    </div>
+    </>
   );
 }
 

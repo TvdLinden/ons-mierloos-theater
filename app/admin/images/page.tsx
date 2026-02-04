@@ -22,8 +22,11 @@ export default async function ImagesPage({
   const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <AdminPageHeader title="" />
+    <>
+      <AdminPageHeader
+        title="Afbeeldingen"
+        breadcrumbs={[{ label: 'Afbeeldingen' }]}
+      />
       <Card>
         <CardHeader>
           <CardTitle>Afbeeldingenbeheer</CardTitle>
@@ -43,6 +46,6 @@ export default async function ImagesPage({
           </Suspense>
         </CardContent>
       </Card>
-    </div>
+    </>
   );
 }
