@@ -1,26 +1,24 @@
 import ShowForm, { ShowFormState } from '@/components/ShowForm';
 import { notFound } from 'next/navigation';
-import { requireRole } from '@/lib/utils/auth';
 import { getAllTags } from '@/lib/queries/tags';
 import { getAllImages } from '@/lib/queries/images';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { getShowByIdWithTagsAndPerformances } from '@/lib/queries/shows';
 import { handleUpsertShow } from '../../actions';
+import Link from 'next/link';
+import { Button } from '@/components/ui';
 
 export default async function EditShowPage(props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
   const { id } = params;
-  await requireRole(['admin', 'contributor']);
 
   const show = await getShowByIdWithTagsAndPerformances(id);
   if (!show) return notFound();
 
   const [availableTags, availableImages] = await Promise.all([getAllTags(), getAllImages(0, 1000)]);
 
-  // Create a bound action with the show's ID and current performances
   const boundAction = handleUpsertShow.bind(null, id, show.performances || []);
 
-  // Map show data to form state
   const initialData: ShowFormState = {
     title: show.title,
     subtitle: show.subtitle || undefined,
@@ -42,20 +40,31 @@ export default async function EditShowPage(props: { params: Promise<{ id: string
   return (
     <>
       <AdminPageHeader
-        title="Voorstelling Bewerken"
+        title="Voorstelling bewerken"
+        subtitle={show.title}
         breadcrumbs={[
           { label: 'Voorstellingen', href: '/admin/shows' },
-          { label: show.title },
+          { label: show.title, href: `/admin/shows/${id}` },
+          { label: 'Bewerken' },
         ]}
+        action={
+          <div className="flex gap-2">
+            <Link href={`/admin/shows/${id}/performances`}>
+              <Button variant="secondary">Speeltijden</Button>
+            </Link>
+            <Link href={`/admin/shows/${id}`}>
+              <Button variant="secondary">Terug naar detail</Button>
+            </Link>
+          </div>
+        }
       />
-      <div className="bg-surface rounded-lg shadow p-8">
-        <ShowForm
-          action={boundAction}
-          initial={initialData}
-          availableTags={availableTags}
-          availableImages={availableImages}
-        />
-      </div>
+      <ShowForm
+        action={boundAction}
+        initial={initialData}
+        availableTags={availableTags}
+        availableImages={availableImages}
+        cancelHref={`/admin/shows/${id}`}
+      />
     </>
   );
 }

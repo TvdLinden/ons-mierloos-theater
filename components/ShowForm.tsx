@@ -59,11 +59,13 @@ export default function ShowForm({
   initial,
   availableTags = [],
   availableImages = [],
+  cancelHref = '/admin/shows',
 }: {
   action: (prevState: FormState, formData: FormData) => Promise<FormState>;
   initial?: ShowFormState;
   availableTags?: Tag[];
   availableImages?: Array<ImageMetadata>;
+  cancelHref?: string;
 }) {
   const [state, formAction, isPending] = useActionState(action, { error: undefined });
   const [selectedImageId, setSelectedImageId] = useState<string | null>(initial?.imageId || null);
@@ -85,7 +87,6 @@ export default function ShowForm({
   );
   const [editingPerformance, setEditingPerformance] = useState<NewPerformance | null>(null);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
-  // const descriptionEditorRef = useRef<WysiwygEditorRef>(null);
   const priceRef = useRef<HTMLInputElement>(null);
 
   const handleGenerateSlug = () => {
@@ -124,10 +125,8 @@ export default function ShowForm({
 
   const handleSavePerformance = (performance: NewPerformance) => {
     if (editingIndex !== null) {
-      // Update existing
       setPerformances(performances.map((p, i) => (i === editingIndex ? performance : p)));
     } else {
-      // Add new
       setPerformances([...performances, performance]);
     }
     setEditingPerformance(null);
@@ -143,105 +142,154 @@ export default function ShowForm({
     <>
       <form action={formAction} className="space-y-6">
         {state.error && <Alert variant="destructive">{state.error}</Alert>}
-        <SimpleFormField label="Titel" htmlFor="title" required>
-          <Input id="title" name="title" type="text" defaultValue={initial?.title} required />
-        </SimpleFormField>
-        <SimpleFormField label="Ondertitel" htmlFor="subtitle">
-          <Input id="subtitle" name="subtitle" type="text" defaultValue={initial?.subtitle} />
-        </SimpleFormField>
-        <SimpleFormField label="Slug" htmlFor="slug" required>
-          <div className="flex gap-2">
-            <Input
-              id="slug"
-              name="slug"
-              type="text"
-              defaultValue={initial?.slug}
-              pattern="[a-z0-9-]+"
-              placeholder="bijv: eaque-nam-ab-quidem"
-              required
-            />
-            <Button type="button" onClick={handleGenerateSlug} variant="outline">
-              Genereer
-            </Button>
+
+        {/* Voorstelling details */}
+        <div className="bg-white rounded-lg shadow p-6">
+          <h2 className="text-lg font-semibold mb-4">Voorstelling details</h2>
+          <div className="space-y-4">
+            <SimpleFormField label="Titel" htmlFor="title" required>
+              <Input id="title" name="title" type="text" defaultValue={initial?.title} required />
+            </SimpleFormField>
+            <SimpleFormField label="Ondertitel" htmlFor="subtitle">
+              <Input id="subtitle" name="subtitle" type="text" defaultValue={initial?.subtitle} />
+            </SimpleFormField>
+            <SimpleFormField label="Slug" htmlFor="slug" required>
+              <div className="flex gap-2">
+                <Input
+                  id="slug"
+                  name="slug"
+                  type="text"
+                  defaultValue={initial?.slug}
+                  pattern="[a-z0-9-]+"
+                  placeholder="bijv: eaque-nam-ab-quidem"
+                  required
+                />
+                <Button type="button" onClick={handleGenerateSlug} variant="outline">
+                  Genereer
+                </Button>
+              </div>
+              <p className="text-xs text-zinc-600 mt-1">
+                URL-vriendelijke naam: alleen kleine letters, cijfers en streepjes.
+              </p>
+            </SimpleFormField>
+            <SimpleFormField label="Prijs (€)" htmlFor="price" required>
+              <NumberInput
+                id="price"
+                name="price"
+                step={0.01}
+                ref={priceRef}
+                defaultValue={Number(initial?.price)}
+                required
+              />
+              <p className="text-xs text-zinc-600 mt-1">
+                Standaard prijs voor voorstellingen (kan per voorstelling overschreven worden).
+              </p>
+            </SimpleFormField>
           </div>
-          <p className="text-xs text-zinc-600 mt-1">
-            URL-vriendelijke naam: alleen kleine letters, cijfers en streepjes.
-          </p>
-        </SimpleFormField>
-        <SimpleFormField label="Inhoud" htmlFor="blocks" required>
-          {/* <pre>{JSON.stringify(initial?.blocks || [], null, 2)}</pre> */}
+        </div>
+
+        {/* Inhoud */}
+        <div className="bg-white rounded-lg shadow p-6">
+          <h2 className="text-lg font-semibold mb-4">Inhoud</h2>
           <BlockEditor
             name="blocks"
             initialBlocks={initial?.blocks}
             availableImages={availableImages}
           />
-        </SimpleFormField>
-        <SimpleFormField label="Prijs (€)" htmlFor="price" required>
-          <NumberInput
-            id="price"
-            name="price"
-            step={0.01}
-            ref={priceRef}
-            defaultValue={Number(initial?.price)}
-            required
-          />
-          <p className="text-xs text-zinc-600 mt-1">
-            Standaard prijs voor voorstellingen (kan per voorstelling overschreven worden).
-          </p>
-        </SimpleFormField>
+        </div>
 
-        <SimpleFormField label="Publicatiedatum" htmlFor="publicationDate">
-          <div className="flex gap-2">
-            <Input
-              id="publicationDate"
-              name="publicationDate"
-              type="datetime-local"
-              defaultValue={initial?.publicationDate}
-            />
-            <button
-              type="button"
-              onClick={() => {
-                const input = document.getElementById('publicationDate') as HTMLInputElement;
-                if (input) input.value = '';
-              }}
-              className="px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors text-sm"
-            >
-              Wissen
-            </button>
+        {/* Publicatie */}
+        <div className="bg-white rounded-lg shadow p-6">
+          <h2 className="text-lg font-semibold mb-4">Publicatie</h2>
+          <div className="space-y-4">
+            <SimpleFormField label="Publicatiedatum" htmlFor="publicationDate">
+              <div className="flex gap-2">
+                <Input
+                  id="publicationDate"
+                  name="publicationDate"
+                  type="datetime-local"
+                  defaultValue={initial?.publicationDate}
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    const input = document.getElementById('publicationDate') as HTMLInputElement;
+                    if (input) input.value = '';
+                  }}
+                  className="px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors text-sm"
+                >
+                  Wissen
+                </button>
+              </div>
+              <p className="text-xs text-zinc-600 mt-1">
+                Optioneel: wanneer deze show zichtbaar moet worden.
+              </p>
+            </SimpleFormField>
+            <SimpleFormField label="Depublicatiedatum" htmlFor="depublicationDate">
+              <div className="flex gap-2">
+                <Input
+                  id="depublicationDate"
+                  name="depublicationDate"
+                  type="datetime-local"
+                  defaultValue={initial?.depublicationDate}
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    const input = document.getElementById('depublicationDate') as HTMLInputElement;
+                    if (input) input.value = '';
+                  }}
+                  className="px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors text-sm"
+                >
+                  Wissen
+                </button>
+              </div>
+              <p className="text-xs text-zinc-600 mt-1">
+                Optioneel: wanneer deze show verborgen moet worden.
+              </p>
+            </SimpleFormField>
           </div>
-          <p className="text-xs text-zinc-600 mt-1">
-            Optioneel: wanneer deze show zichtbaar moet worden.
-          </p>
-        </SimpleFormField>
+        </div>
 
-        <SimpleFormField label="Depublicatiedatum" htmlFor="depublicationDate">
-          <div className="flex gap-2">
-            <Input
-              id="depublicationDate"
-              name="depublicationDate"
-              type="datetime-local"
-              defaultValue={initial?.depublicationDate}
-            />
-            <button
-              type="button"
-              onClick={() => {
-                const input = document.getElementById('depublicationDate') as HTMLInputElement;
-                if (input) input.value = '';
+        {/* Afbeelding & Tags */}
+        <div className="bg-white rounded-lg shadow p-6">
+          <h2 className="text-lg font-semibold mb-4">Afbeelding & Tags</h2>
+          <div className="space-y-4">
+            <ImageSelector
+              label="Afbeelding"
+              selectedImageId={selectedImageId}
+              availableImages={availableImages}
+              onSelect={(imageId) => {
+                setSelectedImageId(imageId);
+                if (imageId) {
+                  const hiddenInput =
+                    document.querySelector<HTMLInputElement>('input[name="imageId"]');
+                  if (hiddenInput) {
+                    hiddenInput.value = imageId;
+                  }
+                }
               }}
-              className="px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors text-sm"
-            >
-              Wissen
-            </button>
+              imageSize="medium"
+            />
+            <input type="hidden" name="imageId" value={selectedImageId || ''} />
+            {availableTags.length > 0 && (
+              <SimpleFormField label="Tags" htmlFor="tags">
+                <TagSelector
+                  availableTags={availableTags}
+                  selectedTagIds={initial?.tagIds}
+                  name="tagIds"
+                />
+              </SimpleFormField>
+            )}
           </div>
-          <p className="text-xs text-zinc-600 mt-1">
-            Optioneel: wanneer deze show verborgen moet worden.
-          </p>
-        </SimpleFormField>
+        </div>
 
+        {/* Speeltijden */}
         <DataTable
-          title={'Voorstellingen'}
+          title="Speeltijden"
           headers={['Datum & Tijd', 'Prijs', 'Zitplaatsen', 'Beschikbaar', 'Status', 'Acties']}
           onAddClickedAction={handleAddPerformance}
+          addButtonLabel="Toevoegen"
         >
           <>
             {performances.map((performance, index) => {
@@ -273,7 +321,11 @@ export default function ShowForm({
                               : 'bg-gray-100 text-gray-800'
                       }`}
                     >
-                      {performance.status}
+                      {performance.status === 'draft' && 'Concept'}
+                      {performance.status === 'published' && 'Gepubliceerd'}
+                      {performance.status === 'sold_out' && 'Uitverkocht'}
+                      {performance.status === 'cancelled' && 'Geannuleerd'}
+                      {performance.status === 'archived' && 'Gearchiveerd'}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-right space-x-2">
@@ -308,46 +360,18 @@ export default function ShowForm({
           />
         ))}
 
-        <ImageSelector
-          label="Afbeelding"
-          selectedImageId={selectedImageId}
-          availableImages={availableImages}
-          onSelect={(imageId) => {
-            setSelectedImageId(imageId);
-            if (imageId) {
-              const hiddenInput = document.querySelector<HTMLInputElement>('input[name="imageId"]');
-              if (hiddenInput) {
-                hiddenInput.value = imageId;
-              }
-            }
-          }}
-          imageSize="medium"
-        />
-        <input type="hidden" name="imageId" value={selectedImageId || ''} />
-        {availableTags.length > 0 && (
-          <SimpleFormField label="Tags" htmlFor="tags">
-            <TagSelector
-              availableTags={availableTags}
-              selectedTagIds={initial?.tagIds}
-              name="tagIds"
-            />
-          </SimpleFormField>
-        )}
-        <div className="pt-4 border-t border-zinc-200">
-          <Button type="submit" className="w-full" disabled={isPending}>
-            {isPending ? 'Opslaan...' : 'Opslaan'}
-          </Button>
-          <Link href="/admin/shows">
-            <Button
-              onClick={() => {}}
-              type="button"
-              variant="outline"
-              className="w-full mt-2"
-              disabled={isPending}
-            >
-              Annuleren
+        {/* Submit */}
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex gap-3">
+            <Button type="submit" className="flex-1" disabled={isPending}>
+              {isPending ? 'Opslaan...' : 'Opslaan'}
             </Button>
-          </Link>
+            <Link href={cancelHref}>
+              <Button type="button" variant="outline" disabled={isPending}>
+                Annuleren
+              </Button>
+            </Link>
+          </div>
         </div>
       </form>
 
@@ -392,7 +416,6 @@ function PerformanceDialogContent({
   const handleChange = (field: keyof NewPerformance, value: string | number) => {
     setFormData((prev) => {
       const updated = { ...prev, [field]: value };
-      // When rows or seatsPerRow changes, update available seats to match new capacity
       if ((field === 'rows' || field === 'seatsPerRow') && isEdit === false) {
         const newCapacity = updated.rows * updated.seatsPerRow;
         updated.availableSeats = newCapacity;
@@ -406,7 +429,7 @@ function PerformanceDialogContent({
   return (
     <>
       <DialogHeader>
-        <DialogTitle>{isEdit ? 'Voorstelling Bewerken' : 'Nieuwe Voorstelling'}</DialogTitle>
+        <DialogTitle>{isEdit ? 'Speeltijd bewerken' : 'Nieuwe speeltijd'}</DialogTitle>
       </DialogHeader>
 
       <div className="max-h-[calc(100vh-240px)] overflow-y-auto pr-4">
