@@ -11,14 +11,17 @@ Run all quality gates to make sure the code is ready to commit.
 Run these in order — each step may surface issues that affect the next.
 
 1. Auto-format all files:
+
    ```bash
    npm run format
    ```
 
 2. Lint and report errors:
+
    ```bash
    npm run lint
    ```
+
    If there are auto-fixable issues, run `npm run lint:fix` and then lint again to confirm only non-fixable warnings remain.
 
 3. Typecheck without emitting:

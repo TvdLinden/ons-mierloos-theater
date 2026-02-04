@@ -9,11 +9,13 @@ Start all required services for local development of this Next.js theater ticket
 ## Steps
 
 1. Start PostgreSQL via Docker (if not already running):
+
    ```bash
    docker-compose up -d db
    ```
 
 2. Start the Next.js dev server in the background:
+
    ```bash
    npm run dev
    ```

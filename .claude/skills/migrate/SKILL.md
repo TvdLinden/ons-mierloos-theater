@@ -9,9 +9,11 @@ Run the database migration workflow after changes to `lib/db/schema.ts`.
 ## Steps
 
 1. Generate a new migration:
+
    ```bash
    npm run db:generate
    ```
+
    This creates a new file in `drizzle/migrations/`.
 
 2. Review the generated migration file to make sure it matches the intended schema changes. Pay attention to:
@@ -20,6 +22,7 @@ Run the database migration workflow after changes to `lib/db/schema.ts`.
    - New foreign key constraints
 
 3. Apply the migration to the local database:
+
    ```bash
    npm run db:migrate
    ```

@@ -1,0 +1,39 @@
+{
+  "name": "@ons-mierloos-theater/shared",
+  "private": true,
+  "exports": {
+    "./db": "./lib/db/index.ts",
+    "./db/schema": "./lib/db/schema.ts",
+    "./commands/*": "./lib/commands/*.ts",
+    "./queries/*": "./lib/queries/*.ts",
+    "./utils/*": "./lib/utils/*.ts",
+    "./schemas/*": "./lib/schemas/*.ts",
+    "./jobs/jobProcessor": "./lib/jobs/jobProcessor.ts"
+  },
+  "scripts": {
+    "db:generate": "cross-env NODE_ENV=development drizzle-kit generate",
+    "db:migrate": "cross-env NODE_ENV=development drizzle-kit push"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.980.0",
+    "bcryptjs": "^3.0.3",
+    "date-fns": "^4.1.0",
+    "drizzle-orm": "^0.45.0",
+    "nodemailer": "^7.0.11",
+    "pdf-lib": "^1.17.1",
+    "pg": "^8.16.3",
+    "qrcode": "^1.5.4",
+    "xlsx": "^0.18.5",
+    "zod": "^4.1.13"
+  },
+  "devDependencies": {
+    "@types/nodemailer": "^7.0.4",
+    "@types/pg": "^8.15.6",
+    "@types/qrcode": "^1.5.6",
+    "cross-env": "^7.0.3",
+    "dotenv": "^17.2.3",
+    "drizzle-kit": "^0.31.8",
+    "jimp": "^0.22.12",
+    "sharp": "^0.33.5"
+  }
+}

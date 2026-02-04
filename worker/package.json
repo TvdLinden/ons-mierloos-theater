@@ -1,0 +1,18 @@
+{
+  "name": "@ons-mierloos-theater/worker",
+  "private": true,
+  "scripts": {
+    "worker": "node --env-file=../.env.local --import tsx scripts/start-worker.ts",
+    "worker:watch": "node --env-file=../.env.local --import tsx --watch scripts/start-worker.ts"
+  },
+  "dependencies": {
+    "@mollie/api-client": "^4.4.0",
+    "@ons-mierloos-theater/shared": "*",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "tsx": "^4.21.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6"
+  }
+}

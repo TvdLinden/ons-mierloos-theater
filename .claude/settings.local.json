@@ -23,7 +23,15 @@
       "Bash(npx prettier:*)",
       "Bash(npx vitest:*)",
       "Bash(npm run lint:fix:*)",
-      "Bash(npm run format:*)"
+      "Bash(npm run format:*)",
+      "Bash(git diff:*)",
+      "Bash(git push:*)",
+      "Bash(npm run lint:*)",
+      "WebSearch",
+      "Bash(bash:*)",
+      "Bash(set -a)",
+      "Bash(. .env.local)",
+      "Bash(set +a)"
     ]
   }
 }

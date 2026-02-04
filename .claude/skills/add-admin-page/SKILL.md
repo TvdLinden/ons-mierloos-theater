@@ -24,6 +24,7 @@ lib/commands/{resource}.ts    # Write operations (if not existing)
 ```
 
 If filtering or pagination is needed on the list page, also create:
+
 ```
 app/admin/{resource}/{Resource}TableClient.tsx   # Client component
 app/api/admin/{resource}/search/route.ts         # Search API endpoint
@@ -34,11 +35,14 @@ app/api/admin/{resource}/search/route.ts         # Search API endpoint
 ## Conventions to follow
 
 ### Layout
+
 The shared `app/admin/layout.tsx` already provides fullscreen padding and role checks.
+
 - Do NOT wrap content in `max-w-*`, `container`, or `mx-auto`.
 - Do NOT call `requireRole()` again — it runs in the layout.
 
 ### Page header
+
 Every page starts with `AdminPageHeader`:
 
 ```tsx
@@ -48,24 +52,22 @@ import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
   title="Resource Title"
   breadcrumbs={[
     { label: 'Resource', href: '/admin/{resource}' },
-    { label: 'Current page label' },  // last item has no href
+    { label: 'Current page label' }, // last item has no href
   ]}
-  action={{ href: '/admin/{resource}/add', label: 'Nieuw item toevoegen' }}  // list page only
-/>
+  action={{ href: '/admin/{resource}/add', label: 'Nieuw item toevoegen' }} // list page only
+/>;
 ```
 
 The first breadcrumb item is always the list page with a link. The last item is the current page with no `href`.
 
 ### Data table — simple (no filters/pagination)
+
 Use `DataTable` directly with static data from a server query:
 
 ```tsx
 import { DataTable, EmptyRow } from '@/components/admin/DataTable';
 
-<DataTable
-  title="Resource"
-  headers={['Kolom 1', 'Kolom 2', 'Acties']}
->
+<DataTable title="Resource" headers={['Kolom 1', 'Kolom 2', 'Acties']}>
   {items.length === 0 ? (
     <EmptyRow colSpan={3} message="Nog geen items" />
   ) : (
@@ -76,10 +78,11 @@ import { DataTable, EmptyRow } from '@/components/admin/DataTable';
       </tr>
     ))
   )}
-</DataTable>
+</DataTable>;
 ```
 
 ### Data table — with filters and pagination
+
 Follow the pattern in `app/admin/sales/OrderSearchClient.tsx` and `app/admin/shows/ShowsTableClient.tsx`:
 
 1. Create an API endpoint at `app/api/admin/{resource}/search/route.ts` that accepts query params (`search`, `status`, `offset`, `limit`, etc.) and returns `{ data, total, totalPages }`.
@@ -91,29 +94,32 @@ Follow the pattern in `app/admin/sales/OrderSearchClient.tsx` and `app/admin/sho
 3. Import the client component into the list `page.tsx` and render it.
 
 ### Data access layer
+
 - **Queries** (reads): `lib/queries/{resource}.ts` — functions like `getAll{Resource}()`, `get{Resource}ById(id)`
 - **Commands** (writes): `lib/commands/{resource}.ts` — functions like `create{Resource}(data)`, `update{Resource}(id, data)`, `delete{Resource}(id)`
 - Import db types from `@/lib/db`
 - Import table definitions from `@/lib/db/schema`
 
 ### Add / Edit pages
+
 Both use `AdminPageHeader` with appropriate breadcrumbs. The form can be a shared component (e.g. `{Resource}Form.tsx`) or inline server actions — match the pattern used by similar resources in the project.
 
 ### Language
+
 All UI text must be in Dutch. Common terms:
 
-| English | Dutch |
-|---|---|
-| Add | Toevoegen |
-| Edit | Bewerken |
-| Delete | Verwijderen |
-| Save | Opslaan |
-| Cancel | Annuleren |
-| Search | Zoeken |
-| All | Alle |
+| English        | Dutch               |
+| -------------- | ------------------- |
+| Add            | Toevoegen           |
+| Edit           | Bewerken            |
+| Delete         | Verwijderen         |
+| Save           | Opslaan             |
+| Cancel         | Annuleren           |
+| Search         | Zoeken              |
+| All            | Alle                |
 | No items found | Geen items gevonden |
-| Created | Aangemaakt |
-| Updated | Bijgewerkt |
+| Created        | Aangemaakt          |
+| Updated        | Bijgewerkt          |
 
 ---
 

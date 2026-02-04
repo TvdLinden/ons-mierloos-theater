@@ -1,0 +1,20 @@
+FROM node:20-alpine
+WORKDIR /app
+
+# Copy workspace package manifests (all three needed for npm ci)
+COPY package.json package-lock.json ./
+COPY shared/package.json shared/
+COPY web/package.json web/
+COPY worker/package.json worker/
+
+RUN npm ci --omit=dev
+
+# Copy source
+COPY shared/lib shared/lib
+COPY worker worker
+
+# Port for health checks
+EXPOSE 8080
+
+# tsx is installed via worker/package.json; env vars injected by the runtime
+CMD ["node", "--import", "tsx", "worker/scripts/start-worker.ts"]
