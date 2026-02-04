@@ -158,6 +158,7 @@ describe('processCheckout Integration Tests', () => {
           quantity: 1,
           orderId: 'order-123',
           pricePerTicket: '35.00',
+          wheelchairAccess: false,
         },
       ]);
 

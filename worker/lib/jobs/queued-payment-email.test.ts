@@ -2,6 +2,10 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { createJob, calculateNextRetry } from '@ons-mierloos-theater/shared/jobs/jobProcessor';
 import { sendQueuedPaymentEmail } from '@ons-mierloos-theater/shared/utils/email';
 
+vi.mock('@ons-mierloos-theater/shared/utils/email', () => ({
+  sendQueuedPaymentEmail: vi.fn(),
+}));
+
 describe('Queued Payment Email Workflow', () => {
   beforeEach(() => {
     vi.clearAllMocks();
