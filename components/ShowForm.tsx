@@ -240,7 +240,6 @@ export default function ShowForm({
 
         <DataTable
           title={'Voorstellingen'}
-          emptyMessage="Nog geen voorstellingen toegevoegd"
           headers={['Datum & Tijd', 'Prijs', 'Zitplaatsen', 'Beschikbaar', 'Status', 'Acties']}
           onAddClickedAction={handleAddPerformance}
         >

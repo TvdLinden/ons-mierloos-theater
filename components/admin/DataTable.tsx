@@ -1,6 +1,6 @@
 'use client';
 
-import { JSX, MouseEventHandler, ReactNode, useRef, useState } from 'react';
+import { JSX, MouseEventHandler, ReactNode, useState } from 'react';
 import { Button } from '../ui';
 import { ExportData } from '@/lib/utils/export';
 import { ExportDropdown } from './ExportDropdown';
@@ -12,20 +12,64 @@ import {
   PaginationLink,
   PaginationPrevious,
   PaginationNext,
+  PaginationEllipsis,
 } from '../ui/pagination';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { ChevronDown, ChevronsUpDown, ChevronUp, Filter } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-type FilterState = {
+export type FilterState = {
   [key: string]: string | boolean;
 };
 
-type FilterDefinition = {
+export type FilterDefinition = {
   label: string;
   key: string;
   filterType: 'text' | 'date' | 'select';
   filterOptions?: Array<{ label: string; value: string }>;
+  placeholder?: string;
 };
+
+/**
+ * Returns an array of page numbers and 'ellipsis' markers for pagination display.
+ * Shows first page, last page, and a window around the current page.
+ */
+function getPaginationRange(currentPage: number, totalPages: number): (number | 'ellipsis')[] {
+  const delta = 1; // Pages to show on each side of current
+  const range: (number | 'ellipsis')[] = [];
+
+  // For small page counts, show all pages
+  if (totalPages <= 7) {
+    return Array.from({ length: totalPages }, (_, i) => i);
+  }
+
+  // Always include first page
+  range.push(0);
+
+  // Calculate start and end of the window around current page
+  const windowStart = Math.max(1, currentPage - delta);
+  const windowEnd = Math.min(totalPages - 2, currentPage + delta);
+
+  // Add ellipsis after first page if needed
+  if (windowStart > 1) {
+    range.push('ellipsis');
+  }
+
+  // Add pages in the window
+  for (let i = windowStart; i <= windowEnd; i++) {
+    range.push(i);
+  }
+
+  // Add ellipsis before last page if needed
+  if (windowEnd < totalPages - 2) {
+    range.push('ellipsis');
+  }
+
+  // Always include last page
+  range.push(totalPages - 1);
+
+  return range;
+}
 
 type DataTableProps = {
   title?: string;
@@ -41,8 +85,8 @@ type DataTableProps = {
   sortDir?: 'asc' | 'desc';
   onSortAction?: (sortKey: string) => void;
   children: ReactNode;
-  emptyMessage?: string;
   onAddClickedAction?: MouseEventHandler<HTMLButtonElement>;
+  addButtonLabel?: string;
   getExportDataAction?: () => Promise<ExportData>;
   filters?: FilterState;
   onFiltersChangeAction?: (filters: FilterState) => void;
@@ -60,6 +104,7 @@ export function DataTable({
   onSortAction,
   children,
   onAddClickedAction,
+  addButtonLabel = 'Toevoegen',
   getExportDataAction,
   filters = {},
   onFiltersChangeAction,
@@ -68,7 +113,6 @@ export function DataTable({
   totalPages = 1,
   onPageChangeAction,
 }: DataTableProps) {
-  const tableRef = useRef<HTMLTableElement>(null);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   const handleFilterChange = (key: string, value: string) => {
@@ -101,7 +145,7 @@ export function DataTable({
                         {filterDef.filterType === 'text' && (
                           <input
                             type="text"
-                            placeholder={`Filter by ${filterDef.label.toLowerCase()}`}
+                            placeholder={filterDef.placeholder || `Zoeken...`}
                             value={currentValue}
                             onChange={(e) => handleFilterChange(filterDef.key, e.target.value)}
                             className="px-3 py-2 text-sm border border-zinc-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary"
@@ -158,13 +202,13 @@ export function DataTable({
           )}
           {onAddClickedAction && (
             <Button type="button" className="ml-auto" onClick={onAddClickedAction}>
-              Add
+              {addButtonLabel}
             </Button>
           )}
         </div>
       )}
       <div className="overflow-x-auto">
-        <table className="w-full" ref={tableRef}>
+        <table className="w-full">
           <thead className="bg-zinc-50">
             <tr>
               {headers.map((header, idx) => {
@@ -179,6 +223,11 @@ export function DataTable({
                   );
                 }
                 const isSorted = sortBy === header.sortKey;
+                const ariaSort = isSorted
+                  ? sortDir === 'asc'
+                    ? 'ascending'
+                    : 'descending'
+                  : undefined;
                 return (
                   <th
                     key={idx}
@@ -188,6 +237,7 @@ export function DataTable({
                         ? () => onSortAction(header.sortKey!)
                         : undefined
                     }
+                    aria-sort={ariaSort}
                   >
                     {header.label}
                     {header.sortable && header.sortKey && (
@@ -226,20 +276,26 @@ export function DataTable({
                   />
                 </PaginationItem>
               )}
-              {Array.from({ length: totalPages }, (_, i) => (
-                <PaginationItem key={i}>
-                  <PaginationLink
-                    href="#"
-                    isActive={i === currentPage}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      onPageChangeAction(i);
-                    }}
-                  >
-                    {i + 1}
-                  </PaginationLink>
-                </PaginationItem>
-              ))}
+              {getPaginationRange(currentPage, totalPages).map((page, idx) =>
+                page === 'ellipsis' ? (
+                  <PaginationItem key={`ellipsis-${idx}`}>
+                    <PaginationEllipsis />
+                  </PaginationItem>
+                ) : (
+                  <PaginationItem key={page}>
+                    <PaginationLink
+                      href="#"
+                      isActive={page === currentPage}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        onPageChangeAction(page);
+                      }}
+                    >
+                      {page + 1}
+                    </PaginationLink>
+                  </PaginationItem>
+                ),
+              )}
               {currentPage < totalPages - 1 && (
                 <PaginationItem>
                   <PaginationNext
@@ -268,11 +324,14 @@ export function Row({ children, className }: RowProps) {
   return <tr className={className}>{children}</tr>;
 }
 
-type ColumnProps = { children: ReactNode } & JSX.IntrinsicElements['td'];
+type ColumnProps = { children: ReactNode; className?: string } & Omit<
+  JSX.IntrinsicElements['td'],
+  'className'
+>;
 
-export function Column({ children, ...props }: ColumnProps) {
+export function Column({ children, className, ...props }: ColumnProps) {
   return (
-    <td {...props} className="px-6 py-8 text-center text-zinc-500">
+    <td {...props} className={cn('px-6 py-8 text-center text-zinc-500', className)}>
       {children}
     </td>
   );
