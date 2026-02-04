@@ -1,4 +1,3 @@
-import { requireRole } from '@/lib/utils/auth';
 import { getShowByIdWithPerformances } from '@/lib/queries/shows';
 import { redirect, notFound } from 'next/navigation';
 import { Card, Button } from '@/components/ui';
@@ -12,7 +11,6 @@ type Props = {
 };
 
 export default async function ShowPerformancesPage({ params }: Props) {
-  await requireRole(['admin', 'contributor']);
   const { id } = await params;
 
   const show = await getShowByIdWithPerformances(id);
@@ -72,6 +70,7 @@ export default async function ShowPerformancesPage({ params }: Props) {
         subtitle={show.subtitle || undefined}
         breadcrumbs={[
           { label: 'Voorstellingen', href: '/admin/shows' },
+          { label: show.title, href: `/admin/shows/${id}` },
           { label: 'Speeltijden' },
         ]}
         action={

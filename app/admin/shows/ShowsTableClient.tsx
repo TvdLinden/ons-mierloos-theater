@@ -308,7 +308,11 @@ export function ShowsTableClient({ onStatusChange }: ShowsTableClientProps) {
             return (
               <tr key={show.id} className="hover:bg-zinc-50">
                 <td className="px-6 py-4">
-                  <div className="font-medium text-primary">{show.title}</div>
+                  <Link href={`/admin/shows/${show.id}`}>
+                    <div className="font-medium text-primary hover:underline cursor-pointer">
+                      {show.title}
+                    </div>
+                  </Link>
                 </td>
                 <td className="px-6 py-4 text-zinc-600 text-sm">{show.subtitle || '-'}</td>
                 <td className="px-6 py-4 text-zinc-600 text-sm">
