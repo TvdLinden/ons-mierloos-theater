@@ -40,7 +40,7 @@ export function SeatMap({
         <div key={rowIndex} className="flex items-center gap-4">
           {/* Row label */}
           <div className="w-8 text-right">
-            <span className="text-sm font-semibold text-slate-300">Row {rowIndex + 1}</span>
+            <span className="text-sm font-semibold text-slate-300">Rij {rowIndex + 1}</span>
           </div>
 
           {/* Seats container with zone indicators */}
@@ -90,7 +90,7 @@ export function SeatMap({
                       ${isWheelchair && isReserved ? 'ring-2 ring-blue-400' : ''}
                       active:scale-95
                     `}
-                    title={`${isWheelchair && isReserved ? '♿ ' : ''}Row ${rowIndex + 1}, Seat ${seatNumber}`}
+                    title={`${isWheelchair && isReserved ? '♿ ' : ''}Rij ${rowIndex + 1}, Zitplaats ${seatNumber}`}
                   >
                     {seatNumber}
                   </button>
@@ -98,9 +98,9 @@ export function SeatMap({
                   {/* Tooltip */}
                   <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
                     {isWheelchair && isReserved ? '♿ ' : ''}
-                    {isReserved ? 'Reserved' : 'Available'} - Click to toggle
+                    {isReserved ? 'Gereserveerd' : 'Beschikbaar'} - Klik om te schakelen
                     {isReserved && <br />}
-                    {isReserved && 'Right-click to toggle wheelchair'}
+                    {isReserved && 'Rechtsklik om rolstoel in/uit te schakelen'}
                   </div>
                 </div>
               );
@@ -113,16 +113,16 @@ export function SeatMap({
       <div className="mt-8 pt-4 border-t border-slate-600">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs text-slate-300">
           <div>
-            <span className="font-semibold">Left Wheelchair Zone:</span>
-            <p className="text-slate-400">Seats 1-2</p>
+            <span className="font-semibold">Linker rolstoelzone:</span>
+            <p className="text-slate-400">Zitplaatsen 1-2</p>
           </div>
           <div>
-            <span className="font-semibold">Normal Fill Zone:</span>
-            <p className="text-slate-400">Seats 3-{seatsPerRow - 2}</p>
+            <span className="font-semibold">Normale vulzone:</span>
+            <p className="text-slate-400">Zitplaatsen 3-{seatsPerRow - 2}</p>
           </div>
           <div>
-            <span className="font-semibold">Right Wheelchair Zone:</span>
-            <p className="text-slate-400">Seats {seatsPerRow - 1}-{seatsPerRow}</p>
+            <span className="font-semibold">Rechter rolstoelzone:</span>
+            <p className="text-slate-400">Zitplaatsen {seatsPerRow - 1}-{seatsPerRow}</p>
           </div>
         </div>
       </div>

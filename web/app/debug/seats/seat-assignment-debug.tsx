@@ -126,7 +126,7 @@ export function SeatAssignmentDebug() {
       {/* Main Seatmap */}
       <div className="lg:col-span-3">
         <div className="bg-slate-700 rounded-lg p-8 shadow-2xl">
-          <h2 className="text-2xl font-bold text-white mb-6">Seatmap ({rows} rows × {seatsPerRow} seats)</h2>
+          <h2 className="text-2xl font-bold text-white mb-6">Zitplaatskaart ({rows} rijen × {seatsPerRow} zitplaatsen)</h2>
           <SeatMap
             rows={rows}
             seatsPerRow={seatsPerRow}
@@ -143,23 +143,23 @@ export function SeatAssignmentDebug() {
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 bg-green-500 rounded"></div>
-              <span className="text-slate-300">Available</span>
+              <span className="text-slate-300">Beschikbaar</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 bg-red-500 rounded"></div>
-              <span className="text-slate-300">Reserved</span>
+              <span className="text-slate-300">Gereserveerd</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 bg-blue-500 rounded"></div>
-              <span className="text-slate-300">Wheelchair</span>
+              <span className="text-slate-300">Rolstoel</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 bg-yellow-400 rounded"></div>
-              <span className="text-slate-300">Last Assign</span>
+              <span className="text-slate-300">Laatste toewijzing</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 border-2 border-slate-300"></div>
-              <span className="text-slate-300">Zone borders</span>
+              <span className="text-slate-300">Zones grenzen</span>
             </div>
           </div>
         </div>
