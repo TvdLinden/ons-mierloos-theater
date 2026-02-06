@@ -3,7 +3,10 @@ import { db } from '@ons-mierloos-theater/shared/db';
 import { payments, orders } from '@ons-mierloos-theater/shared/db/schema';
 import { eq, inArray } from 'drizzle-orm';
 import { getMolliePaymentStatus } from '@ons-mierloos-theater/shared/commands/payments';
-import { updatePaymentStatus, updateOrderStatus } from '@ons-mierloos-theater/shared/commands/payments';
+import {
+  updatePaymentStatus,
+  updateOrderStatus,
+} from '@ons-mierloos-theater/shared/commands/payments';
 import { validateClientToken, hasScope } from '@/lib/auth/client-credentials';
 
 const SYNC_SECRET = process.env.PAYMENT_SYNC_SECRET;

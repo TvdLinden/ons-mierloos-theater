@@ -13,7 +13,12 @@ import {
   DialogFooter,
 } from '@/components/ui';
 import TagSelector from './TagSelector';
-import { PerformanceStatus, Tag, Performance, ImageMetadata } from '@ons-mierloos-theater/shared/db';
+import {
+  PerformanceStatus,
+  Tag,
+  Performance,
+  ImageMetadata,
+} from '@ons-mierloos-theater/shared/db';
 import { ImageSelector } from './ImageSelector';
 import { generateSlug } from '@ons-mierloos-theater/shared/utils/slug';
 import { useState } from 'react';
@@ -141,7 +146,11 @@ export default function ShowForm({
   return (
     <>
       <form action={formAction} className="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-6">
-        {state.error && <Alert variant="destructive" className="lg:col-span-2">{state.error}</Alert>}
+        {state.error && (
+          <Alert variant="destructive" className="lg:col-span-2">
+            {state.error}
+          </Alert>
+        )}
 
         {/* Left column */}
         <div className="space-y-6">
@@ -228,7 +237,9 @@ export default function ShowForm({
                   <button
                     type="button"
                     onClick={() => {
-                      const input = document.getElementById('depublicationDate') as HTMLInputElement;
+                      const input = document.getElementById(
+                        'depublicationDate',
+                      ) as HTMLInputElement;
                       if (input) input.value = '';
                     }}
                     className="px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors text-sm"
@@ -351,7 +362,6 @@ export default function ShowForm({
               value={JSON.stringify(perf)}
             />
           ))}
-
         </div>
 
         {/* Right column — Inhoud (sticky) */}

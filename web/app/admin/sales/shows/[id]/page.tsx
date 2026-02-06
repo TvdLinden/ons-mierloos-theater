@@ -4,7 +4,13 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { requireRole } from '@/lib/utils/auth';
 import { db } from '@ons-mierloos-theater/shared/db';
-import { performances, shows, lineItems, orders, tickets } from '@ons-mierloos-theater/shared/db/schema';
+import {
+  performances,
+  shows,
+  lineItems,
+  orders,
+  tickets,
+} from '@ons-mierloos-theater/shared/db/schema';
 import { eq, and, desc } from 'drizzle-orm';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { DataTable, EmptyRow } from '@/components/admin/DataTable';

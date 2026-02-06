@@ -1,6 +1,9 @@
 'use server';
 
-import { updateSiteSettings, updateSeoSettings } from '@ons-mierloos-theater/shared/queries/settings';
+import {
+  updateSiteSettings,
+  updateSeoSettings,
+} from '@ons-mierloos-theater/shared/queries/settings';
 import { requireRole } from '@/lib/utils/auth';
 import { revalidatePath } from 'next/cache';
 

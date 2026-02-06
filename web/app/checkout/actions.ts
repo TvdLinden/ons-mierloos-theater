@@ -6,7 +6,10 @@ import { createOrder } from '@ons-mierloos-theater/shared/commands/orders';
 import { createMolliePayment } from '@ons-mierloos-theater/shared/commands/payments';
 import { getUserByEmail } from '@ons-mierloos-theater/shared/queries/users';
 import { validateCoupon } from '@ons-mierloos-theater/shared/utils/couponValidation';
-import { validateCartItems, isPerformanceAvailable } from '@ons-mierloos-theater/shared/utils/validation';
+import {
+  validateCartItems,
+  isPerformanceAvailable,
+} from '@ons-mierloos-theater/shared/utils/validation';
 import { validateEmail } from '@ons-mierloos-theater/shared/utils/emailValidation';
 import {
   validateSeatsAvailable,

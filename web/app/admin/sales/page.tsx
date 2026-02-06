@@ -1,6 +1,10 @@
 import Link from 'next/link';
 import { requireRole } from '@/lib/utils/auth';
-import { getAllOrders, getSalesStats, getTicketSalesByPerformance } from '@ons-mierloos-theater/shared/queries/orders';
+import {
+  getAllOrders,
+  getSalesStats,
+  getTicketSalesByPerformance,
+} from '@ons-mierloos-theater/shared/queries/orders';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { StatCard } from '@/components/admin/StatCard';
 import { DataTable, EmptyRow } from '@/components/admin/DataTable';

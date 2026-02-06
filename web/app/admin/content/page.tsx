@@ -8,7 +8,10 @@ import { NewsArticlesList } from './NewsArticlesList';
 import { SocialMediaLinksList } from './SocialMediaLinksList';
 import { PagesList } from './PagesList';
 import { PreviewMode } from './PreviewMode';
-import { getHomepageContent, getAllNewsArticles } from '@ons-mierloos-theater/shared/queries/content';
+import {
+  getHomepageContent,
+  getAllNewsArticles,
+} from '@ons-mierloos-theater/shared/queries/content';
 import { getAllImages } from '@ons-mierloos-theater/shared/queries/images';
 import { getAllSocialMediaLinks } from '@ons-mierloos-theater/shared/queries/socialMedia';
 import { getAllPages } from '@ons-mierloos-theater/shared/queries/pages';

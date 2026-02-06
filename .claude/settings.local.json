@@ -31,7 +31,14 @@
       "Bash(bash:*)",
       "Bash(set -a)",
       "Bash(. .env.local)",
-      "Bash(set +a)"
+      "Bash(set +a)",
+      "Bash(chmod:*)",
+      "Bash(du:*)",
+      "Bash(docker volume:*)",
+      "Bash(docker exec:*)",
+      "Bash(docker compose:*)",
+      "Bash(lsof:*)",
+      "Bash(docker ps:*)"
     ]
   }
 }

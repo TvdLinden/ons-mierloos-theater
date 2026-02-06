@@ -16,7 +16,12 @@ import {
 } from '@ons-mierloos-theater/shared/commands/socialMedia';
 import { updatePage, createPage } from '@ons-mierloos-theater/shared/commands/pages';
 import { revalidatePath, revalidateTag } from 'next/cache';
-import type { LinkLocation, NewsArticle, SocialMediaLink, Page } from '@ons-mierloos-theater/shared/db';
+import type {
+  LinkLocation,
+  NewsArticle,
+  SocialMediaLink,
+  Page,
+} from '@ons-mierloos-theater/shared/db';
 
 export async function createNavigationLinkAction(data: {
   label: string;

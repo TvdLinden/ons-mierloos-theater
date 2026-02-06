@@ -4,7 +4,10 @@ import { users } from '@ons-mierloos-theater/shared/db/schema';
 import { getUserByEmail } from '@ons-mierloos-theater/shared/queries/users';
 import { hashPassword } from '@/lib/utils/auth';
 import { isPasswordPolicyCompliant } from '@ons-mierloos-theater/shared/utils/password-policy';
-import { generateVerificationToken, sendVerificationEmail } from '@ons-mierloos-theater/shared/utils/email';
+import {
+  generateVerificationToken,
+  sendVerificationEmail,
+} from '@ons-mierloos-theater/shared/utils/email';
 import SignupForm from './SignupForm';
 
 async function signupAction(formData: FormData) {

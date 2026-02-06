@@ -4,7 +4,10 @@ import { users } from '@ons-mierloos-theater/shared/db/schema';
 import { eq } from 'drizzle-orm';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/utils/auth';
-import { generateVerificationToken, sendVerificationEmail } from '@ons-mierloos-theater/shared/utils/email';
+import {
+  generateVerificationToken,
+  sendVerificationEmail,
+} from '@ons-mierloos-theater/shared/utils/email';
 
 // Verify the request is from an admin
 async function requireAdminAuth() {

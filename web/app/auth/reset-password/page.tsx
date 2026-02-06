@@ -1,6 +1,9 @@
 import { redirect, notFound } from 'next/navigation';
 import { hashPassword, validateResetToken } from '@/lib/utils/auth';
-import { isPasswordPolicyCompliant, getPasswordPolicyText } from '@ons-mierloos-theater/shared/utils/password-policy';
+import {
+  isPasswordPolicyCompliant,
+  getPasswordPolicyText,
+} from '@ons-mierloos-theater/shared/utils/password-policy';
 import { resetUserPassword } from '@ons-mierloos-theater/shared/commands/users';
 import ResetPasswordForm from './reset-password-form';
 

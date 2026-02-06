@@ -4,7 +4,10 @@ import { authOptions } from '@/lib/utils/auth';
 import { db } from '@ons-mierloos-theater/shared/db';
 import { users } from '@ons-mierloos-theater/shared/db/schema';
 import { eq, and, ne } from 'drizzle-orm';
-import { generateVerificationToken, sendVerificationEmail } from '@ons-mierloos-theater/shared/utils/email';
+import {
+  generateVerificationToken,
+  sendVerificationEmail,
+} from '@ons-mierloos-theater/shared/utils/email';
 
 export async function POST(request: NextRequest) {
   try {

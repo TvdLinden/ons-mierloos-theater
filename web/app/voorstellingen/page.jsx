@@ -1,4 +1,8 @@
-import { getUpcomingShows, getUpcomingShowsCount, getUpcomingMonths } from '@ons-mierloos-theater/shared/queries/shows';
+import {
+  getUpcomingShows,
+  getUpcomingShowsCount,
+  getUpcomingMonths,
+} from '@ons-mierloos-theater/shared/queries/shows';
 import { getAllTags } from '@ons-mierloos-theater/shared/queries/tags';
 import PerformanceCard from '@/components/PerformanceCard';
 import TagFilterClient from '@/components/TagFilterClient';

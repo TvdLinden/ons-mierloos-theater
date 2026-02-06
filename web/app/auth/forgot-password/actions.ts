@@ -3,7 +3,10 @@
 // redirect not needed here
 import { getUserByEmail } from '@ons-mierloos-theater/shared/queries/users';
 import { updateUser } from '@ons-mierloos-theater/shared/commands/users';
-import { generateVerificationToken, sendPasswordResetEmail } from '@ons-mierloos-theater/shared/utils/email';
+import {
+  generateVerificationToken,
+  sendPasswordResetEmail,
+} from '@ons-mierloos-theater/shared/utils/email';
 
 export async function forgotPasswordAction(
   prevState: { error?: string; success?: boolean },
