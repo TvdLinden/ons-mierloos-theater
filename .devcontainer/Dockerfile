@@ -12,3 +12,9 @@ RUN echo "node ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers.d/node
 RUN git config --global --add safe.directory /workspace
 
 WORKDIR /workspace
+
+# Pre-create directories and set ownership for volumes
+RUN mkdir -p /workspace/node_modules \
+    /workspace/.next \
+    /workspace/.turbo \
+    && chown -R node:node /workspace

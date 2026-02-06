@@ -6,21 +6,26 @@ services:
     volumes:
       - ..:/workspace:cached
       - node_modules:/workspace/node_modules
-      - /workspace/.next
-      - /workspace/.turbo
+      - next_cache:/workspace/.next
+      - turbo_cache:/workspace/.turbo
     ports:
       - "3000:3000"
     environment:
-      - TURBOPACK_CACHE_DIR=/tmp/.turbopack-cache
+      - NODE_ENV=development
+      - TURBOPACK_CACHE_DIR=/workspace/.turbo
       - NEXT_TELEMETRY_DISABLED=1
+      - WATCHPACK_POLLING=true
+      - CHOKIDAR_USEPOLLING=true  # Add this for better file watching
     env_file:
       - ../.env.local
     depends_on:
       db:
         condition: service_healthy
-    command: sleep infinity
+    command: sleep infinity  # postCreateCommand will start dev server
     networks:
       - dev-network
+    stdin_open: true
+    tty: true
 
   db:
     image: postgres:16-alpine
@@ -62,6 +67,8 @@ services:
 volumes:
   pgdata:
   node_modules:
+  next_cache:
+  turbo_cache:
 
 networks:
   dev-network:

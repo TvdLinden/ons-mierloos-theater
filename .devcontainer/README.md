@@ -376,14 +376,38 @@ Available versions: Node 18, 20, 22, 24 (check [devcontainers/images](https://gi
 
 ## Performance Tips
 
-### On macOS/Windows
+### Optimize Docker Desktop Resources (macOS/Windows)
 
-The dev container uses named volumes for `node_modules` to avoid slow file I/O:
+**This is the #1 performance improvement!**
 
-- `node_modules` is stored in a Docker volume (fast I/O)
-- Your source code is mounted from your machine (so edits are immediately visible)
+1. Open **Docker Desktop Settings**
+2. Go to **Resources** tab
+3. Increase allocations:
+   - **CPU limit:** 6-8 cores (minimum 4)
+   - **Memory:** 6-8GB (minimum 4GB)
+   - **Swap:** 2GB
+   - **Disk image size:** 64GB+
+4. Click **Apply & Restart**
 
-This gives you the best of both: fast dependency access + live editing.
+### Volume Mount Performance
+
+The dev container is optimized for macOS/Windows with:
+
+- `:cached` flag on workspace mount - trades disk consistency for speed
+- `node_modules` in named Docker volume - fast I/O
+- `.next` and `.turbo` excluded from mount - let container build these
+- `TURBOPACK_CACHE_DIR` in /tmp - faster builds
+
+**Result:** Fast hot reload and builds despite mounted volumes.
+
+### If still slow, enable VirtioFS (Docker Desktop 4.6+)
+
+Docker Desktop settings:
+1. **Preferences** → **General**
+2. Enable **Use VirtioFS** (if available)
+3. Restart Docker
+
+VirtioFS provides better mount performance than osxfs.
 
 ### Clean Up Disk Space
 
@@ -396,7 +420,28 @@ docker volume prune
 
 # Full cleanup (careful—removes ALL unused Docker resources)
 docker system prune -a
+
+# Check Docker disk usage
+docker system df
 ```
+
+### Troubleshooting Slowness
+
+**If `npm run dev` is still slow:**
+
+1. Check Docker Desktop resource allocation (see above)
+2. Verify no large processes running on host (Activity Monitor)
+3. Try rebuilding the devcontainer:
+   ```bash
+   docker-compose -f .devcontainer/docker-compose.yml down -v
+   # Then reopen in VS Code: Dev Containers: Rebuild Container
+   ```
+4. Check container resource limits (shouldn't need adjustment if host has resources)
+
+**For Next.js builds specifically:**
+- SWC compiler is used (faster than Babel)
+- Turbopack cache is in `/tmp` (faster rebuilds)
+- Telemetry is disabled (reduces overhead)
 
 ## Next Steps
 
