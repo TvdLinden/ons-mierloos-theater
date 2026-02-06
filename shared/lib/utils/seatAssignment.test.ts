@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getContiguousBlocks, pickBestBlock, assignSeats } from './seatAssignment';
+import { getContiguousBlocks, pickBestBlock, findAdjacentBlock, assignSeats } from './seatAssignment';
 import type { Seat } from './seatAssignment';
 
 // ---------------------------------------------------------------------------
@@ -139,6 +139,61 @@ describe('pickBestBlock', () => {
   it('takes seats from the start of the block', () => {
     // [5,6,7,8,9] qty 2 → [5,6], remainder stays contiguous at [7,8,9]
     expect(pickBestBlock([[5, 6, 7, 8, 9]], 2, false)).toEqual([5, 6]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// findAdjacentBlock
+// ---------------------------------------------------------------------------
+
+describe('findAdjacentBlock', () => {
+  it('finds a 2×2 block on an empty venue', () => {
+    const result = findAdjacentBlock(new Set(), 3, 10, 4);
+    expect(result).not.toBeNull();
+    expect(labels(result!)).toEqual(['A1', 'A2', 'B1', 'B2']);
+  });
+
+  it('finds a 2×3 block for 5 seats', () => {
+    const result = findAdjacentBlock(new Set(), 3, 10, 5);
+    expect(result).not.toBeNull();
+    // 2 rows × 3 wide = 6, takes 5: row A gets 3, row B gets 2
+    expect(labels(result!)).toEqual(['A1', 'A2', 'A3', 'B1', 'B2']);
+  });
+
+  it('skips rows with occupied seats in the rectangle', () => {
+    const occ = occupied('A1');
+    const result = findAdjacentBlock(occ, 3, 10, 4);
+    expect(result).not.toBeNull();
+    // A1 occupied → shifts to A2,A3 / B2,B3
+    expect(labels(result!)).toEqual(['A2', 'A3', 'B2', 'B3']);
+  });
+
+  it('returns null when no rectangle fits', () => {
+    // Checkerboard pattern — no 2×2 block possible
+    const occ = occupied('A1', 'A3', 'A5', 'B2', 'B4', 'B6', 'C1', 'C3', 'C5');
+    const result = findAdjacentBlock(occ, 3, 6, 4);
+    expect(result).toBeNull();
+  });
+
+  it('returns null for quantity 1 (needs at least 2 rows)', () => {
+    const result = findAdjacentBlock(new Set(), 3, 10, 1);
+    expect(result).toBeNull();
+  });
+
+  it('prefers fewer rows (wider block)', () => {
+    // For 6 seats: 2 rows × 3 wide is tried before 3 rows × 2 wide
+    const result = findAdjacentBlock(new Set(), 4, 10, 6);
+    expect(result).not.toBeNull();
+    expect(labels(result!)).toEqual(['A1', 'A2', 'A3', 'B1', 'B2', 'B3']);
+  });
+
+  it('falls back to more rows when wide block is blocked', () => {
+    // Block all 3-wide possibilities in rows A-B by occupying seat 2 in both
+    const occ = occupied('A2', 'B2', 'C2');
+    // For qty 4: 2×2 block starting at seat 1 blocked (A2 occupied), try seat 3 etc.
+    const result = findAdjacentBlock(occ, 3, 6, 4);
+    expect(result).not.toBeNull();
+    expect(labels(result!)).toEqual(['A3', 'A4', 'B3', 'B4']);
   });
 });
 
@@ -318,10 +373,10 @@ describe('assignSeats — edge cases', () => {
     expect(labels(assignSeats(new Set(), 2, 4, 2, true))).toEqual(['A3', 'A4']);
   });
 
-  it('quantity larger than seatsPerRow falls back to fluid fill across rows', () => {
+  it('quantity larger than seatsPerRow uses adjacent block across rows', () => {
     // 3 rows of 4 seats, qty 5. No single row can hold 5 contiguous seats.
-    // Fluid fill picks A1, A2, A3, A4, B1.
-    expect(labels(assignSeats(new Set(), 3, 4, 5, false))).toEqual(['A1', 'A2', 'A3', 'A4', 'B1']);
+    // Adjacent block: 2 rows × 3 wide, takes 5 → A1,A2,A3,B1,B2.
+    expect(labels(assignSeats(new Set(), 3, 4, 5, false))).toEqual(['A1', 'A2', 'A3', 'B1', 'B2']);
   });
 });
 

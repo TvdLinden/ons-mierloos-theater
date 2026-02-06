@@ -26,6 +26,50 @@ export function getContiguousBlocks(
 }
 
 /**
+ * Try to fit seats in a rectangular block across consecutive rows.
+ * For example, 4 seats could be placed as 2 seats × 2 rows (seats at the same
+ * column positions in each row).  Prefers fewer rows (= wider blocks) so the
+ * group stays close together.
+ */
+export function findAdjacentBlock(
+  occupiedSeats: Set<string>,
+  rows: number,
+  seatsPerRow: number,
+  quantity: number,
+): Seat[] | null {
+  for (let numRows = 2; numRows <= Math.min(quantity, rows); numRows++) {
+    const width = Math.ceil(quantity / numRows);
+    if (width * numRows < quantity) continue;
+
+    for (let startRow = 0; startRow <= rows - numRows; startRow++) {
+      for (let startSeat = 1; startSeat <= seatsPerRow - width + 1; startSeat++) {
+        let allFree = true;
+        outer: for (let r = startRow; r < startRow + numRows; r++) {
+          for (let s = startSeat; s < startSeat + width; s++) {
+            if (occupiedSeats.has(`${r}-${s}`)) {
+              allFree = false;
+              break outer;
+            }
+          }
+        }
+
+        if (allFree) {
+          const seats: Seat[] = [];
+          for (let r = startRow; r < startRow + numRows && seats.length < quantity; r++) {
+            for (let s = startSeat; s < startSeat + width && seats.length < quantity; s++) {
+              seats.push({ rowIndex: r, seatNumber: s });
+            }
+          }
+          if (seats.length === quantity) return seats;
+        }
+      }
+    }
+  }
+
+  return null;
+}
+
+/**
  * Pick the best block from candidates for a given quantity.
  * Preference: exact fit > remainder >= 2 > remainder == 1 (if allowed).
  * Returns the seats to assign (from the start of the block), or null.
@@ -146,7 +190,11 @@ export function assignSeats(
     if (block) return block.map((s) => ({ rowIndex: row, seatNumber: s }));
   }
 
-  // Phase 5: fluid fill — grab any available seats across rows
+  // Phase 5: adjacent block — fit across consecutive rows in a rectangle (e.g. 2×2)
+  const adjacentResult = findAdjacentBlock(occupiedSeats, rows, seatsPerRow, quantity);
+  if (adjacentResult) return adjacentResult;
+
+  // Phase 6: fluid fill — grab any available seats across rows
   const seats: Seat[] = [];
   for (let row = 0; row < rows && seats.length < quantity; row++) {
     for (let s = 1; s <= seatsPerRow && seats.length < quantity; s++) {
