@@ -40,24 +40,24 @@ export function SeatMap({
         <div key={rowIndex} className="flex items-center gap-4">
           {/* Row label */}
           <div className="w-8 text-right">
-            <span className="text-sm font-semibold text-slate-300">Rij {rowIndex + 1}</span>
+            <span className="text-sm font-semibold text-slate-700">Rij {rowIndex + 1}</span>
           </div>
 
           {/* Seats container with zone indicators */}
           <div className="flex gap-1 relative">
             {/* Left zone indicator */}
             {seatsPerRow >= 2 && (
-              <div className="absolute -left-0.5 top-0 bottom-0 w-16 border-l-2 border-slate-500 opacity-40"></div>
+              <div className="absolute -left-0.5 top-0 bottom-0 w-16 border-l-2 border-slate-300 opacity-40"></div>
             )}
 
             {/* Normal zone indicator */}
             {normalMax >= normalMin && (
-              <div className="absolute top-0 bottom-0 border-l-2 border-slate-500 opacity-40" style={{ left: `${(normalMin - 1) * 40 + 64}px` }}></div>
+              <div className="absolute top-0 bottom-0 border-l-2 border-slate-300 opacity-40" style={{ left: `${(normalMin - 1) * 40 + 64}px` }}></div>
             )}
 
             {/* Right zone indicator */}
             {seatsPerRow > normalMax && (
-              <div className="absolute top-0 bottom-0 border-l-2 border-slate-500 opacity-40" style={{ left: `${(normalMax) * 40 + 64}px` }}></div>
+              <div className="absolute top-0 bottom-0 border-l-2 border-slate-300 opacity-40" style={{ left: `${(normalMax) * 40 + 64}px` }}></div>
             )}
 
             {/* Seats */}
@@ -96,7 +96,7 @@ export function SeatMap({
                   </button>
 
                   {/* Tooltip */}
-                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10 shadow-lg">
                     {isWheelchair && isReserved ? '♿ ' : ''}
                     {isReserved ? 'Gereserveerd' : 'Beschikbaar'} - Klik om te schakelen
                     {isReserved && <br />}
@@ -110,19 +110,19 @@ export function SeatMap({
       ))}
 
       {/* Zone Legend Below Map */}
-      <div className="mt-8 pt-4 border-t border-slate-600">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs text-slate-300">
+      <div className="mt-8 pt-4 border-t border-slate-200">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs text-slate-600">
           <div>
-            <span className="font-semibold">Linker rolstoelzone:</span>
-            <p className="text-slate-400">Zitplaatsen 1-2</p>
+            <span className="font-semibold text-slate-900">Linker rolstoelzone:</span>
+            <p className="text-slate-500">Zitplaatsen 1-2</p>
           </div>
           <div>
-            <span className="font-semibold">Normale vulzone:</span>
-            <p className="text-slate-400">Zitplaatsen 3-{seatsPerRow - 2}</p>
+            <span className="font-semibold text-slate-900">Normale vulzone:</span>
+            <p className="text-slate-500">Zitplaatsen 3-{seatsPerRow - 2}</p>
           </div>
           <div>
-            <span className="font-semibold">Rechter rolstoelzone:</span>
-            <p className="text-slate-400">Zitplaatsen {seatsPerRow - 1}-{seatsPerRow}</p>
+            <span className="font-semibold text-slate-900">Rechter rolstoelzone:</span>
+            <p className="text-slate-500">Zitplaatsen {seatsPerRow - 1}-{seatsPerRow}</p>
           </div>
         </div>
       </div>

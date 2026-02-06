@@ -125,8 +125,8 @@ export function SeatAssignmentDebug() {
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
       {/* Main Seatmap */}
       <div className="lg:col-span-3">
-        <div className="bg-slate-700 rounded-lg p-8 shadow-2xl">
-          <h2 className="text-2xl font-bold text-white mb-6">Zitplaatskaart ({rows} rijen × {seatsPerRow} zitplaatsen)</h2>
+        <div className="bg-white rounded-lg p-8 shadow-md border border-slate-200">
+          <h2 className="text-2xl font-bold text-slate-900 mb-6">Zitplaatskaart ({rows} rijen × {seatsPerRow} zitplaatsen)</h2>
           <SeatMap
             rows={rows}
             seatsPerRow={seatsPerRow}
@@ -139,27 +139,27 @@ export function SeatAssignmentDebug() {
         </div>
 
         {/* Legend */}
-        <div className="mt-6 bg-slate-700 rounded-lg p-4 shadow-lg">
+        <div className="mt-6 bg-white rounded-lg p-4 shadow-md border border-slate-200">
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 bg-green-500 rounded"></div>
-              <span className="text-slate-300">Beschikbaar</span>
+              <span className="text-slate-700">Beschikbaar</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 bg-red-500 rounded"></div>
-              <span className="text-slate-300">Gereserveerd</span>
+              <span className="text-slate-700">Gereserveerd</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 bg-blue-500 rounded"></div>
-              <span className="text-slate-300">Rolstoel</span>
+              <span className="text-slate-700">Rolstoel</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 bg-yellow-400 rounded"></div>
-              <span className="text-slate-300">Laatste toewijzing</span>
+              <span className="text-slate-700">Laatste toewijzing</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 border-2 border-slate-300"></div>
-              <span className="text-slate-300">Zones grenzen</span>
+              <div className="w-4 h-4 border-2 border-slate-400"></div>
+              <span className="text-slate-700">Zones grenzen</span>
             </div>
           </div>
         </div>
