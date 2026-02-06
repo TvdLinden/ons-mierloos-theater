@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { assignSeats } from '@/shared/lib/utils/seatAssignment';
+import { assignSeats } from '@ons-mierloos-theater/shared/utils/seatAssignment';
 import { SeatMap } from './seat-map';
 import { ControlPanel } from './control-panel';
 

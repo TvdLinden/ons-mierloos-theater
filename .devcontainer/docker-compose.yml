@@ -4,12 +4,15 @@ services:
       context: ..
       dockerfile: .devcontainer/Dockerfile
     volumes:
-      - ..:/workspace
+      - ..:/workspace:cached
       - node_modules:/workspace/node_modules
+      - /workspace/.next
+      - /workspace/.turbo
     ports:
       - "3000:3000"
     environment:
-      - NODE_ENV=development
+      - TURBOPACK_CACHE_DIR=/tmp/.turbopack-cache
+      - NEXT_TELEMETRY_DISABLED=1
     env_file:
       - ../.env.local
     depends_on:

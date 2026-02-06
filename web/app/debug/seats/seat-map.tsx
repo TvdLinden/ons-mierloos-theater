@@ -1,6 +1,6 @@
 'use client';
 
-import { Seat } from '@/shared/lib/utils/seatAssignment';
+import { Seat } from '@ons-mierloos-theater/shared/utils/seatAssignment';
 
 interface SeatMapProps {
   rows: number;
