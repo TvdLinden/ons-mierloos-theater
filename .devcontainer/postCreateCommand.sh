@@ -1,9 +1,10 @@
 #!/bin/bash
 set -e
 
-# Fix permissions first
-echo "🔧 Setting up permissions..."
-chown -R node:node /workspace 2>/dev/null || true
+# Fix permissions first (using sudo since node user needs root for chown)
+echo "🔧 Fixing workspace permissions..."
+sudo chown -R node:node /workspace 2>/dev/null || true
+sudo chmod -R u+w /workspace/node_modules 2>/dev/null || true
 
 echo "🚀 Setting up development environment..."
 
@@ -25,9 +26,14 @@ else
   echo "✅ .env.local already exists"
 fi
 
-# Step 2: Install dependencies
-echo "📦 Installing dependencies..."
-npm install
+# Step 2: Clean up node_modules volume (keep lock file for reproducibility)
+echo "🧹 Cleaning incompatible bindings from node_modules volume..."
+sudo rm -rf node_modules 2>/dev/null || true
+npm cache clean --force 2>/dev/null || true
+
+# Step 3: Install dependencies using lock file (reproduces production exactly)
+echo "📦 Installing dependencies from lock file..."
+npm ci --legacy-peer-deps || npm install --legacy-peer-deps
 
 # Step 3: Wait for PostgreSQL to be ready
 echo "⏳ Waiting for PostgreSQL to be ready..."

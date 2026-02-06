@@ -218,6 +218,33 @@ docker-compose --file .devcontainer/docker-compose.yml restart db
 npm install
 ```
 
+### Issue: npm error EACCES "sharp-darwin-arm64" or permission denied during npm install
+
+**Cause:** Host machine's macOS ARM64 bindings (darwin-arm64) are incompatible with the Linux container. If you've run `npm install` on your macOS host, those bindings get mounted into the container and cause permission errors.
+
+**Solution:**
+
+1. **Clean up on host machine (outside devcontainer):**
+```bash
+# Remove host node_modules with macOS bindings (KEEP package-lock.json!)
+rm -rf node_modules
+
+# Remove the Docker volume to ensure clean install
+docker volume rm ons-mierloos-theater_devcontainer_node_modules 2>/dev/null || true
+```
+
+2. **Rebuild devcontainer:**
+   - VS Code command palette: **Dev Containers: Rebuild Container**
+   - The postCreateCommand will use `npm ci` with the lock file for reproducible install
+
+**Why we keep package-lock.json:**
+- `npm ci` (clean install) uses the lock file to install exact versions
+- Ensures dev environment matches production deployments exactly
+- Prevents version inconsistencies across the team
+- The lock file is version controlled in git for reproducibility
+
+**Prevention:** Always run npm commands inside the devcontainer terminal (in VS Code), never on your host machine. The devcontainer has its own isolated `node_modules` volume that handles Linux bindings correctly.
+
 ### Issue: Database migrations fail on first setup
 
 **Cause:** Minor race condition between db startup and migration

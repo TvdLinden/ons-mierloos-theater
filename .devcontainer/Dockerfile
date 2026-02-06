@@ -5,6 +5,9 @@ RUN apt-get update && apt-get install -y \
     postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 
+# Allow node user to run sudo without password for setup scripts
+RUN echo "node ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers.d/node
+
 # Configure git to trust the workspace directory
 RUN git config --global --add safe.directory /workspace
 
