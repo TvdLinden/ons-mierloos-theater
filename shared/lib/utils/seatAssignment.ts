@@ -98,12 +98,12 @@ export function pickBestBlock(
  * Assign seats for a line item based on wheelchair access needs.
  *
  * Seat layout per row:
- *   [1, 2]     = left wheelchair zone
+ *   [1, 2]     = left wheelchair zone (preferred for wheelchair orders)
  *   [3 .. N-2] = normal fill zone
- *   [N-1, N]   = right wheelchair zone (preferred for wheelchair orders)
+ *   [N-1, N]   = right wheelchair zone
  *
- * Normal orders fill the normal zone first, then left zone, then right zone as last resort.
- * Wheelchair orders get the right end first, then left end, then fall back to normal logic.
+ * Normal orders fill the normal zone first, then right zone, then left zone as last resort.
+ * Wheelchair orders get the left end first, then right end, then fall back to normal logic.
  */
 export function assignSeats(
   occupiedSeats: Set<string>,
@@ -114,11 +114,27 @@ export function assignSeats(
 ): Seat[] {
   const normalMin = 3;
   const normalMax = seatsPerRow - 2;
-  const leftAndNormalMax = seatsPerRow - 2; // seats 1 to N-2 (excludes right zone)
+  const rightAndNormalMin = 3; // seats 3 to N (excludes left zone)
 
   // --- WHEELCHAIR PATH ---
   if (wheelchairAccess) {
-    // Phase 1: right end of row — seats (N-Q+1) to N
+    // Phase 1: left end of row — seats 1 to Q
+    for (let row = 0; row < rows; row++) {
+      let allFree = true;
+      for (let s = 1; s <= quantity; s++) {
+        if (occupiedSeats.has(`${row}-${s}`)) {
+          allFree = false;
+          break;
+        }
+      }
+      if (allFree) {
+        const seats: Seat[] = [];
+        for (let s = 1; s <= quantity; s++) seats.push({ rowIndex: row, seatNumber: s });
+        return seats;
+      }
+    }
+
+    // Phase 2: right end of row — seats (N-Q+1) to N
     for (let row = 0; row < rows; row++) {
       const startSeat = seatsPerRow - quantity + 1;
       if (startSeat < 1) continue;
@@ -136,22 +152,6 @@ export function assignSeats(
       }
     }
 
-    // Phase 2: left end of row — seats 1 to Q
-    for (let row = 0; row < rows; row++) {
-      let allFree = true;
-      for (let s = 1; s <= quantity; s++) {
-        if (occupiedSeats.has(`${row}-${s}`)) {
-          allFree = false;
-          break;
-        }
-      }
-      if (allFree) {
-        const seats: Seat[] = [];
-        for (let s = 1; s <= quantity; s++) seats.push({ rowIndex: row, seatNumber: s });
-        return seats;
-      }
-    }
-
     // Phase 3: fall through to normal seat logic below
   }
 
@@ -165,25 +165,25 @@ export function assignSeats(
     }
   }
 
-  // Phase 2: expand to include left zone (1 to N-2), no remainder == 1
-  if (leftAndNormalMax >= 1) {
+  // Phase 2: expand to include right zone (3 to N), no remainder == 1
+  if (seatsPerRow >= rightAndNormalMin) {
     for (let row = 0; row < rows; row++) {
-      const blocks = getContiguousBlocks(occupiedSeats, row, 1, leftAndNormalMax);
+      const blocks = getContiguousBlocks(occupiedSeats, row, rightAndNormalMin, seatsPerRow);
       const block = pickBestBlock(blocks, quantity, false);
       if (block) return block.map((s) => ({ rowIndex: row, seatNumber: s }));
     }
   }
 
-  // Phase 3: left + normal zone, accept remainder == 1
-  if (leftAndNormalMax >= 1) {
+  // Phase 3: right + normal zone, accept remainder == 1
+  if (seatsPerRow >= rightAndNormalMin) {
     for (let row = 0; row < rows; row++) {
-      const blocks = getContiguousBlocks(occupiedSeats, row, 1, leftAndNormalMax);
+      const blocks = getContiguousBlocks(occupiedSeats, row, rightAndNormalMin, seatsPerRow);
       const block = pickBestBlock(blocks, quantity, true);
       if (block) return block.map((s) => ({ rowIndex: row, seatNumber: s }));
     }
   }
 
-  // Phase 4: full row including right zone, accept remainder == 1
+  // Phase 4: full row including left zone, accept remainder == 1
   for (let row = 0; row < rows; row++) {
     const blocks = getContiguousBlocks(occupiedSeats, row, 1, seatsPerRow);
     const block = pickBestBlock(blocks, quantity, true);

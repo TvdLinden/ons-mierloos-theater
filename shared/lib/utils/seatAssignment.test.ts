@@ -230,34 +230,33 @@ describe('assignSeats — normal orders', () => {
     expect(labels(assignSeats(occ, ROWS, SEATS, 4, false))).toEqual(['B3', 'B4', 'B5', 'B6']);
   });
 
-  it('spills into the left zone when every row has remainder == 1 in normal zone', () => {
+  it('spills into the right zone when every row has remainder == 1 in normal zone', () => {
     // Normal zone is 6 seats (3-8). qty 5 → remainder 1 in every row → all skipped.
-    // Phase 2 includes left zone: block [1..8] = 8, remainder 3 → accepted.
+    // Phase 2 includes right zone: block [3..10] = 8, remainder 3 → accepted.
     expect(labels(assignSeats(new Set(), ROWS, SEATS, 5, false))).toEqual([
-      'A1',
-      'A2',
       'A3',
       'A4',
       'A5',
+      'A6',
+      'A7',
     ]);
   });
 
   it('accepts remainder == 1 in phase 3 when no better option exists', () => {
-    // 1 row, 6 seats.  Normal zone: 3-4 (2 seats). Left+normal: 1-4 (4 seats).
-    // qty 3 → normal too small, left+normal remainder 1 → phase 2 skips, phase 3 accepts.
-    expect(labels(assignSeats(new Set(), 1, 6, 3, false))).toEqual(['A1', 'A2', 'A3']);
+    // 1 row, 6 seats.  Normal zone: 3-4 (2 seats). Right+normal: 3-6 (4 seats).
+    // qty 3 → normal too small, right+normal remainder 1 → phase 2 skips, phase 3 accepts.
+    expect(labels(assignSeats(new Set(), 1, 6, 3, false))).toEqual(['A3', 'A4', 'A5']);
   });
 
-  it('uses the right zone only when left + normal cannot fit the group', () => {
+  it('uses the left zone only when right + normal cannot fit the group', () => {
     // 1 row, 6 seats.  Available: seats 4, 5 only.
-    // Normal (3-4): [4] too small.  Left+normal (1-4): [4] too small.
-    // Full row (1-6): [4,5] exact fit for qty 2.
+    // Normal (3-4): [4] too small.  Right+normal (3-6): A6 taken → [4,5] exact fit for qty 2.
     const occ = occupied('A1', 'A2', 'A3', 'A6');
     expect(labels(assignSeats(occ, 1, 6, 2, false))).toEqual(['A4', 'A5']);
   });
 
-  it('prefers the left zone over the right zone when normal is full', () => {
-    // All normal zones full; left zones still available.
+  it('prefers the right zone over the left zone when normal is full', () => {
+    // All normal zones full; right zones still available.
     const occ = occupied(
       'A3',
       'A4',
@@ -278,7 +277,7 @@ describe('assignSeats — normal orders', () => {
       'C7',
       'C8',
     );
-    expect(labels(assignSeats(occ, ROWS, SEATS, 2, false))).toEqual(['A1', 'A2']);
+    expect(labels(assignSeats(occ, ROWS, SEATS, 2, false))).toEqual(['A9', 'A10']);
   });
 
   it('fluid-fills non-contiguous seats when the venue is nearly full', () => {
@@ -312,18 +311,18 @@ describe('assignSeats — wheelchair orders', () => {
   const ROWS = 3;
   const SEATS = 10;
 
-  it('assigns the right end of the first row on an empty venue', () => {
-    expect(labels(assignSeats(new Set(), ROWS, SEATS, 2, true))).toEqual(['A9', 'A10']);
+  it('assigns the left end of the first row on an empty venue', () => {
+    expect(labels(assignSeats(new Set(), ROWS, SEATS, 2, true))).toEqual(['A1', 'A2']);
   });
 
-  it('moves to the next row when the right end is taken', () => {
-    const occ = occupied('A9', 'A10');
-    expect(labels(assignSeats(occ, ROWS, SEATS, 2, true))).toEqual(['B9', 'B10']);
+  it('moves to the next row when the left end is taken', () => {
+    const occ = occupied('A1', 'A2');
+    expect(labels(assignSeats(occ, ROWS, SEATS, 2, true))).toEqual(['B1', 'B2']);
   });
 
-  it('falls back to the left end when all right ends are taken', () => {
-    const occ = occupied('A9', 'A10', 'B9', 'B10', 'C9', 'C10');
-    expect(labels(assignSeats(occ, ROWS, SEATS, 2, true))).toEqual(['A1', 'A2']);
+  it('falls back to the right end when all left ends are taken', () => {
+    const occ = occupied('A1', 'A2', 'B1', 'B2', 'C1', 'C2');
+    expect(labels(assignSeats(occ, ROWS, SEATS, 2, true))).toEqual(['A9', 'A10']);
   });
 
   it('falls back to the normal zone when both ends of every row are taken', () => {
@@ -331,19 +330,17 @@ describe('assignSeats — wheelchair orders', () => {
     expect(labels(assignSeats(occ, ROWS, SEATS, 2, true))).toEqual(['A3', 'A4']);
   });
 
-  it('extends inward from the right end for a group of 3', () => {
-    // startSeat = 10 - 3 + 1 = 8
-    expect(labels(assignSeats(new Set(), ROWS, SEATS, 3, true))).toEqual(['A8', 'A9', 'A10']);
+  it('extends inward from the left end for a group of 3', () => {
+    expect(labels(assignSeats(new Set(), ROWS, SEATS, 3, true))).toEqual(['A1', 'A2', 'A3']);
   });
 
-  it('extends inward from the left end for a group of 3 when right ends are full', () => {
-    const occ = occupied('A8', 'A9', 'A10', 'B8', 'B9', 'B10', 'C8', 'C9', 'C10');
-    expect(labels(assignSeats(occ, ROWS, SEATS, 3, true))).toEqual(['A1', 'A2', 'A3']);
+  it('extends inward from the right end for a group of 3 when left ends are full', () => {
+    const occ = occupied('A1', 'A2', 'A3', 'B1', 'B2', 'B3', 'C1', 'C2', 'C3');
+    expect(labels(assignSeats(occ, ROWS, SEATS, 3, true))).toEqual(['A8', 'A9', 'A10']);
   });
 
-  it('assigns a single wheelchair seat at the last position in the row', () => {
-    // startSeat = 10 - 1 + 1 = 10
-    expect(labels(assignSeats(new Set(), ROWS, SEATS, 1, true))).toEqual(['A10']);
+  it('assigns a single wheelchair seat at the first position in the row', () => {
+    expect(labels(assignSeats(new Set(), ROWS, SEATS, 1, true))).toEqual(['A1']);
   });
 });
 
@@ -364,13 +361,13 @@ describe('assignSeats — edge cases', () => {
 
   it('handles a small venue where the normal zone is empty (seatsPerRow = 4)', () => {
     // normalMax = 4 - 2 = 2, normalMin = 3 → normal zone skipped entirely.
-    // Phase 2: left + normal scans seats 1-2 → block [1,2], exact fit for qty 2.
-    expect(labels(assignSeats(new Set(), 2, 4, 2, false))).toEqual(['A1', 'A2']);
+    // Phase 2: right + normal scans seats 3-4 → block [3,4], exact fit for qty 2.
+    expect(labels(assignSeats(new Set(), 2, 4, 2, false))).toEqual(['A3', 'A4']);
   });
 
-  it('wheelchair on a small venue (seatsPerRow = 4) uses the right end', () => {
-    // Right zone: seats 3, 4
-    expect(labels(assignSeats(new Set(), 2, 4, 2, true))).toEqual(['A3', 'A4']);
+  it('wheelchair on a small venue (seatsPerRow = 4) uses the left end', () => {
+    // Left zone: seats 1, 2
+    expect(labels(assignSeats(new Set(), 2, 4, 2, true))).toEqual(['A1', 'A2']);
   });
 
   it('quantity larger than seatsPerRow uses adjacent block across rows', () => {
@@ -399,9 +396,9 @@ describe('assignSeats — sequential booking simulation', () => {
     expect(labels(o2)).toEqual(['A7', 'A8']);
     markOccupied(occ, o2);
 
-    // Order 3 — wheelchair, 2 tickets → right end of row A (untouched by normals)
+    // Order 3 — wheelchair, 2 tickets → left end of row A (untouched by normals)
     const o3 = assignSeats(occ, 3, 10, 2, true);
-    expect(labels(o3)).toEqual(['A9', 'A10']);
+    expect(labels(o3)).toEqual(['A1', 'A2']);
     markOccupied(occ, o3);
 
     // Order 4 — normal, 3 tickets → row A normal full, goes to row B
@@ -409,9 +406,9 @@ describe('assignSeats — sequential booking simulation', () => {
     expect(labels(o4)).toEqual(['B3', 'B4', 'B5']);
     markOccupied(occ, o4);
 
-    // Order 5 — wheelchair, 2 tickets → row A right taken, goes to row B right
+    // Order 5 — wheelchair, 2 tickets → row A left taken, goes to row B left
     const o5 = assignSeats(occ, 3, 10, 2, true);
-    expect(labels(o5)).toEqual(['B9', 'B10']);
+    expect(labels(o5)).toEqual(['B1', 'B2']);
     markOccupied(occ, o5);
 
     // Order 6 — normal, 6 tickets → row B normal has 3 left (6,7,8), not enough.
@@ -420,18 +417,18 @@ describe('assignSeats — sequential booking simulation', () => {
     expect(labels(o6)).toEqual(['C3', 'C4', 'C5', 'C6', 'C7', 'C8']);
     markOccupied(occ, o6);
 
-    // Order 7 — wheelchair, 2 tickets → rows A & B right taken, row C right free
+    // Order 7 — wheelchair, 2 tickets → rows A & B left taken, row C left free
     const o7 = assignSeats(occ, 3, 10, 2, true);
-    expect(labels(o7)).toEqual(['C9', 'C10']);
+    expect(labels(o7)).toEqual(['C1', 'C2']);
     markOccupied(occ, o7);
 
-    // Verify: left zones (A1,A2 / B1,B2 / C1,C2) are all still free — never
-    // touched by any normal order because normal + right zones were sufficient.
-    expect(occ.has('0-1')).toBe(false); // A1
-    expect(occ.has('0-2')).toBe(false); // A2
-    expect(occ.has('1-1')).toBe(false); // B1
-    expect(occ.has('1-2')).toBe(false); // B2
-    expect(occ.has('2-1')).toBe(false); // C1
-    expect(occ.has('2-2')).toBe(false); // C2
+    // Verify: right zones (A9,A10 / B9,B10 / C9,C10) are all still free — never
+    // touched by any normal order because normal + left zones were sufficient.
+    expect(occ.has('0-9')).toBe(false); // A9
+    expect(occ.has('0-10')).toBe(false); // A10
+    expect(occ.has('1-9')).toBe(false); // B9
+    expect(occ.has('1-10')).toBe(false); // B10
+    expect(occ.has('2-9')).toBe(false); // C9
+    expect(occ.has('2-10')).toBe(false); // C10
   });
 });
