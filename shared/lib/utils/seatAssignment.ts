@@ -1,4 +1,4 @@
-export type Seat = { rowIndex: number; seatNumber: number };
+export type Seat = { rowIndex: number; seatNumber: number; wheelchairAccess: boolean };
 
 /**
  * Find contiguous blocks of available seats within a seat range in a row.
@@ -89,7 +89,9 @@ export function findBestConnectedCluster(
 
       const currentCluster: Seat[] = [];
       const visited = new Set<string>();
-      const queue: Seat[] = [{ rowIndex: r, seatNumber: s }];
+      const queue: Seat[] = [
+        { rowIndex: r, seatNumber: s, wheelchairAccess: s === 1 || s === seatsPerRow },
+      ];
       visited.add(`${r}-${s}`);
 
       while (queue.length > 0 && currentCluster.length < quantity) {
@@ -97,10 +99,26 @@ export function findBestConnectedCluster(
         currentCluster.push(current);
 
         const neighbors = [
-          { rowIndex: current.rowIndex, seatNumber: current.seatNumber - 1 }, // Left
-          { rowIndex: current.rowIndex, seatNumber: current.seatNumber + 1 }, // Right
-          { rowIndex: current.rowIndex + 1, seatNumber: current.seatNumber }, // Down (toward back)
-          { rowIndex: current.rowIndex - 1, seatNumber: current.seatNumber }, // Up (toward stage)
+          {
+            rowIndex: current.rowIndex,
+            seatNumber: current.seatNumber - 1,
+            wheelchairAccess: current.seatNumber - 1 === 1,
+          }, // Left
+          {
+            rowIndex: current.rowIndex,
+            seatNumber: current.seatNumber + 1,
+            wheelchairAccess: current.seatNumber + 1 === seatsPerRow,
+          }, // Right
+          {
+            rowIndex: current.rowIndex + 1,
+            seatNumber: current.seatNumber,
+            wheelchairAccess: current.seatNumber === 1 || current.seatNumber === seatsPerRow,
+          }, // Down
+          {
+            rowIndex: current.rowIndex - 1,
+            seatNumber: current.seatNumber,
+            wheelchairAccess: current.seatNumber === 1 || current.seatNumber === seatsPerRow,
+          }, // Up
         ];
 
         // Priority within the cluster: Stay in the same row first
@@ -164,7 +182,13 @@ export function assignSeats(
       for (let row = 0; row < rows; row++) {
         const blocks = getContiguousBlocks(occupiedSeats, row, 1, quantity);
         const block = pickBestBlock(blocks, quantity, true);
-        if (block) return block.map((s) => ({ rowIndex: row, seatNumber: s }));
+        if (block) {
+          return block.map((s, index) => ({
+            rowIndex: row,
+            seatNumber: s,
+            wheelchairAccess: index === 0 && s === 1, // Only first seat if it's seat 1
+          }));
+        }
       }
 
       // Phase 2: single row - right end (seats N-Q+1 to N)
@@ -173,49 +197,59 @@ export function assignSeats(
         if (startSeat < 1) continue;
         const blocks = getContiguousBlocks(occupiedSeats, row, startSeat, seatsPerRow);
         const block = pickBestBlock(blocks, quantity, true);
-        if (block) return block.map((s) => ({ rowIndex: row, seatNumber: s }));
+        if (block) {
+          return block.map((s, index) => ({
+            rowIndex: row,
+            seatNumber: s,
+            wheelchairAccess: index === block.length - 1 && s === seatsPerRow, // Only last seat if it's seat N
+          }));
+        }
       }
     }
 
-    // Phase 3: multi-row - collect from left wheelchair zone (seats 1-2)
+    // Phase 3: multi-row - collect from left edge seats (seat 1 only - actual wheelchair access)
     const leftSeats: Seat[] = [];
     for (let row = 0; row < rows && leftSeats.length < quantity; row++) {
-      const blocks = getContiguousBlocks(occupiedSeats, row, 1, leftZoneMax);
-      for (const block of blocks) {
-        for (const seatNum of block) {
-          if (leftSeats.length >= quantity) break;
-          leftSeats.push({ rowIndex: row, seatNumber: seatNum });
-        }
-        if (leftSeats.length >= quantity) break;
+      if (!occupiedSeats.has(`${row}-1`)) {
+        leftSeats.push({ rowIndex: row, seatNumber: 1, wheelchairAccess: leftSeats.length === 0 }); // Only first seat gets wheelchair access
       }
     }
     if (leftSeats.length === quantity) return leftSeats;
 
-    // Phase 4: multi-row - collect from right wheelchair zone (seats N-1 to N)
+    // Phase 4: multi-row - collect from right edge seats (seat N only - actual wheelchair access)
     const rightSeats: Seat[] = [];
     for (let row = 0; row < rows && rightSeats.length < quantity; row++) {
-      const blocks = getContiguousBlocks(occupiedSeats, row, rightZoneMin, seatsPerRow);
-      for (const block of blocks) {
-        for (const seatNum of block) {
-          if (rightSeats.length >= quantity) break;
-          rightSeats.push({ rowIndex: row, seatNumber: seatNum });
-        }
-        if (rightSeats.length >= quantity) break;
+      if (!occupiedSeats.has(`${row}-${seatsPerRow}`)) {
+        rightSeats.push({
+          rowIndex: row,
+          seatNumber: seatsPerRow,
+          wheelchairAccess: rightSeats.length === 0, // Only first seat gets wheelchair access
+        });
       }
     }
     if (rightSeats.length === quantity) return rightSeats;
 
     // Phase 5: use cluster approach for wheelchair (better than falling through)
     const cluster = findBestConnectedCluster(occupiedSeats, rows, seatsPerRow, quantity);
-    if (cluster) return cluster;
+    if (cluster) {
+      // Mark only the first edge seat (seat 1 or seat N) as wheelchair accessible
+      const hasEdgeSeat = cluster.find((s) => s.seatNumber === 1 || s.seatNumber === seatsPerRow);
+      return cluster.map((s) => ({
+        ...s,
+        wheelchairAccess: hasEdgeSeat && s === hasEdgeSeat,
+      }));
+    }
 
     // Phase 6: fluid fill with left-side priority for wheelchair
     const seats: Seat[] = [];
+    let wheelchairSeatAssigned = false;
     // First collect from left zone across all rows
     for (let row = 0; row < rows && seats.length < quantity; row++) {
       for (let s = 1; s <= leftZoneMax && seats.length < quantity; s++) {
         if (!occupiedSeats.has(`${row}-${s}`)) {
-          seats.push({ rowIndex: row, seatNumber: s });
+          const isWheelchairSeat = !wheelchairSeatAssigned && s === 1;
+          seats.push({ rowIndex: row, seatNumber: s, wheelchairAccess: isWheelchairSeat });
+          if (isWheelchairSeat) wheelchairSeatAssigned = true;
         }
       }
     }
@@ -223,7 +257,7 @@ export function assignSeats(
     for (let row = 0; row < rows && seats.length < quantity; row++) {
       for (let s = 3; s <= seatsPerRow - 2 && seats.length < quantity; s++) {
         if (!occupiedSeats.has(`${row}-${s}`)) {
-          seats.push({ rowIndex: row, seatNumber: s });
+          seats.push({ rowIndex: row, seatNumber: s, wheelchairAccess: false });
         }
       }
     }
@@ -231,7 +265,9 @@ export function assignSeats(
     for (let row = 0; row < rows && seats.length < quantity; row++) {
       for (let s = rightZoneMin; s <= seatsPerRow && seats.length < quantity; s++) {
         if (!occupiedSeats.has(`${row}-${s}`)) {
-          seats.push({ rowIndex: row, seatNumber: s });
+          const isWheelchairSeat = !wheelchairSeatAssigned && s === seatsPerRow;
+          seats.push({ rowIndex: row, seatNumber: s, wheelchairAccess: isWheelchairSeat });
+          if (isWheelchairSeat) wheelchairSeatAssigned = true;
         }
       }
     }
@@ -246,7 +282,12 @@ export function assignSeats(
     for (let row = 0; row < rows; row++) {
       const blocks = getContiguousBlocks(occupiedSeats, row, normalMin, normalMax);
       const block = pickBestBlock(blocks, quantity, false);
-      if (block) return block.map((s) => ({ rowIndex: row, seatNumber: s }));
+      if (block)
+        return block.map((s) => ({
+          rowIndex: row,
+          seatNumber: s,
+          wheelchairAccess: false,
+        }));
     }
   }
 
@@ -255,7 +296,12 @@ export function assignSeats(
     for (let row = 0; row < rows; row++) {
       const blocks = getContiguousBlocks(occupiedSeats, row, rightAndNormalMin, seatsPerRow);
       const block = pickBestBlock(blocks, quantity, false);
-      if (block) return block.map((s) => ({ rowIndex: row, seatNumber: s }));
+      if (block)
+        return block.map((s) => ({
+          rowIndex: row,
+          seatNumber: s,
+          wheelchairAccess: s === seatsPerRow,
+        }));
     }
   }
 
@@ -264,7 +310,12 @@ export function assignSeats(
     for (let row = 0; row < rows; row++) {
       const blocks = getContiguousBlocks(occupiedSeats, row, rightAndNormalMin, seatsPerRow);
       const block = pickBestBlock(blocks, quantity, true);
-      if (block) return block.map((s) => ({ rowIndex: row, seatNumber: s }));
+      if (block)
+        return block.map((s) => ({
+          rowIndex: row,
+          seatNumber: s,
+          wheelchairAccess: s === seatsPerRow,
+        }));
     }
   }
 
@@ -272,19 +323,31 @@ export function assignSeats(
   for (let row = 0; row < rows; row++) {
     const blocks = getContiguousBlocks(occupiedSeats, row, 1, seatsPerRow);
     const block = pickBestBlock(blocks, quantity, true);
-    if (block) return block.map((s) => ({ rowIndex: row, seatNumber: s }));
+    if (block)
+      return block.map((s) => ({
+        rowIndex: row,
+        seatNumber: s,
+        wheelchairAccess: s === 1 || s === seatsPerRow,
+      }));
   }
 
   // Phase 5: adjacent block — fit across consecutive rows in a rectangle (e.g. 2×2)
   const cluster = findBestConnectedCluster(occupiedSeats, rows, seatsPerRow, quantity);
-  if (cluster) return cluster;
+  if (cluster) {
+    // Normal path: no wheelchair access for any seat
+    return cluster.map((s) => ({ ...s, wheelchairAccess: false }));
+  }
 
   // Phase 6: fluid fill — grab any available seats across rows
   const seats: Seat[] = [];
   for (let row = 0; row < rows && seats.length < quantity; row++) {
     for (let s = 1; s <= seatsPerRow && seats.length < quantity; s++) {
       if (!occupiedSeats.has(`${row}-${s}`)) {
-        seats.push({ rowIndex: row, seatNumber: s });
+        seats.push({
+          rowIndex: row,
+          seatNumber: s,
+          wheelchairAccess: s === 1 || s === seatsPerRow,
+        });
       }
     }
   }

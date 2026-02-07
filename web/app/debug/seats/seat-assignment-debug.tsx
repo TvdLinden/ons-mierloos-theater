@@ -11,7 +11,11 @@ export function SeatAssignmentDebug() {
   const [reservedSeats, setReservedSeats] = useState<Set<string>>(new Set());
   const [requestQuantity, setRequestQuantity] = useState(2);
   const [requestWheelchair, setRequestWheelchair] = useState(false);
-  const [lastAssignment, setLastAssignment] = useState<Array<{ rowIndex: number; seatNumber: number }> | null>(null);
+  const [lastAssignment, setLastAssignment] = useState<Array<{
+    rowIndex: number;
+    seatNumber: number;
+    wheelchairAccess: boolean;
+  }> | null>(null);
   const [wheelchairReservations, setWheelchairReservations] = useState<Set<string>>(new Set());
 
   const totalSeats = rows * seatsPerRow;
@@ -61,28 +65,30 @@ export function SeatAssignmentDebug() {
   };
 
   const handleAssignSeats = () => {
-    const assignment = assignSeats(reservedSeats, rows, seatsPerRow, requestQuantity, requestWheelchair);
+    const assignment = assignSeats(
+      reservedSeats,
+      rows,
+      seatsPerRow,
+      requestQuantity,
+      requestWheelchair,
+    );
 
     if (assignment.length > 0) {
       const newReserved = new Set(reservedSeats);
-      let hasWheelchair = false;
+      const newWheelchair = new Set(wheelchairReservations);
 
       assignment.forEach((seat) => {
         const seatId = `${seat.rowIndex}-${seat.seatNumber}`;
         newReserved.add(seatId);
+
+        // Use wheelchairAccess field from the assignment to mark wheelchair seats
+        if (seat.wheelchairAccess) {
+          newWheelchair.add(seatId);
+        }
       });
 
-      if (requestWheelchair) {
-        hasWheelchair = true;
-        // Mark first seat as wheelchair-accessible
-        const firstSeat = assignment[0];
-        const firstSeatId = `${firstSeat.rowIndex}-${firstSeat.seatNumber}`;
-        const newWheelchair = new Set(wheelchairReservations);
-        newWheelchair.add(firstSeatId);
-        setWheelchairReservations(newWheelchair);
-      }
-
       setReservedSeats(newReserved);
+      setWheelchairReservations(newWheelchair);
       setLastAssignment(assignment);
     }
   };
@@ -126,7 +132,9 @@ export function SeatAssignmentDebug() {
       {/* Main Seatmap */}
       <div className="lg:col-span-3">
         <div className="bg-white rounded-lg p-8 shadow-md border border-slate-200">
-          <h2 className="text-2xl font-bold text-slate-900 mb-6">Zitplaatskaart ({rows} rijen × {seatsPerRow} zitplaatsen)</h2>
+          <h2 className="text-2xl font-bold text-slate-900 mb-6">
+            Zitplaatskaart ({rows} rijen × {seatsPerRow} zitplaatsen)
+          </h2>
           <SeatMap
             rows={rows}
             seatsPerRow={seatsPerRow}
