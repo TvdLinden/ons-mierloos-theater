@@ -50,7 +50,7 @@ export function pickBestBlock(
   return best;
 }
 
-function findBestConnectedCluster(
+export function findBestConnectedCluster(
   occupiedSeats: Set<string>,
   rows: number,
   seatsPerRow: number,

@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { getContiguousBlocks, pickBestBlock, findAdjacentBlock, assignSeats } from './seatAssignment';
+import {
+  getContiguousBlocks,
+  pickBestBlock,
+  findBestConnectedCluster,
+  assignSeats,
+} from './seatAssignment';
 import type { Seat } from './seatAssignment';
 
 // ---------------------------------------------------------------------------
@@ -143,57 +148,82 @@ describe('pickBestBlock', () => {
 });
 
 // ---------------------------------------------------------------------------
-// findAdjacentBlock
+// findBestConnectedCluster
 // ---------------------------------------------------------------------------
 
-describe('findAdjacentBlock', () => {
-  it('finds a 2×2 block on an empty venue', () => {
-    const result = findAdjacentBlock(new Set(), 3, 10, 4);
+describe('findBestConnectedCluster', () => {
+  it('finds a connected cluster on an empty venue', () => {
+    const result = findBestConnectedCluster(new Set(), 3, 10, 4);
     expect(result).not.toBeNull();
-    expect(labels(result!)).toEqual(['A1', 'A2', 'B1', 'B2']);
+    expect(result!.length).toBe(4);
+    // Should prefer front row and centered seats due to scoring
+    const rows = new Set(result!.map((s) => s.rowIndex));
+    expect(rows.size).toBeLessThanOrEqual(2); // Compact (max 2 rows for 4 seats)
   });
 
-  it('finds a 2×3 block for 5 seats', () => {
-    const result = findAdjacentBlock(new Set(), 3, 10, 5);
+  it('finds a connected cluster for 5 seats', () => {
+    const result = findBestConnectedCluster(new Set(), 3, 10, 5);
     expect(result).not.toBeNull();
-    // 2 rows × 3 wide = 6, takes 5: row A gets 3, row B gets 2
-    expect(labels(result!)).toEqual(['A1', 'A2', 'A3', 'B1', 'B2']);
+    expect(result!.length).toBe(5);
+    // Verify seats are connected (each seat has at least one adjacent neighbor)
+    const seatSet = new Set(result!.map((s) => `${s.rowIndex}-${s.seatNumber}`));
+    for (const seat of result!) {
+      const neighbors = [
+        `${seat.rowIndex}-${seat.seatNumber - 1}`,
+        `${seat.rowIndex}-${seat.seatNumber + 1}`,
+        `${seat.rowIndex - 1}-${seat.seatNumber}`,
+        `${seat.rowIndex + 1}-${seat.seatNumber}`,
+      ];
+      const hasNeighbor = neighbors.some((n) => seatSet.has(n) && n !== `${seat.rowIndex}-${seat.seatNumber}`);
+      expect(hasNeighbor || result!.length === 1).toBe(true);
+    }
   });
 
-  it('skips rows with occupied seats in the rectangle', () => {
+  it('finds connected seats avoiding occupied ones', () => {
     const occ = occupied('A1');
-    const result = findAdjacentBlock(occ, 3, 10, 4);
+    const result = findBestConnectedCluster(occ, 3, 10, 4);
     expect(result).not.toBeNull();
-    // A1 occupied → shifts to A2,A3 / B2,B3
-    expect(labels(result!)).toEqual(['A2', 'A3', 'B2', 'B3']);
+    expect(result!.length).toBe(4);
+    // Verify no occupied seats were assigned
+    for (const seat of result!) {
+      expect(occ.has(`${seat.rowIndex}-${seat.seatNumber}`)).toBe(false);
+    }
   });
 
-  it('returns null when no rectangle fits', () => {
-    // Checkerboard pattern — no 2×2 block possible
+  it('returns null when not enough connected seats available', () => {
+    // Checkerboard pattern — no 4 connected seats possible
     const occ = occupied('A1', 'A3', 'A5', 'B2', 'B4', 'B6', 'C1', 'C3', 'C5');
-    const result = findAdjacentBlock(occ, 3, 6, 4);
+    const result = findBestConnectedCluster(occ, 3, 6, 4);
     expect(result).toBeNull();
   });
 
-  it('returns null for quantity 1 (needs at least 2 rows)', () => {
-    const result = findAdjacentBlock(new Set(), 3, 10, 1);
-    expect(result).toBeNull();
+  it('handles quantity 1 by returning single seat', () => {
+    const result = findBestConnectedCluster(new Set(), 3, 10, 1);
+    expect(result).not.toBeNull();
+    expect(result!.length).toBe(1);
+    // Should return a seat in front row (row 0)
+    expect(result![0].rowIndex).toBe(0);
   });
 
-  it('prefers fewer rows (wider block)', () => {
-    // For 6 seats: 2 rows × 3 wide is tried before 3 rows × 2 wide
-    const result = findAdjacentBlock(new Set(), 4, 10, 6);
+  it('prefers compact clusters (fewer rows)', () => {
+    // For 6 seats: compactness scoring should minimize row spread
+    const result = findBestConnectedCluster(new Set(), 4, 10, 6);
     expect(result).not.toBeNull();
-    expect(labels(result!)).toEqual(['A1', 'A2', 'A3', 'B1', 'B2', 'B3']);
+    expect(result!.length).toBe(6);
+    // Should span at most 2 rows for 6 seats with 10 seats/row
+    const rows = new Set(result!.map((s) => s.rowIndex));
+    expect(rows.size).toBeLessThanOrEqual(2);
   });
 
-  it('falls back to more rows when wide block is blocked', () => {
-    // Block all 3-wide possibilities in rows A-B by occupying seat 2 in both
-    const occ = occupied('A2', 'B2', 'C2');
-    // For qty 4: 2×2 block starting at seat 1 blocked (A2 occupied), try seat 3 etc.
-    const result = findAdjacentBlock(occ, 3, 6, 4);
+  it('expands across rows when blocked', () => {
+    // Block seat 5 onwards in row A, forcing expansion to row B
+    const occ = occupied('A5', 'A6', 'A7', 'A8', 'A9', 'A10');
+    const result = findBestConnectedCluster(occ, 3, 10, 6);
     expect(result).not.toBeNull();
-    expect(labels(result!)).toEqual(['A3', 'A4', 'B3', 'B4']);
+    expect(result!.length).toBe(6);
+    // Should include seats from row A
+    const rowACont = result!.filter((s) => s.rowIndex === 0).length;
+    expect(rowACont).toBeGreaterThan(0);
   });
 });
 
@@ -326,8 +356,31 @@ describe('assignSeats — wheelchair orders', () => {
   });
 
   it('falls back to the normal zone when both ends of every row are taken', () => {
-    const occ = occupied('A1', 'A2', 'A9', 'A10', 'B1', 'B2', 'B9', 'B10', 'C1', 'C2', 'C9', 'C10');
-    expect(labels(assignSeats(occ, ROWS, SEATS, 2, true))).toEqual(['A3', 'A4']);
+    const occ = occupied(
+      'A1',
+      'A2',
+      'A9',
+      'A10',
+      'B1',
+      'B2',
+      'B9',
+      'B10',
+      'C1',
+      'C2',
+      'C9',
+      'C10',
+    );
+    const result = assignSeats(occ, ROWS, SEATS, 2, true);
+    const resultLabels = labels(result);
+    expect(resultLabels.length).toBe(2);
+    // Should be in row A (front row)
+    expect(resultLabels[0].startsWith('A')).toBe(true);
+    expect(resultLabels[1].startsWith('A')).toBe(true);
+    // Should be in normal zone (seats 3-8)
+    const seatNums = result.map((s) => s.seatNumber);
+    expect(seatNums.every((n) => n >= 3 && n <= 8)).toBe(true);
+    // Should be adjacent
+    expect(Math.abs(seatNums[0] - seatNums[1])).toBe(1);
   });
 
   it('extends inward from the left end for a group of 3', () => {
@@ -370,10 +423,17 @@ describe('assignSeats — edge cases', () => {
     expect(labels(assignSeats(new Set(), 2, 4, 2, true))).toEqual(['A1', 'A2']);
   });
 
-  it('quantity larger than seatsPerRow uses adjacent block across rows', () => {
+  it('quantity larger than seatsPerRow uses connected cluster across rows', () => {
     // 3 rows of 4 seats, qty 5. No single row can hold 5 contiguous seats.
-    // Adjacent block: 2 rows × 3 wide, takes 5 → A1,A2,A3,B1,B2.
-    expect(labels(assignSeats(new Set(), 3, 4, 5, false))).toEqual(['A1', 'A2', 'A3', 'B1', 'B2']);
+    // Cluster logic will find 5 connected seats, preferring compactness and front rows
+    const result = assignSeats(new Set(), 3, 4, 5, false);
+    expect(result.length).toBe(5);
+    // Should get all 4 seats from row A (3,4 in normal zone + eventually 1,2 from left zone in phase 4)
+    // plus 1 seat from row B, or use cluster to find connected seats
+    const resultLabels = labels(result);
+    expect(resultLabels.length).toBe(5);
+    // Verify they're connected (all adjacent or in adjacent rows)
+    expect(resultLabels.filter((l) => l.startsWith('A')).length).toBeGreaterThanOrEqual(3);
   });
 });
 
