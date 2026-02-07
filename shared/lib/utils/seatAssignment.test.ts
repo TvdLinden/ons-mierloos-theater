@@ -398,6 +398,122 @@ describe('assignSeats — wheelchair orders', () => {
 });
 
 // ---------------------------------------------------------------------------
+// assignSeats — wheelchairAccess field validation
+// ---------------------------------------------------------------------------
+
+describe('assignSeats — wheelchairAccess field', () => {
+  const ROWS = 3;
+  const SEATS = 10;
+
+  describe('wheelchair orders', () => {
+    it('marks seat 1 (leftmost) as wheelchairAccess when using left zone', () => {
+      const result = assignSeats(new Set(), ROWS, SEATS, 2, true);
+      expect(result.length).toBe(2);
+
+      // Find the wheelchair accessible seat
+      const wheelchairSeat = result.find((s) => s.wheelchairAccess);
+      expect(wheelchairSeat).toBeDefined();
+      expect(wheelchairSeat!.seatNumber).toBe(1); // Must be seat 1 (leftmost)
+    });
+
+    it('marks seat N (rightmost) as wheelchairAccess when left zone is full', () => {
+      const occ = occupied('A1', 'A2', 'B1', 'B2', 'C1', 'C2');
+      const result = assignSeats(occ, ROWS, SEATS, 2, true);
+      expect(result.length).toBe(2);
+
+      // Find the wheelchair accessible seat
+      const wheelchairSeat = result.find((s) => s.wheelchairAccess);
+      expect(wheelchairSeat).toBeDefined();
+      expect(wheelchairSeat!.seatNumber).toBe(SEATS); // Must be seat N (rightmost)
+    });
+
+    it('marks only ONE seat as wheelchairAccess per order', () => {
+      const result = assignSeats(new Set(), ROWS, SEATS, 5, true);
+      expect(result.length).toBe(5);
+
+      const wheelchairSeats = result.filter((s) => s.wheelchairAccess);
+      expect(wheelchairSeats.length).toBe(1); // Only one seat should have wheelchair access
+    });
+
+    it('wheelchair accessible seat is always an edge seat (seat 1 or seat N)', () => {
+      // Test multiple scenarios
+      const scenarios = [
+        { occ: new Set(), qty: 2, desc: 'empty venue' },
+        { occ: occupied('A1', 'A2'), qty: 2, desc: 'first row left occupied' },
+        { occ: occupied('A1', 'B1', 'C1'), qty: 3, desc: 'all seat 1s occupied' },
+      ];
+
+      for (const { occ, qty, desc } of scenarios) {
+        const result = assignSeats(occ, ROWS, SEATS, qty, true);
+        if (result.length === qty) {
+          const wheelchairSeat = result.find((s) => s.wheelchairAccess);
+          expect(wheelchairSeat).toBeDefined();
+          // Must be either seat 1 (left edge) or seat N (right edge)
+          expect([1, SEATS]).toContain(wheelchairSeat!.seatNumber);
+        }
+      }
+    });
+
+    it('marks the first edge seat in multi-row assignments', () => {
+      // Occupy A1, force multi-row collection
+      const occ = occupied('A1');
+      const result = assignSeats(occ, ROWS, SEATS, 3, true);
+
+      const wheelchairSeat = result.find((s) => s.wheelchairAccess);
+      expect(wheelchairSeat).toBeDefined();
+      // Should be B1 (first available edge seat)
+      expect(wheelchairSeat!.rowIndex).toBe(1); // Row B
+      expect(wheelchairSeat!.seatNumber).toBe(1);
+    });
+
+    it('all companion seats have wheelchairAccess: false', () => {
+      const result = assignSeats(new Set(), ROWS, SEATS, 4, true);
+      expect(result.length).toBe(4);
+
+      const companionSeats = result.filter((s) => !s.wheelchairAccess);
+      expect(companionSeats.length).toBe(3); // 3 out of 4 should be companions
+
+      // All companion seats should have wheelchairAccess explicitly set to false
+      companionSeats.forEach((seat) => {
+        expect(seat.wheelchairAccess).toBe(false);
+      });
+    });
+  });
+
+  describe('normal orders', () => {
+    it('marks all seats as wheelchairAccess: false for normal orders', () => {
+      const result = assignSeats(new Set(), ROWS, SEATS, 5, false);
+      expect(result.length).toBe(5);
+
+      // ALL seats should have wheelchairAccess: false
+      result.forEach((seat) => {
+        expect(seat.wheelchairAccess).toBe(false);
+      });
+    });
+
+    it('never assigns wheelchairAccess: true in normal path even for edge seats', () => {
+      // Normal order that gets seats 1-5 (including edge seat 1)
+      const result = assignSeats(new Set(), ROWS, SEATS, 5, false);
+
+      const edgeSeats = result.filter((s) => s.seatNumber === 1 || s.seatNumber === SEATS);
+      // Even if edge seats are assigned, they should not have wheelchair access
+      edgeSeats.forEach((seat) => {
+        expect(seat.wheelchairAccess).toBe(false);
+      });
+    });
+
+    it('wheelchairAccess field is always present and boolean', () => {
+      const result = assignSeats(new Set(), ROWS, SEATS, 3, false);
+
+      result.forEach((seat) => {
+        expect(seat).toHaveProperty('wheelchairAccess');
+        expect(typeof seat.wheelchairAccess).toBe('boolean');
+      });
+    });
+  });
+});
+
+// ---------------------------------------------------------------------------
 // assignSeats — edge cases
 // ---------------------------------------------------------------------------
 
