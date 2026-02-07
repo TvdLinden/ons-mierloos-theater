@@ -13,17 +13,17 @@ RUN git config --global --add safe.directory /workspace
 
 WORKDIR /workspace
 
+# Create workspace directory and set ownership to node user
+RUN chown -R node:node /workspace
+
 # Switch to node user early
 USER node
 
 # Copy everything (we'll use .dockerignore to exclude node_modules)
 COPY --chown=node:node . .
 
-# Override .npmrc with hoisted config for Docker only
-# This doesn't affect Vercel builds since it's only in the container
-RUN echo "legacy-peer-deps=true" > .npmrc && \
-    echo "auto-install-peers=true" >> .npmrc && \
-    echo "node-linker=hoisted" >> .npmrc
+# Remove any conflicting .npmrc from COPY to use workspace's .npmrc
+# The workspace .npmrc will be used instead for consistency with Vercel builds
 
 # Install dependencies as node user
 RUN npm install --legacy-peer-deps
