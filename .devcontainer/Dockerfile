@@ -13,8 +13,28 @@ RUN git config --global --add safe.directory /workspace
 
 WORKDIR /workspace
 
-# Pre-create directories and set ownership for volumes
-RUN mkdir -p /workspace/node_modules \
-    /workspace/.next \
+# Switch to node user early
+USER node
+
+# Copy everything (we'll use .dockerignore to exclude node_modules)
+COPY --chown=node:node . .
+
+# Override .npmrc with hoisted config for Docker only
+# This doesn't affect Vercel builds since it's only in the container
+RUN echo "legacy-peer-deps=true" > .npmrc && \
+    echo "auto-install-peers=true" >> .npmrc && \
+    echo "node-linker=hoisted" >> .npmrc
+
+# Install dependencies as node user
+RUN npm install --legacy-peer-deps
+
+# Switch back to root for any remaining setup
+USER root
+
+# Pre-create directories for volumes
+RUN mkdir -p /workspace/.next \
     /workspace/.turbo \
     && chown -R node:node /workspace
+
+# Switch back to node user for runtime
+USER node

@@ -5,7 +5,8 @@ services:
       dockerfile: .devcontainer/Dockerfile
     volumes:
       - ..:/workspace:cached
-      - node_modules:/workspace/node_modules
+      # Exclude node_modules from being mounted - let them live in the container
+      - /workspace/node_modules
       - next_cache:/workspace/.next
       - turbo_cache:/workspace/.turbo
     ports:
@@ -15,7 +16,7 @@ services:
       - TURBOPACK_CACHE_DIR=/workspace/.turbo
       - NEXT_TELEMETRY_DISABLED=1
       - WATCHPACK_POLLING=true
-      - CHOKIDAR_USEPOLLING=true  # Add this for better file watching
+      - CHOKIDAR_USEPOLLING=true
     env_file:
       - ../.env.local
     depends_on:
@@ -66,7 +67,6 @@ services:
 
 volumes:
   pgdata:
-  node_modules:
   next_cache:
   turbo_cache:
 
