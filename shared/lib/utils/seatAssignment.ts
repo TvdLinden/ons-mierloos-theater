@@ -1,6 +1,42 @@
 export type Seat = { rowIndex: number; seatNumber: number; wheelchairAccess: boolean };
 
 /**
+ * Helper: Detects if taking a set of seats in a row leaves exactly 1 empty seat
+ * between the new booking and a "wall" or another occupied seat.
+ */
+function createsSingleSeatGap(
+  rowSeats: number[],
+  occupiedSeats: Set<string>,
+  rowIndex: number,
+  seatsPerRow: number,
+): boolean {
+  if (rowSeats.length === 0) return false;
+
+  const minSelected = Math.min(...rowSeats);
+  const maxSelected = Math.max(...rowSeats);
+
+  // Check Left side
+  const leftGapSeat = minSelected - 1;
+  const leftBeyondGap = minSelected - 2;
+  if (leftGapSeat >= 1 && !occupiedSeats.has(`${rowIndex}-${leftGapSeat}`)) {
+    if (leftBeyondGap < 1 || occupiedSeats.has(`${rowIndex}-${leftBeyondGap}`)) {
+      return true;
+    }
+  }
+
+  // Check Right side
+  const rightGapSeat = maxSelected + 1;
+  const rightBeyondGap = maxSelected + 2;
+  if (rightGapSeat <= seatsPerRow && !occupiedSeats.has(`${rowIndex}-${rightGapSeat}`)) {
+    if (rightBeyondGap > seatsPerRow || occupiedSeats.has(`${rowIndex}-${rightBeyondGap}`)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+/**
  * Find contiguous blocks of available seats within a seat range in a row.
  */
 export function getContiguousBlocks(
@@ -62,87 +98,111 @@ export function findBestConnectedCluster(
   const isValid = (r: number, s: number) =>
     r >= 0 && r < rows && s >= 1 && s <= seatsPerRow && !occupiedSeats.has(`${r}-${s}`);
 
+  /**
+   * Priority,Feature,Impact,Goal
+   * 1,Gap Prevention,Huge Penalty,"Prevent ""Orphan Seats"""
+   * 2,Row Spread,Large Penalty,Keep the group in one row if possible
+   * 3,Row Index,Large Bonus,Get as close to the front as possible
+   * 4,Hugging,Medium Bonus,"Fill the theater efficiently (no ""islands"")"
+   * 5,Centering,Small Penalty,Favor the middle of the row
+   */
   const scoreCluster = (cluster: Seat[]) => {
     let score = 0;
 
-    // 1. Prefer Front Rows (Lower Index = Higher Score)
-    // We subtract the row indices from a large constant.
-    const rowSum = cluster.reduce((sum, seat) => sum + seat.rowIndex, 0);
-    score += rows * quantity * 1000 - rowSum * 1000;
+    // 1. Group by row for gap/hugging logic
+    const rowMap: Record<number, number[]> = {};
+    cluster.forEach((s) => {
+      if (!rowMap[s.rowIndex]) rowMap[s.rowIndex] = [];
+      rowMap[s.rowIndex].push(s.seatNumber);
+    });
 
-    // 2. Prefer Compactness (Minimize row spread)
+    // 2. Front-Row Bias
+    // We give a massive bonus for being in lower row indices.
+    // Each seat contributes to the score based on its proximity to the front.
+    const verticalScore = cluster.reduce((sum, s) => sum + (rows - s.rowIndex) * 1000, 0);
+    score += verticalScore;
+
+    // 3. Gap Penalty & Hugging Bonus
+    for (const [rStr, sNums] of Object.entries(rowMap)) {
+      const rIdx = parseInt(rStr);
+
+      // Strict Gap Penalty: Should be the highest weight to prevent orphans
+      if (createsSingleSeatGap(sNums, occupiedSeats, rIdx, seatsPerRow)) {
+        score -= 100000;
+      }
+
+      // Hugging Bonus: Encourages filling "dead space"
+      sNums.forEach((sNum) => {
+        if (sNum === 1 || sNum === seatsPerRow) score += 500;
+        if (occupiedSeats.has(`${rIdx}-${sNum - 1}`)) score += 500;
+        if (occupiedSeats.has(`${rIdx}-${sNum + 1}`)) score += 500;
+      });
+    }
+
+    // 4. Compactness (Heavy penalty for splitting across rows)
     const distinctRows = new Set(cluster.map((s) => s.rowIndex)).size;
-    score -= distinctRows * 5000;
+    score -= (distinctRows - 1) * 10000;
 
-    // 3. Prefer Centering
+    // 5. Centering (Tie-breaker for same row)
     const avgSeatNum = cluster.reduce((sum, s) => sum + s.seatNumber, 0) / cluster.length;
     const rowCenter = (seatsPerRow + 1) / 2;
-    score -= Math.abs(avgSeatNum - rowCenter) * 10;
+    score -= Math.abs(avgSeatNum - rowCenter) * 100;
 
     return score;
   };
 
-  // --- SEARCH FROM FRONT TO BACK ---
+  // --- ANCHOR-BASED SEARCH ---
+  const searchOrder: { r: number; s: number }[] = [];
   for (let r = 0; r < rows; r++) {
     for (let s = 1; s <= seatsPerRow; s++) {
       if (!isValid(r, s)) continue;
+      const isAnchor =
+        s === 1 ||
+        s === seatsPerRow ||
+        occupiedSeats.has(`${r}-${s - 1}`) ||
+        occupiedSeats.has(`${r}-${s + 1}`);
 
-      const currentCluster: Seat[] = [];
-      const visited = new Set<string>();
-      const queue: Seat[] = [
-        { rowIndex: r, seatNumber: s, wheelchairAccess: s === 1 || s === seatsPerRow },
+      if (isAnchor) searchOrder.unshift({ r, s });
+      else searchOrder.push({ r, s });
+    }
+  }
+
+  for (const { r, s } of searchOrder) {
+    const currentCluster: Seat[] = [];
+    const visited = new Set<string>();
+    const queue: Seat[] = [
+      { rowIndex: r, seatNumber: s, wheelchairAccess: s === 1 || s === seatsPerRow },
+    ];
+    visited.add(`${r}-${s}`);
+
+    while (queue.length > 0 && currentCluster.length < quantity) {
+      const current = queue.shift()!;
+      currentCluster.push(current);
+
+      const neighbors = [
+        { rowIndex: current.rowIndex, seatNumber: current.seatNumber - 1 },
+        { rowIndex: current.rowIndex, seatNumber: current.seatNumber + 1 },
+        { rowIndex: current.rowIndex + 1, seatNumber: current.seatNumber },
+        { rowIndex: current.rowIndex - 1, seatNumber: current.seatNumber },
       ];
-      visited.add(`${r}-${s}`);
 
-      while (queue.length > 0 && currentCluster.length < quantity) {
-        const current = queue.shift()!;
-        currentCluster.push(current);
-
-        const neighbors = [
-          {
-            rowIndex: current.rowIndex,
-            seatNumber: current.seatNumber - 1,
-            wheelchairAccess: current.seatNumber - 1 === 1,
-          }, // Left
-          {
-            rowIndex: current.rowIndex,
-            seatNumber: current.seatNumber + 1,
-            wheelchairAccess: current.seatNumber + 1 === seatsPerRow,
-          }, // Right
-          {
-            rowIndex: current.rowIndex + 1,
-            seatNumber: current.seatNumber,
-            wheelchairAccess: current.seatNumber === 1 || current.seatNumber === seatsPerRow,
-          }, // Down
-          {
-            rowIndex: current.rowIndex - 1,
-            seatNumber: current.seatNumber,
-            wheelchairAccess: current.seatNumber === 1 || current.seatNumber === seatsPerRow,
-          }, // Up
-        ];
-
-        // Priority within the cluster: Stay in the same row first
-        neighbors.sort((a, b) => {
-          const aRowDiff = Math.abs(a.rowIndex - current.rowIndex);
-          const bRowDiff = Math.abs(b.rowIndex - current.rowIndex);
-          return aRowDiff - bRowDiff;
-        });
-
-        for (const n of neighbors) {
-          const key = `${n.rowIndex}-${n.seatNumber}`;
-          if (isValid(n.rowIndex, n.seatNumber) && !visited.has(key)) {
-            visited.add(key);
-            queue.push(n);
-          }
+      for (const n of neighbors) {
+        const key = `${n.rowIndex}-${n.seatNumber}`;
+        if (isValid(n.rowIndex, n.seatNumber) && !visited.has(key)) {
+          visited.add(key);
+          queue.push({
+            ...n,
+            wheelchairAccess: n.seatNumber === 1 || n.seatNumber === seatsPerRow,
+          });
         }
       }
+    }
 
-      if (currentCluster.length === quantity) {
-        const score = scoreCluster(currentCluster);
-        if (score > bestScore) {
-          bestScore = score;
-          bestCluster = currentCluster;
-        }
+    if (currentCluster.length === quantity) {
+      const score = scoreCluster(currentCluster);
+      if (score > bestScore) {
+        bestScore = score;
+        bestCluster = currentCluster;
       }
     }
   }
