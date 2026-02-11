@@ -68,7 +68,7 @@ export default function TimeslotPicker({
 
   if (availablePerformances.length === 0) {
     return (
-      <div className="mt-6 w-full">
+      <div id="tickets" className="w-full bg-card rounded-xl border border-border shadow-sm p-6">
         <p className="text-center text-accent dark:text-surface">
           Helaas zijn er geen beschikbare voorstellingen.
         </p>
@@ -77,8 +77,8 @@ export default function TimeslotPicker({
   }
 
   return (
-    <div className="mt-8 w-full">
-      <h2 className="text-xl font-bold text-primary dark:text-secondary mb-4">
+    <div id="tickets" className="w-full bg-card rounded-xl border border-border shadow-sm p-6">
+      <h2 className="text-xl font-bold text-primary dark:text-secondary mb-4 font-display">
         Selecteer een Voorstelling
       </h2>
 

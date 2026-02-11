@@ -23,6 +23,7 @@ That's it! Your environment is ready.
 The development environment includes three services:
 
 ### App (Main Dev Container)
+
 - **Purpose:** Development environment for the Next.js application
 - **Base:** Node 20 with TypeScript support
 - **Includes:** All npm workspace packages (shared, web, worker)
@@ -30,6 +31,7 @@ The development environment includes three services:
 - **Location:** `/workspace` inside container
 
 ### PostgreSQL Database (db)
+
 - **Purpose:** Development database
 - **Image:** `postgres:16-alpine`
 - **Credentials:** `username:password`
@@ -39,6 +41,7 @@ The development environment includes three services:
 - **Persistence:** Data persists in `pgdata` volume across container rebuilds
 
 ### Worker (Background Job Processor)
+
 - **Purpose:** Optional service for job processing (PDF generation, payment webhooks, etc.)
 - **Base:** Node 20 with the Dockerfile.worker configuration
 - **Auto-starts:** No (opt-in via profiles)
@@ -131,11 +134,11 @@ docker-compose --file .devcontainer/docker-compose.yml logs -f worker
 
 The setup script automatically creates `.env.local` from `.env.example` with these modifications:
 
-| Variable | Development Value | Note |
-|----------|-------------------|------|
-| `DATABASE_URL` | `postgresql://username:password@db:5432/database` | Uses `db` hostname (Docker service name) |
-| `USE_MOCK_PAYMENT` | `true` | Uses mock Mollie payments |
-| Other variables | Copied from `.env.example` | Edit `.env.local` to customize |
+| Variable           | Development Value                                 | Note                                     |
+| ------------------ | ------------------------------------------------- | ---------------------------------------- |
+| `DATABASE_URL`     | `postgresql://username:password@db:5432/database` | Uses `db` hostname (Docker service name) |
+| `USE_MOCK_PAYMENT` | `true`                                            | Uses mock Mollie payments                |
+| Other variables    | Copied from `.env.example`                        | Edit `.env.local` to customize           |
 
 To customize variables after setup, edit `.env.local` in the workspace root.
 
@@ -165,6 +168,7 @@ The dev container includes [SQLTools](https://marketplace.visualstudio.com/items
    - Save password: Yes
 
 Once connected, you can:
+
 - Browse database schema
 - Run SQL queries
 - Generate ERD diagrams
@@ -174,18 +178,18 @@ Once connected, you can:
 
 These extensions are automatically installed in the dev container:
 
-| Extension | Purpose |
-|-----------|---------|
-| **ESLint** | Real-time linting with inline error messages |
-| **Prettier** | Code formatting (auto on save) |
-| **Tailwind CSS IntelliSense** | Class suggestions for Tailwind and `cva()` |
-| **Docker** | Manage Docker containers and images |
-| **React Snippets** | Quick React code generation |
-| **Prisma** | SQL syntax highlighting and parsing |
-| **SQLTools** | Database client and query runner |
-| **Error Lens** | Show linting/TypeScript errors inline |
-| **Path IntelliSense** | Autocomplete for file paths |
-| **Vitest Explorer** | Test runner UI with coverage visualization |
+| Extension                     | Purpose                                      |
+| ----------------------------- | -------------------------------------------- |
+| **ESLint**                    | Real-time linting with inline error messages |
+| **Prettier**                  | Code formatting (auto on save)               |
+| **Tailwind CSS IntelliSense** | Class suggestions for Tailwind and `cva()`   |
+| **Docker**                    | Manage Docker containers and images          |
+| **React Snippets**            | Quick React code generation                  |
+| **Prisma**                    | SQL syntax highlighting and parsing          |
+| **SQLTools**                  | Database client and query runner             |
+| **Error Lens**                | Show linting/TypeScript errors inline        |
+| **Path IntelliSense**         | Autocomplete for file paths                  |
+| **Vitest Explorer**           | Test runner UI with coverage visualization   |
 
 ## Troubleshooting
 
@@ -194,6 +198,7 @@ These extensions are automatically installed in the dev container:
 **Cause:** Database container hasn't started or failed health check
 
 **Solution:**
+
 ```bash
 # Check if db container is running
 docker-compose --file .devcontainer/docker-compose.yml ps
@@ -210,6 +215,7 @@ docker-compose --file .devcontainer/docker-compose.yml restart db
 **Cause:** `node_modules` not properly synced
 
 **Solution:**
+
 ```bash
 # Rebuild dev container (VS Code command palette)
 # > Dev Containers: Rebuild Container
@@ -225,6 +231,7 @@ npm install
 **Solution:**
 
 1. **Clean up on host machine (outside devcontainer):**
+
 ```bash
 # Remove host node_modules with macOS bindings (KEEP package-lock.json!)
 rm -rf node_modules
@@ -238,6 +245,7 @@ docker volume rm ons-mierloos-theater_devcontainer_node_modules 2>/dev/null || t
    - The postCreateCommand will use `npm ci` with the lock file for reproducible install
 
 **Why we keep package-lock.json:**
+
 - `npm ci` (clean install) uses the lock file to install exact versions
 - Ensures dev environment matches production deployments exactly
 - Prevents version inconsistencies across the team
@@ -250,6 +258,7 @@ docker volume rm ons-mierloos-theater_devcontainer_node_modules 2>/dev/null || t
 **Cause:** Minor race condition between db startup and migration
 
 **Solution:**
+
 ```bash
 # Wait a few seconds and try again
 npm run db:migrate
@@ -263,6 +272,7 @@ pg_isready -h db -U username -d database
 **Cause:** Another process is using the port
 
 **Solution:**
+
 ```bash
 # Find and kill the process
 lsof -i :3000
@@ -277,6 +287,7 @@ npm run dev -- -p 3001
 **Cause:** Port 8080 in use or database not ready
 
 **Solution:**
+
 ```bash
 # Check if port is free
 lsof -i :8080
@@ -302,6 +313,7 @@ docker-compose --file .devcontainer/docker-compose.yml up --build worker
 **Cause:** Using wrong docker-compose file or deleting volumes
 
 **Solution:**
+
 ```bash
 # Verify pgdata volume exists
 docker volume ls | grep pgdata
@@ -320,7 +332,7 @@ To always start the worker service when opening the dev container, edit `.devcon
 {
   "dockerComposeFile": "docker-compose.yml",
   "service": "app",
-  "runServices": ["app", "db", "worker"]  // Add this line
+  "runServices": ["app", "db", "worker"] // Add this line
 }
 ```
 
@@ -403,6 +415,7 @@ The dev container is optimized for macOS/Windows with:
 ### If still slow, enable VirtioFS (Docker Desktop 4.6+)
 
 Docker Desktop settings:
+
 1. **Preferences** → **General**
 2. Enable **Use VirtioFS** (if available)
 3. Restart Docker
@@ -439,6 +452,7 @@ docker system df
 4. Check container resource limits (shouldn't need adjustment if host has resources)
 
 **For Next.js builds specifically:**
+
 - SWC compiler is used (faster than Babel)
 - Turbopack cache is in `/tmp` (faster rebuilds)
 - Telemetry is disabled (reduces overhead)

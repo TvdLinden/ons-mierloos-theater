@@ -1,7 +1,11 @@
 {
   "name": "ons-mierloos-theater",
   "private": true,
-  "workspaces": ["shared", "web", "worker"],
+  "workspaces": [
+    "shared",
+    "web",
+    "worker"
+  ],
   "scripts": {
     "dev": "npm run dev --workspace=web",
     "build": "npm run build --workspace=web",

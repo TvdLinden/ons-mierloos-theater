@@ -174,7 +174,9 @@ describe('findBestConnectedCluster', () => {
         `${seat.rowIndex - 1}-${seat.seatNumber}`,
         `${seat.rowIndex + 1}-${seat.seatNumber}`,
       ];
-      const hasNeighbor = neighbors.some((n) => seatSet.has(n) && n !== `${seat.rowIndex}-${seat.seatNumber}`);
+      const hasNeighbor = neighbors.some(
+        (n) => seatSet.has(n) && n !== `${seat.rowIndex}-${seat.seatNumber}`,
+      );
       expect(hasNeighbor || result!.length === 1).toBe(true);
     }
   });
@@ -356,20 +358,7 @@ describe('assignSeats — wheelchair orders', () => {
   });
 
   it('falls back to the normal zone when both ends of every row are taken', () => {
-    const occ = occupied(
-      'A1',
-      'A2',
-      'A9',
-      'A10',
-      'B1',
-      'B2',
-      'B9',
-      'B10',
-      'C1',
-      'C2',
-      'C9',
-      'C10',
-    );
+    const occ = occupied('A1', 'A2', 'A9', 'A10', 'B1', 'B2', 'B9', 'B10', 'C1', 'C2', 'C9', 'C10');
     const result = assignSeats(occ, ROWS, SEATS, 2, true);
     const resultLabels = labels(result);
     expect(resultLabels.length).toBe(2);

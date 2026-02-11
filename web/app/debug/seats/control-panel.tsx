@@ -60,10 +60,14 @@ export function ControlPanel({
               style={{ width: `${percentageReserved}%` }}
             ></div>
           </div>
-          <div className="text-center text-sm text-slate-500">{percentageReserved}% gereserveerd</div>
+          <div className="text-center text-sm text-slate-500">
+            {percentageReserved}% gereserveerd
+          </div>
           <div className="pt-2 border-t border-slate-200 mt-4">
             <span className="text-slate-600">♿ Rolstoel gereserveerd:</span>
-            <span className="font-bold text-blue-600 text-lg ml-2">{seatInfo.wheelchairReservations}</span>
+            <span className="font-bold text-blue-600 text-lg ml-2">
+              {seatInfo.wheelchairReservations}
+            </span>
           </div>
         </div>
       </div>
@@ -108,7 +112,8 @@ export function ControlPanel({
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">
-              Aantal zitplaatsen: <span className="text-slate-900 font-bold">{requestQuantity}</span>
+              Aantal zitplaatsen:{' '}
+              <span className="text-slate-900 font-bold">{requestQuantity}</span>
             </label>
             <input
               type="range"
@@ -127,9 +132,7 @@ export function ControlPanel({
               onChange={(e) => onToggleWheelchair(e.target.checked)}
               className="w-4 h-4 rounded accent-blue-500"
             />
-            <span className="text-slate-700 font-medium">
-              ♿ Roltoegangsvereist
-            </span>
+            <span className="text-slate-700 font-medium">♿ Roltoegangsvereist</span>
           </label>
 
           <button
@@ -144,12 +147,15 @@ export function ControlPanel({
               }
             `}
           >
-            {requestQuantity > seatInfo.available ? 'Niet genoeg zitplaatsen' : 'Zitplaatsen toewijzen'}
+            {requestQuantity > seatInfo.available
+              ? 'Niet genoeg zitplaatsen'
+              : 'Zitplaatsen toewijzen'}
           </button>
 
           {lastAssignmentCount > 0 && (
             <div className="p-3 bg-yellow-50 border border-yellow-200 rounded text-yellow-800 text-sm">
-              ✓ Laatste toewijzing: {lastAssignmentCount} zitplaats{lastAssignmentCount !== 1 ? 'en' : ''} gereserveerd
+              ✓ Laatste toewijzing: {lastAssignmentCount} zitplaats
+              {lastAssignmentCount !== 1 ? 'en' : ''} gereserveerd
             </div>
           )}
         </div>

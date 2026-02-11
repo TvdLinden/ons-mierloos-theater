@@ -1,5 +1,10 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { getNextJobs, updateJobStatus, calculateNextRetry, type Job } from '@ons-mierloos-theater/shared/jobs/jobProcessor';
+import {
+  getNextJobs,
+  updateJobStatus,
+  calculateNextRetry,
+  type Job,
+} from '@ons-mierloos-theater/shared/jobs/jobProcessor';
 
 // Note: calculateNextRetry is a pure utility function that doesn't need mocking
 // We test it directly

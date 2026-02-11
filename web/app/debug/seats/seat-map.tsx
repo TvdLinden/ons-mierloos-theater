@@ -52,12 +52,18 @@ export function SeatMap({
 
             {/* Normal zone indicator */}
             {normalMax >= normalMin && (
-              <div className="absolute top-0 bottom-0 border-l-2 border-slate-300 opacity-40" style={{ left: `${(normalMin - 1) * 40 + 64}px` }}></div>
+              <div
+                className="absolute top-0 bottom-0 border-l-2 border-slate-300 opacity-40"
+                style={{ left: `${(normalMin - 1) * 40 + 64}px` }}
+              ></div>
             )}
 
             {/* Right zone indicator */}
             {seatsPerRow > normalMax && (
-              <div className="absolute top-0 bottom-0 border-l-2 border-slate-300 opacity-40" style={{ left: `${(normalMax) * 40 + 64}px` }}></div>
+              <div
+                className="absolute top-0 bottom-0 border-l-2 border-slate-300 opacity-40"
+                style={{ left: `${normalMax * 40 + 64}px` }}
+              ></div>
             )}
 
             {/* Seats */}
@@ -122,7 +128,9 @@ export function SeatMap({
           </div>
           <div>
             <span className="font-semibold text-slate-900">Rechter rolstoelzone:</span>
-            <p className="text-slate-500">Zitplaatsen {seatsPerRow - 1}-{seatsPerRow}</p>
+            <p className="text-slate-500">
+              Zitplaatsen {seatsPerRow - 1}-{seatsPerRow}
+            </p>
           </div>
         </div>
       </div>
