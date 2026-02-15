@@ -7,10 +7,9 @@ import {
 } from '@ons-mierloos-theater/shared/commands/shows';
 import { redirect } from 'next/navigation';
 import { setShowTags } from '@ons-mierloos-theater/shared/commands/tags';
-import { isValidSlug } from '@ons-mierloos-theater/shared/utils/slug';
 import { invalidateShowPaths } from '@/lib/utils/invalidateShowPaths';
 import type { ShowStatus } from '@ons-mierloos-theater/shared/db';
-import { BlocksArray, blocksArraySchema } from '@ons-mierloos-theater/shared/schemas/blocks';
+import { showFormSchema } from '@/lib/schemas/show';
 
 /**
  * Upserts a show (create or update) with tags.
@@ -24,46 +23,34 @@ export async function handleUpsertShow(
   prevState: { error?: string },
   formData: FormData,
 ) {
-  // Parse basic show fields
-  const title = formData.get('title') as string;
-  const subtitle = formData.get('subtitle') as string;
-  const blocksJson = formData.get('blocks') as string;
-  const slug = formData.get('slug') as string;
-  const basePrice = formData.get('price') as string;
-  const publicationDate = formData.get('publicationDate') as string;
-  const depublicationDate = formData.get('depublicationDate') as string;
-  const imageId = formData.get('imageId') as string | null;
-  const tagIds = formData.getAll('tagIds') as string[];
+  const validationResult = showFormSchema.safeParse({
+    title: formData.get('title'),
+    subtitle: formData.get('subtitle'),
+    slug: formData.get('slug'),
+    price: formData.get('price'),
+    blocks: formData.get('blocks'),
+    publicationDate: formData.get('publicationDate'),
+    depublicationDate: formData.get('depublicationDate'),
+    imageId: formData.get('imageId'),
+    tagIds: formData.getAll('tagIds'),
+  });
 
-  // Validate basic fields
-  if (!title) {
-    return { error: 'Titel is verplicht.' };
+  if (!validationResult.success) {
+    const firstError = validationResult.error.issues[0];
+    return { error: firstError?.message || 'Validatiefout.' };
   }
 
-  let blocks: BlocksArray = [];
-  if (blocksJson) {
-    try {
-      const parsed = JSON.parse(blocksJson);
-      blocks = blocksArraySchema.parse(parsed);
-    } catch (error) {
-      console.error('Error parsing blocks:', error);
-      return { error: 'Ongeldige inhoud.' };
-    }
-  } else {
-    return { error: 'Inhoud is verplicht.' };
-  }
-
-  if (!isValidSlug(slug)) {
-    return {
-      error: 'Slug is verplicht en mag alleen kleine letters, cijfers en streepjes bevatten.',
-    };
-  }
-
-  if (!basePrice || isNaN(Number(basePrice)) || !/^\d+(\.\d{1,2})?$/.test(basePrice)) {
-    return {
-      error: 'Prijs is verplicht en moet een geldig decimaal getal zijn (max 2 decimalen).',
-    };
-  }
+  const {
+    title,
+    subtitle,
+    slug,
+    price: basePrice,
+    blocks,
+    publicationDate,
+    depublicationDate,
+    imageId,
+    tagIds,
+  } = validationResult.data;
 
   let finalShowId: string;
 

@@ -6,6 +6,7 @@ import { updatePerformance } from '@ons-mierloos-theater/shared/commands/shows';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import PerformanceForm from '@/components/PerformanceForm';
 import { Card } from '@/components/ui';
+import { performanceFormSchema } from '@/lib/schemas/performance';
 
 type Props = {
   params: Promise<{ id: string; performanceId: string }>;
@@ -29,34 +30,31 @@ export default async function EditPerformancePage({ params }: Props) {
   async function handleUpdatePerformance(prevState: { error?: string }, formData: FormData) {
     'use server';
 
-    const date = formData.get('date') as string;
-    const price = formData.get('price') as string;
-    const rows = formData.get('rows') as string;
-    const seatsPerRow = formData.get('seatsPerRow') as string;
-    const status = formData.get('status') as string;
-    const notes = formData.get('notes') as string;
+    const validationResult = performanceFormSchema.safeParse({
+      date: formData.get('date'),
+      price: formData.get('price'),
+      rows: formData.get('rows'),
+      seatsPerRow: formData.get('seatsPerRow'),
+      status: formData.get('status'),
+      notes: formData.get('notes'),
+    });
 
-    if (!date) {
-      return { error: 'Datum en tijd zijn verplicht.' };
+    if (!validationResult.success) {
+      const firstError = validationResult.error.issues[0];
+      return { error: firstError?.message || 'Validatiefout.' };
     }
 
-    if (price && (isNaN(Number(price)) || !/^\d+(\.\d{1,2})?$/.test(price))) {
-      return { error: 'Prijs moet een geldig decimaal getal zijn (max 2 decimalen).' };
-    }
-
-    const rowsNum = rows ? parseInt(rows) : 5;
-    const seatsPerRowNum = seatsPerRow ? parseInt(seatsPerRow) : 20;
-    const totalSeats = rowsNum * seatsPerRowNum;
+    const { date, price, rows, seatsPerRow, status, notes } = validationResult.data;
+    const totalSeats = rows * seatsPerRow;
 
     try {
       await updatePerformance(performanceId, {
         date: new Date(date),
         price: price || undefined,
-        rows: rowsNum,
-        seatsPerRow: seatsPerRowNum,
-        totalSeats: totalSeats,
-        status:
-          (status as 'draft' | 'published' | 'sold_out' | 'cancelled' | 'archived') || 'draft',
+        rows,
+        seatsPerRow,
+        totalSeats,
+        status,
         notes: notes || null,
       });
     } catch (error) {

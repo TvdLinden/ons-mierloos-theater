@@ -116,7 +116,7 @@ export function DateRangePicker({
           value={startInput}
           onChange={handleStartInputChange}
           onBlur={handleStartInputBlur}
-          placeholder={`Start: ${getPlaceholder(format)}`}
+          placeholder={format}
           disabled={disabled}
           className="flex-1"
         />
@@ -124,7 +124,7 @@ export function DateRangePicker({
           value={endInput}
           onChange={handleEndInputChange}
           onBlur={handleEndInputBlur}
-          placeholder={`End: ${getPlaceholder(format)}`}
+          placeholder={format}
           disabled={disabled}
           className="flex-1"
         />
