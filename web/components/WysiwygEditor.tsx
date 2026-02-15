@@ -122,9 +122,7 @@ export default function WysiwygEditor({ name, defaultValue, disabled, ref }: Wys
     content: defaultValue || '',
     editorProps: {
       attributes: {
-        class: `prose prose-sm dark:prose-invert max-w-none border border-border rounded-md p-4 min-h-64 outline-none bg-white dark:bg-slate-950 transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] ${
-          disabled ? 'opacity-50 cursor-not-allowed' : ''
-        }`,
+        class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-2xl mx-auto focus:outline-none',
       },
     },
     immediatelyRender: false,
@@ -417,7 +415,7 @@ export default function WysiwygEditor({ name, defaultValue, disabled, ref }: Wys
         </Popover>
       </ToggleGroup>
 
-      <EditorContent className="prose prose-lg max-w-none! w-full flex-1" editor={editor} />
+      <EditorContent className="flex-1" editor={editor} />
 
       {/* Hidden input to store the HTML content */}
       <input type="hidden" name={name} value={editor?.getHTML() || ''} />
