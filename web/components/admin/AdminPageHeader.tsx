@@ -33,7 +33,7 @@ export function AdminPageHeader({
           <>
             {typeof action === 'object' && 'href' in action ? (
               <Link href={action.href}>
-                <Button variant="secondary">{action.label}</Button>
+                <Button variant="outline">{action.label}</Button>
               </Link>
             ) : (
               action

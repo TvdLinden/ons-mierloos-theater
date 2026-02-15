@@ -1,7 +1,6 @@
 import { db, Image } from '../db';
 import { images, shows, sponsors } from '../db/schema';
-import { eq, notInArray, sql, desc } from 'drizzle-orm';
-import { mime } from 'zod';
+import { eq, sql, desc } from 'drizzle-orm';
 
 export async function getImageById(id: string): Promise<Image | null> {
   const result = await db.select().from(images).where(eq(images.id, id)).limit(1);
@@ -72,20 +71,20 @@ export async function getImageUsage(imageId: string): Promise<{
 }
 
 /**
- * Find images that are not referenced by any performance or sponsor
- * (not used as imageId, thumbnailImageId, or logoId)
+ * Find images that are not referenced by any FK column or image_usages entry.
+ * Images in image_usages are those embedded in show/page block content.
  */
-import { newsArticles } from '../db/schema';
+import { newsArticles, imageUsages } from '../db/schema';
 
 export async function findUnusedImages(offset = 0, limit = 50): Promise<Image[]> {
-  // Single SQL: NOT EXISTS subqueries for each referencing table/column.
   const rows = await db
     .select()
     .from(images)
     .where(
       sql`NOT EXISTS (SELECT 1 FROM ${shows} WHERE ${shows.imageId} = ${images.id})
         AND NOT EXISTS (SELECT 1 FROM ${sponsors} WHERE ${sponsors.logoId} = ${images.id})
-        AND NOT EXISTS (SELECT 1 FROM ${newsArticles} WHERE ${newsArticles.imageId} = ${images.id})`,
+        AND NOT EXISTS (SELECT 1 FROM ${newsArticles} WHERE ${newsArticles.imageId} = ${images.id})
+        AND NOT EXISTS (SELECT 1 FROM ${imageUsages} WHERE ${imageUsages.imageId} = ${images.id})`,
     )
     .orderBy(desc(images.uploadedAt))
     .limit(limit)

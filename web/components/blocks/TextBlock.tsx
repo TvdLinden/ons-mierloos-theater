@@ -4,6 +4,7 @@ import { useRef, useState } from 'react';
 import WysiwygEditor, { WysiwygEditorRef } from '@/components/WysiwygEditor';
 import type { TextBlock } from '@ons-mierloos-theater/shared/schemas/blocks';
 import { cn } from '@/lib/utils';
+import DOMPurify from 'isomorphic-dompurify';
 import {
   Label,
   Select,
@@ -26,6 +27,9 @@ interface TextBlockComponentProps {
 }
 
 export function TextBlockDisplayMode({ block }: { block: TextBlock }) {
+  // Sanitize HTML to prevent XSS attacks
+  const sanitizedContent = DOMPurify.sanitize(block.content);
+
   return (
     <div
       className={cn(
@@ -34,7 +38,7 @@ export function TextBlockDisplayMode({ block }: { block: TextBlock }) {
         block.textAlignment || 'text-left',
         block.className,
       )}
-      dangerouslySetInnerHTML={{ __html: block.content }}
+      dangerouslySetInnerHTML={{ __html: sanitizedContent }}
     />
   );
 }

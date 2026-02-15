@@ -5,10 +5,13 @@ import {
   insertShow,
   linkShowToTags,
 } from '@ons-mierloos-theater/shared/commands/shows';
+import { syncImageUsages } from '@ons-mierloos-theater/shared/commands/imageUsages';
 import { redirect } from 'next/navigation';
 import { setShowTags } from '@ons-mierloos-theater/shared/commands/tags';
 import { invalidateShowPaths } from '@/lib/utils/invalidateShowPaths';
+import { uploadImagesFromBlocks } from '@/lib/utils/uploadImagesFromBlocks';
 import type { ShowStatus } from '@ons-mierloos-theater/shared/db';
+import type { BlocksArray } from '@ons-mierloos-theater/shared/schemas/blocks';
 import { showFormSchema } from '@/lib/schemas/show';
 
 /**
@@ -58,12 +61,28 @@ export async function handleUpsertShow(
   const finalImageId = imageId && imageId.trim() ? imageId.trim() : undefined;
 
   try {
+    // Parse and upload images in blocks
+    let parsedBlocks: BlocksArray | null = null;
+    if (blocks) {
+      try {
+        const blockData = typeof blocks === 'string' ? JSON.parse(blocks) : blocks;
+        // Validate blocks structure
+        parsedBlocks = blockData;
+      } catch (error) {
+        console.error('Error parsing blocks:', error);
+        return { error: 'Invalid blocks format.' };
+      }
+    }
+
+    // Upload any base64 images and get cleaned blocks
+    const cleanedBlocks = await uploadImagesFromBlocks(parsedBlocks);
+
     if (showId) {
       // UPDATE existing show
       const updateFields: any = {
         title,
         subtitle: subtitle?.trim() || null,
-        blocks,
+        blocks: cleanedBlocks,
         slug,
         basePrice,
         publicationDate: publicationDate?.trim() ? new Date(publicationDate) : null,
@@ -84,7 +103,7 @@ export async function handleUpsertShow(
         title,
         subtitle: subtitle?.trim() || null,
         slug,
-        blocks,
+        blocks: cleanedBlocks,
         basePrice,
         status: 'draft' as ShowStatus,
         imageId: finalImageId,
@@ -97,6 +116,9 @@ export async function handleUpsertShow(
 
     // Update tags (works for both insert and update)
     await setShowTags(finalShowId, tagIds);
+
+    // Sync image usages from blocks content
+    await syncImageUsages('show', finalShowId, cleanedBlocks);
 
     // Invalidate all paths depending on show data
     invalidateShowPaths(finalShowId);

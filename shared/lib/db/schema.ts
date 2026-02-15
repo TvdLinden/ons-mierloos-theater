@@ -219,6 +219,22 @@ export const images = pgTable('images', {
   uploadedAt: timestamp('uploaded_at', { withTimezone: true }).defaultNow(),
 });
 
+// Image usages - tracks which images are embedded in block content
+export const imageUsages = pgTable(
+  'image_usages',
+  {
+    imageId: uuid('image_id')
+      .notNull()
+      .references(() => images.id, { onDelete: 'cascade' }),
+    entityType: varchar('entity_type', { length: 50 }).notNull(), // 'show' | 'page'
+    entityId: uuid('entity_id').notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.imageId, table.entityType, table.entityId] }),
+    index('image_usages_entity_idx').on(table.entityType, table.entityId),
+  ],
+);
+
 // Images relations will be defined at the end after all tables are declared
 
 // Tags table for categorizing shows

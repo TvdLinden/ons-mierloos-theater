@@ -1,10 +1,12 @@
 'use client';
 
 import { useEditor, EditorContent } from '@tiptap/react';
+import type { Editor } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
 import Youtube from '@tiptap/extension-youtube';
 import { Markdown } from '@tiptap/markdown';
+import DOMPurify from 'isomorphic-dompurify';
 import {
   Bold,
   Italic,
@@ -19,7 +21,7 @@ import {
   Image as ImageIcon,
   Play,
 } from 'lucide-react';
-import { useState, useImperativeHandle, useEffect } from 'react';
+import { useState, useImperativeHandle, useEffect, useRef } from 'react';
 import { Popover, PopoverTrigger, PopoverContent } from './ui/popover';
 import { Input } from './ui/input';
 import { Button } from './ui/button';
@@ -38,23 +40,21 @@ export type WysiwygEditorRef = {
   getHTML: () => string;
   getText: () => string;
   getMarkdown: () => string;
+  getHTMLWithUploadedImages: () => Promise<string>;
+  getMarkdownWithUploadedImages: () => Promise<string>;
 };
 
-export default function WysiwygEditor({
-  name,
-  defaultValue,
-  placeholder,
-  disabled,
-  ref,
-}: WysiwygEditorProps) {
+export default function WysiwygEditor({ name, defaultValue, disabled, ref }: WysiwygEditorProps) {
   const [imageUrl, setImageUrl] = useState('');
   const [youtubeUrl, setYoutubeUrl] = useState('');
   const [imageOpen, setImageOpen] = useState(false);
   const [youtubeOpen, setYoutubeOpen] = useState(false);
   const [, setEditorUpdate] = useState(0); // Force re-render on editor update
+  const editorRef = useRef<Editor | null>(null);
 
   const editor = useEditor({
     extensions: [
+      PasteImage.configure(),
       PasteMarkdown.configure(),
 
       Markdown.configure({
@@ -140,12 +140,91 @@ export default function WysiwygEditor({
       // Only update if editor is empty to avoid overwriting user edits
       editor.commands.setContent(defaultValue);
     }
+    editorRef.current = editor;
   }, [editor, defaultValue]);
 
+  // Extract base64 images from data URL and upload them
+  const uploadBase64Image = async (dataUrl: string): Promise<{ id?: string; r2Url: string }> => {
+    try {
+      const arr = dataUrl.split(',');
+      const mimeMatch = arr[0].match(/:(.*?);/);
+      const mime = mimeMatch ? mimeMatch[1] : 'image/png';
+      const bstr = atob(arr[1]);
+      const n = bstr.length;
+      const u8arr = new Uint8Array(n);
+      for (let i = 0; i < n; i++) {
+        u8arr[i] = bstr.charCodeAt(i);
+      }
+      const blob = new Blob([u8arr], { type: mime });
+      const file = new File([blob], 'pasted-image.png', { type: mime });
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        console.error('Image upload failed:', response.statusText);
+        return { r2Url: dataUrl }; // Return original if upload fails
+      }
+
+      const data = await response.json();
+      return { id: data.id, r2Url: data.r2Url || dataUrl };
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      return { r2Url: dataUrl }; // Return original if upload fails
+    }
+  };
+
+  const getHTMLWithUploadedImages = async (): Promise<string> => {
+    const html = editor.getHTML();
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    const imgs = doc.querySelectorAll('img');
+
+    const uploadPromises = Array.from(imgs)
+      .filter((img) => img.src && img.src.startsWith('data:'))
+      .map(async (img) => {
+        const { id, r2Url } = await uploadBase64Image(img.src);
+        img.src = r2Url;
+        if (id) {
+          img.setAttribute('data-image-id', id);
+        }
+      });
+
+    await Promise.all(uploadPromises);
+    // Sanitize before returning to prevent XSS
+    return DOMPurify.sanitize(doc.body.innerHTML);
+  };
+
+  const getMarkdownWithUploadedImages = async (): Promise<string> => {
+    let markdown = editor.getMarkdown();
+
+    // Find all markdown image references: ![alt](data:...)
+    const imageRegex = /!\[([^\]]*)\]\((data:[^)]+)\)/g;
+    const matches = Array.from(markdown.matchAll(imageRegex));
+
+    const uploadPromises = matches.map(async (match) => {
+      const fullMatch = match[0];
+      const alt = match[1];
+      const dataUrl = match[2];
+      const { r2Url } = await uploadBase64Image(dataUrl);
+      markdown = markdown.replace(fullMatch, `![${alt}](${r2Url})`);
+    });
+
+    await Promise.all(uploadPromises);
+    return markdown;
+  };
+
   useImperativeHandle(ref, () => ({
-    getHTML: () => editor.getHTML(),
+    getHTML: () => DOMPurify.sanitize(editor.getHTML()),
     getText: () => editor.getText(),
     getMarkdown: () => editor.getMarkdown(),
+    getHTMLWithUploadedImages,
+    getMarkdownWithUploadedImages,
   }));
 
   if (!editor) {
@@ -267,7 +346,7 @@ export default function WysiwygEditor({
   ];
 
   return (
-    <div className="space-y-2 w-full">
+    <div className="flex flex-col gap-2 w-full h-full">
       <ToggleGroup type="single" className="flex-wrap">
         {toggleItems.map((item) => (
           <Toggle
@@ -338,7 +417,7 @@ export default function WysiwygEditor({
         </Popover>
       </ToggleGroup>
 
-      <EditorContent className="prose prose-lg max-w-none! w-full" editor={editor} />
+      <EditorContent className="prose prose-lg max-w-none! w-full flex-1" editor={editor} />
 
       {/* Hidden input to store the HTML content */}
       <input type="hidden" name={name} value={editor?.getHTML() || ''} />
@@ -346,8 +425,46 @@ export default function WysiwygEditor({
   );
 }
 
-import { Editor, Extension } from '@tiptap/core';
+import { Extension } from '@tiptap/core';
 import { Plugin } from '@tiptap/pm/state';
+
+const PasteImage = Extension.create({
+  name: 'pasteImage',
+
+  addProseMirrorPlugins() {
+    const editor = this.editor;
+    return [
+      new Plugin({
+        props: {
+          handlePaste(view, event) {
+            const files = event.clipboardData?.files;
+            if (!files || files.length === 0) {
+              return false;
+            }
+
+            let handled = false;
+
+            Array.from(files).forEach((file) => {
+              if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                  const dataUrl = e.target?.result as string;
+                  if (dataUrl) {
+                    editor.chain().focus().setImage({ src: dataUrl }).run();
+                    handled = true;
+                  }
+                };
+                reader.readAsDataURL(file);
+              }
+            });
+
+            return handled;
+          },
+        },
+      }),
+    ];
+  },
+});
 
 const PasteMarkdown = Extension.create({
   name: 'pasteMarkdown',
@@ -357,7 +474,7 @@ const PasteMarkdown = Extension.create({
     return [
       new Plugin({
         props: {
-          handlePaste(view, event, slice) {
+          handlePaste(view, event) {
             const text = event.clipboardData?.getData('text/plain');
 
             if (!text) {

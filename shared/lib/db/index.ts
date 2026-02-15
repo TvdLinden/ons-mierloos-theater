@@ -10,6 +10,7 @@ import {
   tags,
   showTags,
   images,
+  imageUsages,
   mailingListSubscribers,
   sponsors,
   coupons,
@@ -127,6 +128,7 @@ const db = drizzle(pool, {
     tags,
     showTags,
     images,
+    imageUsages,
     mailingListSubscribers,
     sponsors,
     coupons,
@@ -166,4 +168,4 @@ const db = drizzle(pool, {
   },
 });
 
-export { db };
+export { db, imageUsages };

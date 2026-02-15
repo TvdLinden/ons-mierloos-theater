@@ -9,7 +9,7 @@ export const performanceFormSchema = z.object({
         const date = new Date(val);
         return !isNaN(date.getTime());
       },
-      { message: 'Ongeldige datum en tijd.' }
+      { message: 'Ongeldige datum en tijd.' },
     ),
   price: z
     .string()
@@ -19,7 +19,7 @@ export const performanceFormSchema = z.object({
         if (!val) return true; // empty is valid (optional)
         return !isNaN(Number(val)) && /^\d+(\.\d{1,2})?$/.test(val);
       },
-      { message: 'Prijs moet een geldig decimaal getal zijn (max 2 decimalen).' }
+      { message: 'Prijs moet een geldig decimaal getal zijn (max 2 decimalen).' },
     ),
   rows: z
     .string()
