@@ -17,7 +17,7 @@ export default async function EditShowPage(props: { params: Promise<{ id: string
 
   const [availableTags, availableImages] = await Promise.all([getAllTags(), getAllImages(0, 1000)]);
 
-  const boundAction = handleUpsertShow.bind(null, id, show.performances || []);
+  const boundAction = handleUpsertShow.bind(null, id);
 
   const initialData: ShowFormState = {
     title: show.title,
@@ -26,14 +26,12 @@ export default async function EditShowPage(props: { params: Promise<{ id: string
     slug: show.slug,
     imageId: show.imageId || undefined,
     price: show.basePrice,
-    status: show.status,
     publicationDate: show.publicationDate
       ? new Date(show.publicationDate).toISOString().slice(0, 16)
       : undefined,
     depublicationDate: show.depublicationDate
       ? new Date(show.depublicationDate).toISOString().slice(0, 16)
       : undefined,
-    performances: show.performances || [],
     tagIds: show.tags?.map((t) => t.id) || undefined,
   };
 
@@ -61,6 +59,7 @@ export default async function EditShowPage(props: { params: Promise<{ id: string
         availableTags={availableTags}
         availableImages={availableImages}
         cancelHref={`/admin/shows/${id}`}
+        performancesHref={`/admin/shows/${id}/performances`}
       />
     </>
   );

@@ -3,44 +3,24 @@
 import {
   updateShow,
   insertShow,
-  insertPerformance,
-  deletePerformance,
   linkShowToTags,
 } from '@ons-mierloos-theater/shared/commands/shows';
 import { redirect } from 'next/navigation';
 import { setShowTags } from '@ons-mierloos-theater/shared/commands/tags';
 import { isValidSlug } from '@ons-mierloos-theater/shared/utils/slug';
 import { invalidateShowPaths } from '@/lib/utils/invalidateShowPaths';
-import type { PerformanceStatus, ShowStatus } from '@ons-mierloos-theater/shared/db';
-import { Blocks } from 'lucide-react';
+import type { ShowStatus } from '@ons-mierloos-theater/shared/db';
 import { BlocksArray, blocksArraySchema } from '@ons-mierloos-theater/shared/schemas/blocks';
 
-type NewPerformance = {
-  id?: string;
-  date: string;
-  price: string;
-  rows: number;
-  seatsPerRow: number;
-  availableSeats: number;
-  status: PerformanceStatus;
-  notes?: string;
-};
-
-type CurrentPerformance = {
-  id: string;
-  [key: string]: any;
-};
-
 /**
- * Upserts a show (create or update) with performances and tags.
+ * Upserts a show (create or update) with tags.
+ * Performance management is now handled on a dedicated page.
  * @param showId Optional - if provided, updates existing show; if null, creates new show
- * @param currentPerformances Optional - current performances (only used when updating)
  * @param prevState Previous form state
  * @param formData Form data from the submission
  */
 export async function handleUpsertShow(
   showId: string | null,
-  currentPerformances: CurrentPerformance[] = [],
   prevState: { error?: string },
   formData: FormData,
 ) {
@@ -54,10 +34,6 @@ export async function handleUpsertShow(
   const depublicationDate = formData.get('depublicationDate') as string;
   const imageId = formData.get('imageId') as string | null;
   const tagIds = formData.getAll('tagIds') as string[];
-
-  // Parse performances array from hidden inputs
-  const performancesData = formData.getAll('performances') as string[];
-  const performances: NewPerformance[] = performancesData.map((p) => JSON.parse(p));
 
   // Validate basic fields
   if (!title) {
@@ -115,17 +91,6 @@ export async function handleUpsertShow(
       await updateShow(showId, updateFields);
 
       finalShowId = showId;
-
-      // Track which performances exist in the current show
-      const currentPerformanceIds = new Set(currentPerformances?.map((p) => p.id) || []);
-      const submittedPerformanceIds = new Set(performances.filter((p) => p.id).map((p) => p.id!));
-
-      // Delete performances that were removed
-      for (const perfId of currentPerformanceIds) {
-        if (!submittedPerformanceIds.has(perfId)) {
-          await deletePerformance(perfId);
-        }
-      }
     } else {
       // INSERT new show
       const show = await insertShow({
@@ -145,24 +110,6 @@ export async function handleUpsertShow(
 
     // Update tags (works for both insert and update)
     await setShowTags(finalShowId, tagIds);
-
-    // Insert new performances (those without IDs)
-    const newPerformances = performances.filter((p) => !p.id);
-    if (newPerformances.length > 0) {
-      for (const perf of newPerformances) {
-        await insertPerformance({
-          showId: finalShowId,
-          date: new Date(perf.date),
-          price: perf.price,
-          rows: perf.rows,
-          seatsPerRow: perf.seatsPerRow,
-          totalSeats: perf.rows * perf.seatsPerRow,
-          availableSeats: perf.availableSeats,
-          status: perf.status,
-          notes: perf.notes || null,
-        });
-      }
-    }
 
     // Invalidate all paths depending on show data
     invalidateShowPaths(finalShowId);

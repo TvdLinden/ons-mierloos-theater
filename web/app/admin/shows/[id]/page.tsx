@@ -23,6 +23,7 @@ export default async function ShowDetailPage({ params }: Props) {
   );
   const totalSeats = show.performances.reduce((sum, p) => sum + (p.totalSeats || 0), 0);
   const availableSeats = show.performances.reduce((sum, p) => sum + (p.availableSeats || 0), 0);
+  const soldTickets = totalSeats - availableSeats;
 
   return (
     <>
@@ -146,7 +147,7 @@ export default async function ShowDetailPage({ params }: Props) {
           </Link>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           <div className="bg-zinc-50 rounded-lg p-4">
             <p className="text-xs text-zinc-500 uppercase tracking-wide mb-1">Komend</p>
             <p className="text-xl font-bold">{upcomingPerformances.length}</p>
@@ -154,6 +155,10 @@ export default async function ShowDetailPage({ params }: Props) {
           <div className="bg-zinc-50 rounded-lg p-4">
             <p className="text-xs text-zinc-500 uppercase tracking-wide mb-1">Totaal plaatsen</p>
             <p className="text-xl font-bold">{totalSeats}</p>
+          </div>
+          <div className="bg-zinc-50 rounded-lg p-4">
+            <p className="text-xs text-zinc-500 uppercase tracking-wide mb-1">Verkocht</p>
+            <p className="text-xl font-bold">{soldTickets}</p>
           </div>
           <div className="bg-zinc-50 rounded-lg p-4">
             <p className="text-xs text-zinc-500 uppercase tracking-wide mb-1">Beschikbaar</p>
@@ -164,44 +169,65 @@ export default async function ShowDetailPage({ params }: Props) {
         {show.performances.length === 0 ? (
           <p className="text-zinc-500 text-sm">Nog geen speeltijden toegevoegd.</p>
         ) : (
-          <div className="space-y-2">
-            {show.performances.slice(0, 5).map((performance) => (
-              <Link
-                key={performance.id}
-                href={`/admin/shows/${id}/performances/${performance.id}`}
-                className="flex items-center justify-between py-2 border-b border-zinc-100 last:border-0 hover:bg-zinc-50 -mx-2 px-2 rounded"
-              >
-                <div>
-                  <p className="text-sm font-medium text-primary">
-                    {new Date(performance.date).toLocaleString('nl-NL', {
-                      dateStyle: 'long',
-                      timeStyle: 'short',
-                    })}
-                  </p>
-                  <p className="text-xs text-zinc-500">
-                    €{performance.price} · {performance.availableSeats}/{performance.totalSeats}{' '}
-                    plaatsen
-                  </p>
-                </div>
-                <span
-                  className={`inline-block px-2 py-0.5 rounded text-xs font-semibold ${
-                    performance.status === 'published'
-                      ? 'bg-green-100 text-green-800'
-                      : performance.status === 'sold_out'
-                        ? 'bg-red-100 text-red-800'
-                        : performance.status === 'cancelled'
-                          ? 'bg-zinc-100 text-zinc-800'
-                          : 'bg-yellow-100 text-yellow-800'
-                  }`}
+          <div className="divide-y divide-zinc-100">
+            {show.performances.slice(0, 5).map((performance) => {
+              const sold = (performance.totalSeats || 0) - (performance.availableSeats || 0);
+              const pct = performance.totalSeats
+                ? Math.round((sold / performance.totalSeats) * 100)
+                : 0;
+              return (
+                <Link
+                  key={performance.id}
+                  href={`/admin/shows/${id}/performances/${performance.id}/edit`}
+                  className="flex items-center gap-4 py-3 hover:bg-zinc-50 -mx-2 px-2 rounded"
                 >
-                  {performance.status === 'draft' && 'Concept'}
-                  {performance.status === 'published' && 'Gepubliceerd'}
-                  {performance.status === 'sold_out' && 'Uitverkocht'}
-                  {performance.status === 'cancelled' && 'Geannuleerd'}
-                  {performance.status === 'archived' && 'Gearchiveerd'}
-                </span>
-              </Link>
-            ))}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-primary">
+                      {new Date(performance.date).toLocaleString('nl-NL', {
+                        dateStyle: 'long',
+                        timeStyle: 'short',
+                      })}
+                    </p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span
+                        className={`inline-block px-2 py-0.5 rounded text-xs font-semibold ${
+                          performance.status === 'published'
+                            ? 'bg-green-100 text-green-800'
+                            : performance.status === 'sold_out'
+                              ? 'bg-red-100 text-red-800'
+                              : performance.status === 'cancelled'
+                                ? 'bg-zinc-100 text-zinc-800'
+                                : 'bg-yellow-100 text-yellow-800'
+                        }`}
+                      >
+                        {performance.status === 'draft' && 'Concept'}
+                        {performance.status === 'published' && 'Gepubliceerd'}
+                        {performance.status === 'sold_out' && 'Uitverkocht'}
+                        {performance.status === 'cancelled' && 'Geannuleerd'}
+                        {performance.status === 'archived' && 'Gearchiveerd'}
+                      </span>
+                      <span className="text-xs text-zinc-400">€{performance.price}</span>
+                    </div>
+                  </div>
+
+                  <div className="shrink-0 text-right">
+                    <p className="text-sm font-medium">
+                      {sold}{' '}
+                      <span className="text-zinc-400 font-normal">
+                        / {performance.totalSeats} verkocht
+                      </span>
+                    </p>
+                    <div className="mt-1 h-1.5 w-28 bg-zinc-200 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-primary rounded-full"
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                    <p className="text-xs text-zinc-400 mt-0.5">{pct}% bezet</p>
+                  </div>
+                </Link>
+              );
+            })}
             {show.performances.length > 5 && (
               <Link
                 href={`/admin/shows/${id}/performances`}

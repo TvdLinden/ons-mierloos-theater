@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Input } from '@/components/ui/input';
+import { NumberInput } from '@/components/ui/number-input';
+import { nl } from 'date-fns/locale/nl';
 import {
   getLocaleDateTimeFormat,
   getPlaceholder,
@@ -35,6 +37,7 @@ export function DateTimePicker({
   const [open, setOpen] = React.useState(false);
   const [inputValue, setInputValue] = React.useState('');
   const format = getLocaleDateTimeFormat(locale);
+  const isDutch = locale === 'nl' || locale?.startsWith('nl-');
 
   // Update input value when prop value changes
   React.useEffect(() => {
@@ -109,7 +112,7 @@ export function DateTimePicker({
           value={inputValue}
           onChange={handleInputChange}
           onBlur={handleInputBlur}
-          placeholder={placeholder || getPlaceholder(format)}
+          placeholder={placeholder || getPlaceholder(format, locale)}
           disabled={disabled}
           className="pr-10"
         />
@@ -124,34 +127,43 @@ export function DateTimePicker({
               <CalendarIcon className="h-4 w-4" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <div className="p-3 space-y-3">
-              <Calendar
-                mode="single"
-                selected={value}
-                onSelect={handleCalendarSelect}
-                initialFocus
-              />
-              <div className="flex items-center gap-2 px-3 border-t pt-3">
-                <label className="text-sm font-medium">Time:</label>
-                <Input
-                  type="number"
-                  min="0"
-                  max="23"
-                  value={value?.getHours() ?? new Date().getHours()}
-                  onChange={(e) => handleTimeChange('hour', e.target.value)}
-                  className="w-16 text-center"
-                  placeholder="HH"
+          <PopoverContent
+            align="start"
+            sideOffset={4}
+            className="w-auto p-0 h-auto max-h-none overflow-visible"
+          >
+            <div className="flex flex-col">
+              <div className="p-3">
+                <Calendar
+                  mode="single"
+                  selected={value}
+                  onSelect={handleCalendarSelect}
+                  autoFocus
+                  locale={isDutch ? nl : undefined}
                 />
-                <span className="text-muted-foreground">:</span>
-                <Input
-                  type="number"
-                  min="0"
-                  max="59"
+              </div>
+
+              <div className="flex items-center gap-2 p-3 border-t">
+                <label className="text-sm font-medium">{isDutch ? 'Tijd:' : 'Time:'}</label>
+
+                <NumberInput
+                  value={value?.getHours() ?? new Date().getHours()}
+                  onChange={(val) => handleTimeChange('hour', val.toString())}
+                  min={0}
+                  max={23}
+                  step={1}
+                  className="w-20"
+                />
+
+                <span className="text-muted-foreground font-medium">:</span>
+
+                <NumberInput
                   value={value?.getMinutes() ?? new Date().getMinutes()}
-                  onChange={(e) => handleTimeChange('minute', e.target.value)}
-                  className="w-16 text-center"
-                  placeholder="mm"
+                  onChange={(val) => handleTimeChange('minute', val.toString())}
+                  min={0}
+                  max={59}
+                  step={1}
+                  className="w-20"
                 />
               </div>
             </div>

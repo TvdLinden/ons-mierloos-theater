@@ -2,8 +2,8 @@ import { getShowByIdWithPerformances } from '@ons-mierloos-theater/shared/querie
 import { redirect, notFound } from 'next/navigation';
 import { Card, Button } from '@/components/ui';
 import Link from 'next/link';
-import { insertPerformance } from '@ons-mierloos-theater/shared/commands/shows';
-import AddPerformanceToShowForm from '@/components/AddPerformanceToShowForm';
+import { insertPerformance, deletePerformance } from '@ons-mierloos-theater/shared/commands/shows';
+import AddPerformanceSection from '@/components/AddPerformanceSection';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 
 type Props = {
@@ -63,6 +63,16 @@ export default async function ShowPerformancesPage({ params }: Props) {
     }
   }
 
+  async function handleDeletePerformance(performanceId: string) {
+    'use server';
+    try {
+      await deletePerformance(performanceId);
+      redirect(`/admin/shows/${id}/performances`);
+    } catch (error) {
+      console.error('Error deleting performance:', error);
+    }
+  }
+
   return (
     <>
       <AdminPageHeader
@@ -80,18 +90,6 @@ export default async function ShowPerformancesPage({ params }: Props) {
         }
       />
 
-      <Card className="mb-8 p-6">
-        <p className="text-sm text-gray-500">Basisprijs: €{show.basePrice}</p>
-      </Card>
-
-      <Card className="mb-8 p-6">
-        <h2 className="text-2xl font-bold mb-4">Nieuwe speeltijd toevoegen</h2>
-        <AddPerformanceToShowForm
-          action={handleAddPerformance}
-          showBasePrice={show.basePrice || '0'}
-        />
-      </Card>
-
       <Card className="p-6">
         <h2 className="text-2xl font-bold mb-4">Speeltijden</h2>
         {show.performances && show.performances.length > 0 ? (
@@ -99,13 +97,10 @@ export default async function ShowPerformancesPage({ params }: Props) {
             {show.performances.map((performance) => (
               <div
                 key={performance.id}
-                className="border rounded-lg p-4 flex justify-between items-center"
+                className="border rounded-lg p-4 flex justify-between items-start gap-4"
               >
-                <Link
-                  href={`/admin/shows/${id}/performances/${performance.id}`}
-                  className="flex-1 min-w-0"
-                >
-                  <p className="font-medium text-primary hover:underline">
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-primary">
                     {new Date(performance.date).toLocaleString('nl-NL', {
                       dateStyle: 'long',
                       timeStyle: 'short',
@@ -137,7 +132,19 @@ export default async function ShowPerformancesPage({ params }: Props) {
                   {performance.notes && (
                     <p className="text-sm text-gray-500 mt-1">{performance.notes}</p>
                   )}
-                </Link>
+                </div>
+                <div className="flex gap-2 flex-shrink-0">
+                  <Link href={`/admin/shows/${id}/performances/${performance.id}/edit`}>
+                    <Button variant="outline" size="sm">
+                      Bewerken
+                    </Button>
+                  </Link>
+                  <form action={handleDeletePerformance.bind(null, performance.id)}>
+                    <Button type="submit" variant="destructive" size="sm">
+                      Verwijderen
+                    </Button>
+                  </form>
+                </div>
               </div>
             ))}
           </div>
@@ -145,6 +152,8 @@ export default async function ShowPerformancesPage({ params }: Props) {
           <p className="text-gray-500">Nog geen speeltijden toegevoegd.</p>
         )}
       </Card>
+
+      <AddPerformanceSection action={handleAddPerformance} showBasePrice={show.basePrice || '0'} />
     </>
   );
 }

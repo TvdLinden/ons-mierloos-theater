@@ -26,11 +26,10 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
-  let [shows, newsArticles] = await Promise.all([
-    getUpcomingShows(0, 10),
-    getActiveNewsArticles(3),
-  ]);
+  const results = await Promise.all([getUpcomingShows(0, 10), getActiveNewsArticles(3)]);
 
+  let shows = results[0];
+  const newsArticles = results[1];
   // Determine if we're showing upcoming or recently passed shows
   let isShowingRecentlyPassed = false;
   if (shows.length === 0) {

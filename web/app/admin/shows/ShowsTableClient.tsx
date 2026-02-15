@@ -6,6 +6,14 @@ import Link from 'next/link';
 import { DataTable, EmptyRow } from '@/components/admin/DataTable';
 import { useDebouncedValue } from '@/hooks/useDebounce';
 import { Button } from '@/components/ui';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { MoreHorizontal } from 'lucide-react';
 import type { ExportData } from '@ons-mierloos-theater/shared/utils/export';
 import type { ShowWithTagsAndPerformances } from '@ons-mierloos-theater/shared/db';
 
@@ -48,15 +56,22 @@ function getExportData(
     if (!response.ok) throw new Error('Failed to fetch export data');
     const result: FilteredShowsResponse = await response.json();
     return {
-      headers: ['Titel', 'Ondertitel', 'Prijs', 'Status', 'Publicatiedatum', 'Depublicatiedatum'],
-      rows: result.data.map((show) => [
-        show.title,
-        show.subtitle || '',
-        `€${show.basePrice || '0.00'}`,
-        show.status === 'published' ? 'Gepubliceerd' : 'Concept',
-        show.publicationDate ? new Date(show.publicationDate).toLocaleDateString('nl-NL') : '',
-        show.depublicationDate ? new Date(show.depublicationDate).toLocaleDateString('nl-NL') : '',
-      ]),
+      headers: ['Titel', 'Status', 'Prijs', 'Speeltijden', 'Verkocht', 'Beschikbaar'],
+      rows: result.data.map((show) => {
+        const totalSeats = show.performances.reduce((sum, p) => sum + (p.totalSeats || 0), 0);
+        const availableSeats = show.performances.reduce(
+          (sum, p) => sum + (p.availableSeats || 0),
+          0,
+        );
+        return [
+          show.title,
+          show.status === 'published' ? 'Gepubliceerd' : 'Concept',
+          `€${show.basePrice || '0.00'}`,
+          show.performances.length.toString(),
+          (totalSeats - availableSeats).toString(),
+          availableSeats.toString(),
+        ];
+      }),
     };
   };
 }
@@ -187,11 +202,10 @@ export function ShowsTableClient({ onStatusChange }: ShowsTableClientProps) {
         title="Voorstellingen"
         headers={[
           { label: 'Titel', sortable: true, sortKey: 'title' },
-          'Ondertitel',
-          { label: 'Prijs', sortable: true, sortKey: 'basePrice' },
           'Status',
-          { label: 'Publicatiedatum', sortable: true, sortKey: 'publicationDate' },
-          { label: 'Depublicatiedatum', sortable: true, sortKey: 'depublicationDate' },
+          { label: 'Prijs', sortable: true, sortKey: 'basePrice' },
+          'Speeltijden',
+          'Kaartverkoop',
           'Acties',
         ]}
         sortBy={sortBy}
@@ -274,19 +288,19 @@ export function ShowsTableClient({ onStatusChange }: ShowsTableClientProps) {
       >
         {loading ? (
           <tr>
-            <td colSpan={7} className="px-6 py-8 text-center text-zinc-500">
+            <td colSpan={6} className="px-6 py-8 text-center text-zinc-500">
               Bezig met laden...
             </td>
           </tr>
         ) : error ? (
           <tr>
-            <td colSpan={7} className="px-6 py-8 text-center text-red-500">
+            <td colSpan={6} className="px-6 py-8 text-center text-red-500">
               {error}
             </td>
           </tr>
         ) : shows.length === 0 ? (
           <EmptyRow
-            colSpan={7}
+            colSpan={6}
             message={
               isFiltered
                 ? 'Geen voorstellingen gevonden met geselecteerde filters'
@@ -298,13 +312,14 @@ export function ShowsTableClient({ onStatusChange }: ShowsTableClientProps) {
             const isPublished = show.status === 'published';
             const actionLabel = isPublished ? 'Maak concept' : 'Publiceer';
             const targetStatus = isPublished ? 'draft' : 'published';
-            const publicationDate = show.publicationDate
-              ? new Date(show.publicationDate).toLocaleDateString('nl-NL')
-              : '-';
-            const depublicationDate = show.depublicationDate
-              ? new Date(show.depublicationDate).toLocaleDateString('nl-NL')
-              : '-';
 
+            const totalSeats = show.performances.reduce((sum, p) => sum + (p.totalSeats || 0), 0);
+            const availableSeats = show.performances.reduce(
+              (sum, p) => sum + (p.availableSeats || 0),
+              0,
+            );
+            const soldTickets = totalSeats - availableSeats;
+            const pct = totalSeats ? Math.round((soldTickets / totalSeats) * 100) : 0;
             return (
               <tr key={show.id} className="hover:bg-zinc-50">
                 <td className="px-6 py-4">
@@ -312,11 +327,10 @@ export function ShowsTableClient({ onStatusChange }: ShowsTableClientProps) {
                     <div className="font-medium text-primary hover:underline cursor-pointer">
                       {show.title}
                     </div>
+                    {show.subtitle && (
+                      <div className="text-xs text-zinc-400 mt-0.5">{show.subtitle}</div>
+                    )}
                   </Link>
-                </td>
-                <td className="px-6 py-4 text-zinc-600 text-sm">{show.subtitle || '-'}</td>
-                <td className="px-6 py-4 text-zinc-600 text-sm">
-                  &euro;{show.basePrice || '0.00'}
                 </td>
                 <td className="px-6 py-4">
                   <span
@@ -327,24 +341,80 @@ export function ShowsTableClient({ onStatusChange }: ShowsTableClientProps) {
                     {isPublished ? 'Gepubliceerd' : 'Concept'}
                   </span>
                 </td>
-                <td className="px-6 py-4 text-zinc-600 text-sm">{publicationDate}</td>
-                <td className="px-6 py-4 text-zinc-600 text-sm">{depublicationDate}</td>
+                <td className="px-6 py-4 text-zinc-600 text-sm">
+                  &euro;{show.basePrice || '0.00'}
+                </td>
+                <td className="px-6 py-4 text-sm">
+                  {show.performances.length === 0 ? (
+                    <span className="text-zinc-400">Geen speeltijden</span>
+                  ) : (
+                    <div className="space-y-1.5">
+                      {show.performances.slice(0, 3).map((p) => (
+                        <div key={p.id} className="flex items-center justify-between gap-4">
+                          <span className="text-zinc-600">
+                            {new Date(p.date).toLocaleDateString('nl-NL', {
+                              day: 'numeric',
+                              month: 'short',
+                              year: 'numeric',
+                            })}
+                          </span>
+                          <span className="text-xs text-zinc-500 shrink-0 tabular-nums">
+                            {p.availableSeats}/{p.totalSeats}
+                          </span>
+                        </div>
+                      ))}
+                      {show.performances.length > 3 && (
+                        <div className="text-xs text-zinc-400">
+                          +{show.performances.length - 3} meer
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </td>
                 <td className="px-6 py-4">
-                  <div className="flex gap-2">
-                    <Link href={`/admin/shows/edit/${show.id}`}>
-                      <Button type="button" variant="default">
-                        Bewerken
-                      </Button>
-                    </Link>
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      disabled={actionLoading === show.id}
-                      onClick={() => handleStatusToggle(show.id, targetStatus)}
-                    >
-                      {actionLoading === show.id ? 'Bezig...' : actionLabel}
-                    </Button>
+                  <div className="text-sm font-medium">
+                    {soldTickets}{' '}
+                    <span className="text-zinc-400 font-normal">/ {totalSeats}</span>
                   </div>
+                  <div className="mt-1 h-1.5 w-24 bg-zinc-200 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-primary rounded-full"
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                  <div className="text-xs text-zinc-400 mt-0.5">{pct}% bezet</div>
+                </td>
+                <td className="px-6 py-4">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        disabled={actionLoading === show.id}
+                      >
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem asChild>
+                        <Link href={`/admin/shows/${show.id}`}>Bekijken</Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href={`/admin/shows/edit/${show.id}`}>Bewerken</Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href={`/admin/shows/${show.id}/performances`}>Speeltijden</Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onClick={() => handleStatusToggle(show.id, targetStatus)}
+                        disabled={actionLoading === show.id}
+                      >
+                        {actionLoading === show.id ? 'Bezig...' : actionLabel}
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </td>
               </tr>
             );

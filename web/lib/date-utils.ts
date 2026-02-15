@@ -50,10 +50,14 @@ export function getLocaleTimeFormat(locale?: string): string {
 }
 
 /**
- * Get the placeholder based on format
+ * Get a user-friendly placeholder based on locale
  */
-export function getPlaceholder(format: string): string {
-  return format;
+export function getPlaceholder(format: string, locale?: string): string {
+  // Use user-friendly placeholders instead of the format pattern
+  if (locale === 'nl' || locale?.startsWith('nl-')) {
+    return 'Selecteer datum en tijd';
+  }
+  return 'Select date and time';
 }
 
 /**

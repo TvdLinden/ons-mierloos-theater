@@ -7,7 +7,7 @@ import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 export default async function AddShowPage() {
   const [availableTags, availableImages] = await Promise.all([getAllTags(), getAllImages(0, 1000)]);
 
-  const boundAction = handleUpsertShow.bind(null, null, []);
+  const boundAction = handleUpsertShow.bind(null, null);
 
   return (
     <>
