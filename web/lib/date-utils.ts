@@ -49,15 +49,25 @@ export function getLocaleTimeFormat(locale?: string): string {
   return 'HH:mm'; // 24-hour format
 }
 
+type Format = 'date' | 'date-time';
+
 /**
  * Get a user-friendly placeholder based on locale
  */
-export function getPlaceholder(format: string, locale?: string): string {
+export function getPlaceholder(format: Format, locale?: string): string {
   // Use user-friendly placeholders instead of the format pattern
-  if (locale === 'nl' || locale?.startsWith('nl-')) {
-    return 'Selecteer datum en tijd';
+
+  if (format === 'date-time') {
+    if (locale === 'nl' || locale?.startsWith('nl-')) {
+      return 'Selecteer datum en tijd';
+    }
+    return 'Select date and time';
+  } else {
+    if (locale === 'nl') {
+      return 'Selecteer datum';
+    }
+    return 'Select date';
   }
-  return 'Select date and time';
 }
 
 /**

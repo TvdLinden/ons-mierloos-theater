@@ -59,12 +59,12 @@ export default async function EditPerformancePage({ params }: Props) {
           (status as 'draft' | 'published' | 'sold_out' | 'cancelled' | 'archived') || 'draft',
         notes: notes || null,
       });
-
-      redirect(`/admin/shows/${showId}/performances`);
     } catch (error) {
       console.error('Error updating performance:', error);
       return { error: 'Opslaan mislukt.' };
     }
+
+    redirect(`/admin/shows/${showId}/performances`);
   }
 
   return (

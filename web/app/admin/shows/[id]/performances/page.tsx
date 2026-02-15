@@ -26,8 +26,6 @@ export default async function ShowPerformancesPage({ params }: Props) {
     const rows = formData.get('rows') as string;
     const seatsPerRow = formData.get('seatsPerRow') as string;
     const status = formData.get('status') as string;
-    const publicationDate = formData.get('publicationDate') as string;
-    const depublicationDate = formData.get('depublicationDate') as string;
     const notes = formData.get('notes') as string;
 
     if (!date) {

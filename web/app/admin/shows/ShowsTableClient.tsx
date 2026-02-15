@@ -373,14 +373,10 @@ export function ShowsTableClient({ onStatusChange }: ShowsTableClientProps) {
                 </td>
                 <td className="px-6 py-4">
                   <div className="text-sm font-medium">
-                    {soldTickets}{' '}
-                    <span className="text-zinc-400 font-normal">/ {totalSeats}</span>
+                    {soldTickets} <span className="text-zinc-400 font-normal">/ {totalSeats}</span>
                   </div>
                   <div className="mt-1 h-1.5 w-24 bg-zinc-200 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-primary rounded-full"
-                      style={{ width: `${pct}%` }}
-                    />
+                    <div className="h-full bg-primary rounded-full" style={{ width: `${pct}%` }} />
                   </div>
                   <div className="text-xs text-zinc-400 mt-0.5">{pct}% bezet</div>
                 </td>

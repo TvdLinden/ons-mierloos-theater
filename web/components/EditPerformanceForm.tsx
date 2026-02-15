@@ -10,49 +10,35 @@ import { NumberInput } from './ui/number-input';
 import { Performance } from '@ons-mierloos-theater/shared/db';
 import Link from 'next/link';
 
-type PerformanceFormProps = {
+type EditPerformanceFormProps = {
   action: (prevState: { error?: string }, formData: FormData) => Promise<{ error?: string }>;
-  performance?: Performance;
-  showBasePrice?: string;
-  backHref?: string;
-  onCancel?: () => void;
+  performance: Performance;
+  backHref: string;
 };
 
-export default function PerformanceForm({
+export default function EditPerformanceForm({
   action,
   performance,
-  showBasePrice,
   backHref,
-  onCancel,
-}: PerformanceFormProps) {
+}: EditPerformanceFormProps) {
   const [state, formAction, isPending] = useActionState(action, {});
 
-  const isEdit = !!performance;
+  // Convert date to datetime-local format
+  const dateValue = new Date(performance.date);
 
   return (
     <form action={formAction} className="space-y-6">
       <FormField label="Datum en tijd" required>
-        <DateTimePicker
-          name="date"
-          defaultValue={isEdit ? new Date(performance.date) : undefined}
-        />
+        <DateTimePicker name="date" defaultValue={dateValue} />
       </FormField>
 
       <div className="grid grid-cols-2 gap-4">
-        <FormField
-          label="Prijs (€)"
-          helperText={
-            showBasePrice
-              ? `Laat leeg om de basisprijs (€${showBasePrice}) te gebruiken`
-              : 'Standaard indien leeg'
-          }
-        >
+        <FormField label="Prijs (€)" helperText="Standaard indien leeg">
           <NumberInput
             name="price"
             step={0.01}
             min={0}
-            defaultValue={isEdit ? parseFloat(performance.price || '0') : undefined}
-            placeholder={showBasePrice}
+            defaultValue={parseFloat(performance.price || '0')}
             disabled={isPending}
           />
         </FormField>
@@ -60,7 +46,7 @@ export default function PerformanceForm({
         <FormField label="Status" required>
           <StatusSelector
             name="status"
-            defaultValue={performance?.status ?? 'draft'}
+            defaultValue={performance.status}
             options={[
               { value: 'draft', label: 'Concept' },
               { value: 'published', label: 'Gepubliceerd' },
@@ -78,7 +64,7 @@ export default function PerformanceForm({
             name="rows"
             min={1}
             max={26}
-            defaultValue={performance?.rows ?? 5}
+            defaultValue={performance.rows || 5}
             disabled={isPending}
           />
         </FormField>
@@ -87,7 +73,7 @@ export default function PerformanceForm({
           <NumberInput
             name="seatsPerRow"
             min={1}
-            defaultValue={performance?.seatsPerRow ?? 20}
+            defaultValue={performance.seatsPerRow || 20}
             disabled={isPending}
           />
         </FormField>
@@ -100,7 +86,7 @@ export default function PerformanceForm({
         <Textarea
           name="notes"
           placeholder="Bijv. Extra matinee, Special pricing"
-          defaultValue={performance?.notes ?? ''}
+          defaultValue={performance.notes || ''}
           rows={2}
         />
       </FormField>
@@ -109,26 +95,13 @@ export default function PerformanceForm({
 
       <div className="flex gap-3 pt-4 border-t">
         <Button type="submit" disabled={isPending}>
-          {isPending
-            ? isEdit
-              ? 'Opslaan...'
-              : 'Toevoegen...'
-            : isEdit
-              ? 'Opslaan'
-              : 'Speeltijd toevoegen'}
+          {isPending ? 'Opslaan...' : 'Opslaan'}
         </Button>
-        {backHref && (
-          <Link href={backHref}>
-            <Button type="button" variant="outline" disabled={isPending}>
-              Annuleren
-            </Button>
-          </Link>
-        )}
-        {onCancel && !backHref && (
-          <Button type="button" variant="outline" disabled={isPending} onClick={onCancel}>
+        <Link href={backHref}>
+          <Button type="button" variant="outline" disabled={isPending}>
             Annuleren
           </Button>
-        )}
+        </Link>
       </div>
     </form>
   );

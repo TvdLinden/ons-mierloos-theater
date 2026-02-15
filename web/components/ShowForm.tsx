@@ -11,6 +11,7 @@ import Link from 'next/link';
 import { BlockEditor } from './BlockEditor';
 import { BlocksArray } from '@ons-mierloos-theater/shared/schemas/blocks';
 import { NumberInput } from './ui/number-input';
+import { DateTimePicker } from './date-time-picker';
 
 export type ShowFormState = {
   title: string;
@@ -45,6 +46,12 @@ export default function ShowForm({
 }) {
   const [state, formAction, isPending] = useActionState(action, { error: undefined });
   const [selectedImageId, setSelectedImageId] = useState<string | null>(initial?.imageId || null);
+  const [pubDate, setPubDate] = useState<Date | undefined>(
+    initial?.publicationDate ? new Date(initial.publicationDate) : undefined,
+  );
+  const [depubDate, setDepubDate] = useState<Date | undefined>(
+    initial?.depublicationDate ? new Date(initial.depublicationDate) : undefined,
+  );
 
   const handleGenerateSlug = () => {
     const titleInput = document.querySelector<HTMLInputElement>('input[name="title"]');
@@ -115,22 +122,21 @@ export default function ShowForm({
             <div className="space-y-4">
               <SimpleFormField label="Publicatiedatum" htmlFor="publicationDate">
                 <div className="flex gap-2">
-                  <Input
-                    id="publicationDate"
+                  <DateTimePicker
+                    value={pubDate}
+                    onChange={setPubDate}
                     name="publicationDate"
-                    type="datetime-local"
-                    defaultValue={initial?.publicationDate}
+                    locale="nl"
                   />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const input = document.getElementById('publicationDate') as HTMLInputElement;
-                      if (input) input.value = '';
-                    }}
-                    className="px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors text-sm"
-                  >
-                    Wissen
-                  </button>
+                  {pubDate && (
+                    <button
+                      type="button"
+                      onClick={() => setPubDate(undefined)}
+                      className="px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors text-sm shrink-0"
+                    >
+                      Wissen
+                    </button>
+                  )}
                 </div>
                 <p className="text-xs text-zinc-600 mt-1">
                   Optioneel: wanneer deze show zichtbaar moet worden.
@@ -138,24 +144,21 @@ export default function ShowForm({
               </SimpleFormField>
               <SimpleFormField label="Depublicatiedatum" htmlFor="depublicationDate">
                 <div className="flex gap-2">
-                  <Input
-                    id="depublicationDate"
+                  <DateTimePicker
+                    value={depubDate}
+                    onChange={setDepubDate}
                     name="depublicationDate"
-                    type="datetime-local"
-                    defaultValue={initial?.depublicationDate}
+                    locale="nl"
                   />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const input = document.getElementById(
-                        'depublicationDate',
-                      ) as HTMLInputElement;
-                      if (input) input.value = '';
-                    }}
-                    className="px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors text-sm"
-                  >
-                    Wissen
-                  </button>
+                  {depubDate && (
+                    <button
+                      type="button"
+                      onClick={() => setDepubDate(undefined)}
+                      className="px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors text-sm shrink-0"
+                    >
+                      Wissen
+                    </button>
+                  )}
                 </div>
                 <p className="text-xs text-zinc-600 mt-1">
                   Optioneel: wanneer deze show verborgen moet worden.

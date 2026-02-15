@@ -1,7 +1,7 @@
 'use client';
 
 import { JSX, MouseEventHandler, ReactNode, useState } from 'react';
-import { Button } from '../ui';
+import { Button, DatePicker, Input } from '../ui';
 import { ExportData } from '@ons-mierloos-theater/shared/utils/export';
 import { ExportDropdown } from './ExportDropdown';
 import { Popover, PopoverTrigger, PopoverContent } from '../ui/popover';
@@ -143,20 +143,19 @@ export function DataTable({
                       <div key={filterDef.key} className="flex flex-col gap-2">
                         <label className="text-sm font-medium">{filterDef.label}</label>
                         {filterDef.filterType === 'text' && (
-                          <input
+                          <Input
                             type="text"
                             placeholder={filterDef.placeholder || `Zoeken...`}
                             value={currentValue}
                             onChange={(e) => handleFilterChange(filterDef.key, e.target.value)}
-                            className="px-3 py-2 text-sm border border-zinc-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary"
                           />
                         )}
                         {filterDef.filterType === 'date' && (
-                          <input
-                            type="date"
-                            value={currentValue}
-                            onChange={(e) => handleFilterChange(filterDef.key, e.target.value)}
-                            className="px-3 py-2 text-sm border border-zinc-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary"
+                          <DatePicker
+                            value={currentValue ? new Date(currentValue) : undefined}
+                            onChange={(date) =>
+                              handleFilterChange(filterDef.key, date.toISOString())
+                            }
                           />
                         )}
                         {filterDef.filterType === 'select' && filterDef.filterOptions && (

@@ -27,7 +27,7 @@ export interface DatePickerProps {
 export function DatePicker({
   value,
   onChange,
-  locale,
+  locale = 'nl',
   disabled,
   className,
   placeholder,
@@ -86,7 +86,7 @@ export function DatePicker({
           value={inputValue}
           onChange={handleInputChange}
           onBlur={handleInputBlur}
-          placeholder={placeholder || getPlaceholder(format)}
+          placeholder={placeholder || format}
           disabled={disabled}
           className="pr-10"
         />
