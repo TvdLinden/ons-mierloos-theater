@@ -130,6 +130,11 @@ export default async function ShowPerformancesPage({ params }: Props) {
                   )}
                 </div>
                 <div className="flex gap-2 flex-shrink-0">
+                  <Link href={`/admin/shows/${id}/performances/${performance.id}`}>
+                    <Button variant="ghost" size="sm">
+                      Detail
+                    </Button>
+                  </Link>
                   <Link href={`/admin/shows/${id}/performances/${performance.id}/edit`}>
                     <Button variant="outline" size="sm">
                       Bewerken

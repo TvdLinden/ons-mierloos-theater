@@ -43,7 +43,9 @@ export default async function SalesPage() {
             performanceSales.map((sale) => (
               <tr key={sale.performanceId} className="hover:bg-zinc-50">
                 <td className="px-6 py-4">
-                  <Link href={`/admin/sales/shows/${sale.performanceId}`}>
+                  <Link
+                    href={`/admin/sales/shows/${sale.showId}/performances/${sale.performanceId}`}
+                  >
                     <div className="font-medium text-primary hover:underline cursor-pointer">
                       {sale.showTitle}
                     </div>

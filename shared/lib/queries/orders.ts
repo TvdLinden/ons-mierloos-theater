@@ -86,6 +86,7 @@ export async function getTicketSalesByPerformance() {
   return db
     .select({
       performanceId: performances.id,
+      showId: shows.id,
       showTitle: shows.title,
       performanceDate: performances.date,
       totalTickets: sql<number>`coalesce(sum(${lineItems.quantity}), 0)`,
@@ -96,7 +97,7 @@ export async function getTicketSalesByPerformance() {
     .innerJoin(shows, eq(performances.showId, shows.id))
     .innerJoin(orders, eq(lineItems.orderId, orders.id))
     .where(eq(orders.status, 'paid'))
-    .groupBy(performances.id, shows.title, performances.date)
+    .groupBy(performances.id, shows.id, shows.title, performances.date)
     .orderBy(desc(performances.date));
 }
 

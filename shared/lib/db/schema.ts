@@ -133,6 +133,7 @@ export const tickets = pgTable(
     ticketNumber: varchar('ticket_number', { length: 50 }).notNull().unique(),
     rowLetter: varchar('row_letter', { length: 2 }).notNull(), // "A", "B", etc.
     seatNumber: integer('seat_number').notNull(), // 1, 2, 3, etc.
+    wheelchairAccess: boolean('wheelchair_access').notNull().default(false),
     qrToken: uuid('qr_token').notNull().unique().defaultRandom(),
     scannedAt: timestamp('scanned_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),

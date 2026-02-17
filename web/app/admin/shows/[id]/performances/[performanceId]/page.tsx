@@ -1,12 +1,11 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { db } from '@ons-mierloos-theater/shared/db';
-import { performances, lineItems, orders } from '@ons-mierloos-theater/shared/db/schema';
-import { eq, and, desc } from 'drizzle-orm';
+import { performances, orders, tickets } from '@ons-mierloos-theater/shared/db/schema';
+import { eq, and } from 'drizzle-orm';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
-import { StatCard } from '@/components/admin/StatCard';
-import { DataTable, EmptyRow } from '@/components/admin/DataTable';
 import { Button } from '@/components/ui';
+import { SeatMapDisplay } from './SeatMapDisplay';
 
 type Props = {
   params: Promise<{ id: string; performanceId: string }>;
@@ -25,32 +24,45 @@ export default async function PerformanceDetailPage({ params }: Props) {
     notFound();
   }
 
-  // Fetch paid orders for this performance
-  const performanceOrders = await db
+  // Fetch assigned seats for this performance (paid orders only)
+  const assignedTickets = await db
     .select({
-      orderId: orders.id,
-      customerName: orders.customerName,
-      customerEmail: orders.customerEmail,
-      quantity: lineItems.quantity,
-      pricePerTicket: lineItems.pricePerTicket,
-      createdAt: orders.createdAt,
+      rowLetter: tickets.rowLetter,
+      seatNumber: tickets.seatNumber,
+      wheelchairAccess: tickets.wheelchairAccess,
     })
-    .from(lineItems)
-    .innerJoin(orders, eq(lineItems.orderId, orders.id))
-    .where(and(eq(lineItems.performanceId, performanceId), eq(orders.status, 'paid')))
-    .orderBy(desc(orders.createdAt));
+    .from(tickets)
+    .innerJoin(orders, eq(tickets.orderId, orders.id))
+    .where(and(eq(tickets.performanceId, performanceId), eq(orders.status, 'paid')));
 
-  const totalTickets = performanceOrders.reduce((sum, o) => sum + o.quantity, 0);
-  const totalRevenue = performanceOrders.reduce(
-    (sum, o) => sum + Number(o.quantity) * Number(o.pricePerTicket || 0),
-    0,
+  // Convert to arrays for JSON serialization
+  const reservedSeats = assignedTickets.map(
+    (t) => `${t.rowLetter.charCodeAt(0) - 65}-${t.seatNumber}`,
   );
-  const soldSeats = (performance.totalSeats || 0) - (performance.availableSeats || 0);
+  const wheelchairSeats = assignedTickets
+    .filter((t) => t.wheelchairAccess)
+    .map((t) => `${t.rowLetter.charCodeAt(0) - 65}-${t.seatNumber}`);
 
   const dateFormatted = new Date(performance.date).toLocaleString('nl-NL', {
     dateStyle: 'long',
     timeStyle: 'short',
   });
+
+  const statusLabels = {
+    draft: 'Concept',
+    published: 'Gepubliceerd',
+    sold_out: 'Uitverkocht',
+    cancelled: 'Geannuleerd',
+    archived: 'Gearchiveerd',
+  };
+
+  const statusColors = {
+    draft: 'text-yellow-700',
+    published: 'text-green-700',
+    sold_out: 'text-red-700',
+    cancelled: 'text-zinc-600',
+    archived: 'text-zinc-600',
+  };
 
   return (
     <>
@@ -65,50 +77,31 @@ export default async function PerformanceDetailPage({ params }: Props) {
         ]}
         action={
           <div className="flex gap-2">
-            <Link href={`/admin/sales/shows/${performanceId}`}>
+            <Link href={`/admin/shows/${showId}/performances/${performanceId}/edit`}>
+              <Button variant="outline">Bewerken</Button>
+            </Link>
+            <Link href={`/admin/sales/shows/${showId}/performances/${performanceId}`}>
               <Button variant="outline">Verkoop</Button>
             </Link>
           </div>
         }
       />
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
-        <StatCard
-          label="Status"
-          value={
-            performance.status === 'draft'
-              ? 'Concept'
-              : performance.status === 'published'
-                ? 'Gepubliceerd'
-                : performance.status === 'sold_out'
-                  ? 'Uitverkocht'
-                  : performance.status === 'cancelled'
-                    ? 'Geannuleerd'
-                    : 'Gearchiveerd'
-          }
-          valueColor={
-            performance.status === 'published'
-              ? 'text-green-700'
-              : performance.status === 'sold_out'
-                ? 'text-red-700'
-                : performance.status === 'cancelled'
-                  ? 'text-zinc-600'
-                  : 'text-yellow-700'
-          }
-        />
-        <StatCard label="Verkochte plaatsen" value={`${soldSeats} / ${performance.totalSeats}`} />
-        <StatCard label="Omzet" value={`€${totalRevenue.toFixed(2)}`} />
-        <StatCard label="Bestellingen" value={performanceOrders.length} />
-      </div>
-
-      {/* Performance details */}
+      {/* Performance Info Card */}
       <div className="bg-white rounded-lg shadow p-6 mb-8">
         <h2 className="text-lg font-semibold mb-4">Speeltijd details</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
           <div>
             <p className="text-sm text-zinc-600">Datum & tijd</p>
             <p className="font-medium">{dateFormatted}</p>
+          </div>
+          <div>
+            <p className="text-sm text-zinc-600">Status</p>
+            <p
+              className={`font-medium ${statusColors[performance.status as keyof typeof statusColors]}`}
+            >
+              {statusLabels[performance.status as keyof typeof statusLabels]}
+            </p>
           </div>
           <div>
             <p className="text-sm text-zinc-600">Prijs</p>
@@ -141,44 +134,16 @@ export default async function PerformanceDetailPage({ params }: Props) {
         </div>
       </div>
 
-      {/* Orders */}
-      <DataTable
-        title="Bestellingen"
-        headers={['Bestelnummer', 'Klant', 'Datum', 'Tickets', 'Prijs per Ticket', 'Totaal']}
-      >
-        {performanceOrders.length === 0 ? (
-          <EmptyRow colSpan={6} message="Nog geen bestellingen voor deze speeltijd" />
-        ) : (
-          performanceOrders.map((order) => (
-            <tr key={order.orderId} className="hover:bg-zinc-50">
-              <td className="px-6 py-4">
-                <Link href={`/admin/sales/orders/${order.orderId}`}>
-                  <div className="font-mono text-sm text-primary hover:underline cursor-pointer">
-                    {order.orderId.substring(0, 8)}...
-                  </div>
-                </Link>
-              </td>
-              <td className="px-6 py-4">
-                <div className="font-medium">{order.customerName}</div>
-                <div className="text-sm text-zinc-500">{order.customerEmail}</div>
-              </td>
-              <td className="px-6 py-4 text-sm text-zinc-600">
-                {order.createdAt
-                  ? new Date(order.createdAt).toLocaleString('nl-NL', {
-                      dateStyle: 'short',
-                      timeStyle: 'short',
-                    })
-                  : '—'}
-              </td>
-              <td className="px-6 py-4 text-center font-medium">{order.quantity}</td>
-              <td className="px-6 py-4 text-right font-medium">€{order.pricePerTicket}</td>
-              <td className="px-6 py-4 text-right font-bold text-primary">
-                €{(order.quantity * Number(order.pricePerTicket)).toFixed(2)}
-              </td>
-            </tr>
-          ))
-        )}
-      </DataTable>
+      {/* Seat Map Section */}
+      <div className="bg-white rounded-lg shadow p-6">
+        <h2 className="text-lg font-semibold mb-4">Zitplaatsen</h2>
+        <SeatMapDisplay
+          rows={performance.rows || 5}
+          seatsPerRow={performance.seatsPerRow || 20}
+          reservedSeats={reservedSeats}
+          wheelchairSeats={wheelchairSeats}
+        />
+      </div>
     </>
   );
 }

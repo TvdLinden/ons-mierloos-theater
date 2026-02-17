@@ -44,7 +44,7 @@ export async function createTicketsForLineItem(
     );
   }
 
-  const ticketsToCreate: CreateTicket[] = assignedSeats.map(({ rowIndex, seatNumber }) => {
+  const ticketsToCreate: CreateTicket[] = assignedSeats.map(({ rowIndex, seatNumber, wheelchairAccess }) => {
     const rowLetter = String.fromCharCode(65 + rowIndex);
     const ticketNumber = `${performance.showId.substring(0, 4).toUpperCase()}-${performanceId.substring(0, 4).toUpperCase()}-${rowLetter}${seatNumber}`;
     return {
@@ -54,6 +54,7 @@ export async function createTicketsForLineItem(
       ticketNumber,
       rowLetter,
       seatNumber,
+      wheelchairAccess,
     };
   });
 

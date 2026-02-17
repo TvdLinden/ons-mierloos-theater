@@ -1,0 +1,1 @@
+ALTER TABLE "tickets" ADD COLUMN "wheelchair_access" boolean DEFAULT false NOT NULL;

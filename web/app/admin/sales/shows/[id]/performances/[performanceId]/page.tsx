@@ -4,30 +4,25 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { requireRole } from '@/lib/utils/auth';
 import { db } from '@ons-mierloos-theater/shared/db';
-import {
-  performances,
-  shows,
-  lineItems,
-  orders,
-  tickets,
-} from '@ons-mierloos-theater/shared/db/schema';
+import { performances, lineItems, orders, tickets } from '@ons-mierloos-theater/shared/db/schema';
 import { eq, and, desc } from 'drizzle-orm';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { DataTable, EmptyRow } from '@/components/admin/DataTable';
 import { StatCard } from '@/components/admin/StatCard';
+import { Button } from '@/components/ui';
 
-interface ShowSalesPageProps {
-  params: Promise<{ id: string }>;
+interface PerformanceSalesPageProps {
+  params: Promise<{ id: string; performanceId: string }>;
 }
 
-export default async function ShowSalesDetailPage({ params }: ShowSalesPageProps) {
+export default async function PerformanceSalesPage({ params }: PerformanceSalesPageProps) {
   await requireRole(['admin', 'contributor']);
 
-  const { id: performanceId } = await params;
+  const { id: showId, performanceId } = await params;
 
-  // Fetch performance with show data
+  // Fetch performance with show data — verify it belongs to the given show
   const performance = await db.query.performances.findFirst({
-    where: eq(performances.id, performanceId),
+    where: and(eq(performances.id, performanceId), eq(performances.showId, showId)),
     with: {
       show: true,
     },
@@ -62,20 +57,19 @@ export default async function ShowSalesDetailPage({ params }: ShowSalesPageProps
 
   const wheelchairCount = performanceOrders.filter((o) => o.wheelchairAccess).length;
 
-  // Fetch wheelchair seat assignments (tickets already generated at this point)
+  // Fetch wheelchair seat assignments (using tickets.wheelchairAccess)
   const wheelchairBookings = await db
     .select({
       customerName: orders.customerName,
       rowLetter: tickets.rowLetter,
       seatNumber: tickets.seatNumber,
     })
-    .from(lineItems)
-    .innerJoin(orders, eq(lineItems.orderId, orders.id))
-    .innerJoin(tickets, eq(tickets.lineItemId, lineItems.id))
+    .from(tickets)
+    .innerJoin(orders, eq(tickets.orderId, orders.id))
     .where(
       and(
-        eq(lineItems.performanceId, performanceId),
-        eq(lineItems.wheelchairAccess, true),
+        eq(tickets.performanceId, performanceId),
+        eq(tickets.wheelchairAccess, true),
         eq(orders.status, 'paid'),
       ),
     )
@@ -89,6 +83,11 @@ export default async function ShowSalesDetailPage({ params }: ShowSalesPageProps
     wheelchairByCustomer.set(booking.customerName, existing);
   }
 
+  const dateFormatted = new Date(performance.date).toLocaleString('nl-NL', {
+    dateStyle: 'long',
+    timeStyle: 'short',
+  });
+
   return (
     <>
       <AdminPageHeader
@@ -96,13 +95,21 @@ export default async function ShowSalesDetailPage({ params }: ShowSalesPageProps
         breadcrumbs={[
           { label: 'Verkopen', href: '/admin/sales' },
           { label: performance.show.title },
+          { label: dateFormatted },
         ]}
+        action={
+          <div className="flex gap-2">
+            <Link href={`/admin/shows/${showId}/performances/${performanceId}`}>
+              <Button variant="outline">Speeltijd</Button>
+            </Link>
+          </div>
+        }
       />
 
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <StatCard label="Totaal Tickets Verkocht" value={totalTickets} />
-        <StatCard label="Totale Omzet" value={`€${totalRevenue}`} />
+        <StatCard label="Totale Omzet" value={`€${totalRevenue.toFixed(2)}`} />
         <StatCard label="Aantal Bestellingen" value={performanceOrders.length} />
         <StatCard label="Rolstoel" value={wheelchairCount} />
       </div>
@@ -133,14 +140,7 @@ export default async function ShowSalesDetailPage({ params }: ShowSalesPageProps
           </div>
           <div>
             <p className="text-sm text-zinc-600">Datum & Tijd</p>
-            <p className="font-medium">
-              {performance.date
-                ? new Date(performance.date).toLocaleString('nl-NL', {
-                    dateStyle: 'long',
-                    timeStyle: 'short',
-                  })
-                : '-'}
-            </p>
+            <p className="font-medium">{dateFormatted}</p>
           </div>
         </div>
       </div>
