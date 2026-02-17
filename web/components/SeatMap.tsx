@@ -1,6 +1,13 @@
 'use client';
 
 import { Seat } from '@ons-mierloos-theater/shared/utils/seatAssignment';
+import { HoverCard, HoverCardTrigger, HoverCardContent } from '@/components/ui/hover-card';
+
+export interface SeatInfo {
+  customerName: string;
+  orderId: string;
+  orderStatus?: string;
+}
 
 interface SeatMapProps {
   rows: number;
@@ -11,6 +18,7 @@ interface SeatMapProps {
   onToggleSeat: (rowIndex: number, seatNumber: number) => void;
   onToggleWheelchair: (rowIndex: number, seatNumber: number) => void;
   readonly?: boolean;
+  seatInfo?: Record<string, SeatInfo>;
 }
 
 export function SeatMap({
@@ -22,6 +30,7 @@ export function SeatMap({
   onToggleSeat,
   onToggleWheelchair,
   readonly = false,
+  seatInfo,
 }: SeatMapProps) {
   const lastAssignmentSet = lastAssignment
     ? new Set(lastAssignment.map((s) => `${s.rowIndex}-${s.seatNumber}`))
@@ -70,54 +79,66 @@ export function SeatMap({
               const isWheelchair = wheelchairReservations.has(seatId);
               const isLastAssignment = lastAssignmentSet?.has(seatId);
 
+              const isPaid = seatInfo?.[seatId]?.orderStatus === 'paid';
+              const isUnpaid = isReserved && !isPaid && seatInfo?.[seatId];
+
               let seatColor = 'var(--chart-2)';
               if (isLastAssignment) seatColor = 'var(--chart-4)';
+              else if (isUnpaid) seatColor = 'var(--chart-5)';
               else if (isReserved) seatColor = 'var(--chart-3)';
 
               return (
-                <div
-                  key={seatId}
-                  className="relative group"
-                  onContextMenu={(e) => {
-                    if (!readonly) {
-                      e.preventDefault();
-                      if (isReserved) onToggleWheelchair(rowIndex, seatNumber);
-                    }
-                  }}
-                >
-                  <button
-                    onClick={() => {
-                      if (!readonly) onToggleSeat(rowIndex, seatNumber);
-                    }}
-                    disabled={readonly}
-                    style={{
-                      backgroundColor: seatColor,
-                      ...(isWheelchair && isReserved
-                        ? { boxShadow: `0 0 0 2px var(--chart-1)` }
-                        : {}),
-                    }}
-                    className={`
-                      w-10 h-10 rounded font-semibold text-xs transition-colors text-white
-                      hover:opacity-80
-                      ${readonly ? 'cursor-default' : 'cursor-pointer active:scale-95'}
-                    `}
-                    title={`${isWheelchair && isReserved ? '♿ ' : ''}Rij ${rowIndex + 1}, Zitplaats ${seatNumber}`}
-                  >
-                    {seatNumber}
-                  </button>
-
-                  {/* Tooltip */}
-                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-foreground text-background text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10 shadow-lg">
-                    {isWheelchair && isReserved ? '♿ ' : ''}
-                    {isReserved ? 'Gereserveerd' : 'Beschikbaar'}
-                    {!readonly && (
-                      <>
-                        <br />
-                        {isReserved && 'Klik om te schakelen'}
-                      </>
+                <HoverCard key={seatId} openDelay={100} closeDelay={50}>
+                  <HoverCardTrigger asChild>
+                    <button
+                      onClick={() => {
+                        if (!readonly) onToggleSeat(rowIndex, seatNumber);
+                      }}
+                      onContextMenu={(e) => {
+                        if (!readonly) {
+                          e.preventDefault();
+                          if (isReserved) onToggleWheelchair(rowIndex, seatNumber);
+                        }
+                      }}
+                      disabled={readonly}
+                      style={{
+                        backgroundColor: seatColor,
+                        ...(isWheelchair && isReserved
+                          ? { boxShadow: `0 0 0 2px var(--chart-1)` }
+                          : {}),
+                      }}
+                      className={`
+                        w-10 h-10 rounded font-semibold text-xs transition-colors text-white
+                        hover:opacity-80
+                        ${readonly ? 'cursor-default' : 'cursor-pointer active:scale-95'}
+                      `}
+                    >
+                      {seatNumber}
+                    </button>
+                  </HoverCardTrigger>
+                  <HoverCardContent side="top" className="w-auto p-2 text-xs">
+                    <p className="font-semibold">
+                      {isWheelchair && isReserved ? '♿ ' : ''}
+                      Rij {rowIndex + 1}, Zitplaats {seatNumber}
+                    </p>
+                    <p className="text-muted-foreground">
+                      {isUnpaid ? 'Niet betaald' : isReserved ? 'Gereserveerd' : 'Beschikbaar'}
+                    </p>
+                    {isReserved && seatInfo?.[seatId] && (
+                      <div className="mt-1 pt-1 border-t border-border">
+                        <p>{seatInfo[seatId].customerName}</p>
+                        <p className="text-muted-foreground font-mono">
+                          {seatInfo[seatId].orderId.substring(0, 8)}...
+                        </p>
+                      </div>
                     )}
-                  </div>
-                </div>
+                    {!readonly && isReserved && (
+                      <p className="mt-1 text-muted-foreground italic">
+                        Klik om te schakelen
+                      </p>
+                    )}
+                  </HoverCardContent>
+                </HoverCard>
               );
             })}
           </div>
@@ -132,7 +153,11 @@ export function SeatMap({
         </div>
         <div className="flex items-center gap-1.5">
           <div className="w-4 h-4 rounded" style={{ backgroundColor: 'var(--chart-3)' }} />
-          <span>Gereserveerd</span>
+          <span>Gereserveerd (betaald)</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div className="w-4 h-4 rounded" style={{ backgroundColor: 'var(--chart-5)' }} />
+          <span>Niet betaald</span>
         </div>
         <div className="flex items-center gap-1.5">
           <div

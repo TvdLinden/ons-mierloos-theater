@@ -183,7 +183,7 @@ export default async function ShowDetailPage({ params }: Props) {
               return (
                 <Link
                   key={performance.id}
-                  href={`/admin/shows/${id}/performances/${performance.id}/edit`}
+                  href={`/admin/shows/${id}/performances/${performance.id}`}
                   className="flex items-center gap-4 py-3 hover:bg-zinc-50 -mx-2 px-2 rounded"
                 >
                   <div className="flex-1 min-w-0">

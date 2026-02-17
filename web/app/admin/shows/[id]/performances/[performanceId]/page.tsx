@@ -24,24 +24,39 @@ export default async function PerformanceDetailPage({ params }: Props) {
     notFound();
   }
 
-  // Fetch assigned seats for this performance (paid orders only)
+  // Fetch assigned seats for this performance (all orders with tickets)
   const assignedTickets = await db
     .select({
       rowLetter: tickets.rowLetter,
       seatNumber: tickets.seatNumber,
       wheelchairAccess: tickets.wheelchairAccess,
+      customerName: orders.customerName,
+      orderId: orders.id,
+      orderStatus: orders.status,
     })
     .from(tickets)
     .innerJoin(orders, eq(tickets.orderId, orders.id))
-    .where(and(eq(tickets.performanceId, performanceId), eq(orders.status, 'paid')));
+    .where(eq(tickets.performanceId, performanceId));
 
-  // Convert to arrays for JSON serialization
+  // Convert to arrays/maps for JSON serialization
   const reservedSeats = assignedTickets.map(
     (t) => `${t.rowLetter.charCodeAt(0) - 65}-${t.seatNumber}`,
   );
   const wheelchairSeats = assignedTickets
     .filter((t) => t.wheelchairAccess)
     .map((t) => `${t.rowLetter.charCodeAt(0) - 65}-${t.seatNumber}`);
+
+  // Build seat info map: seatId -> { customerName, orderId, orderStatus }
+  const seatInfo: Record<string, { customerName: string; orderId: string; orderStatus: string }> =
+    {};
+  for (const t of assignedTickets) {
+    const seatId = `${t.rowLetter.charCodeAt(0) - 65}-${t.seatNumber}`;
+    seatInfo[seatId] = {
+      customerName: t.customerName,
+      orderId: t.orderId,
+      orderStatus: t.orderStatus,
+    };
+  }
 
   const dateFormatted = new Date(performance.date).toLocaleString('nl-NL', {
     dateStyle: 'long',
@@ -142,6 +157,7 @@ export default async function PerformanceDetailPage({ params }: Props) {
           seatsPerRow={performance.seatsPerRow || 20}
           reservedSeats={reservedSeats}
           wheelchairSeats={wheelchairSeats}
+          seatInfo={seatInfo}
         />
       </div>
     </>
