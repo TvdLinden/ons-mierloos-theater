@@ -69,12 +69,13 @@ export async function uploadImageToR2(
     await client.send(command);
 
     // Construct public URL using custom domain if available
-    const publicUrl = process.env.R2_PUBLIC_URL;
-    if (!publicUrl) {
-      throw new Error('Missing R2_PUBLIC_URL environment variable');
+    const accountId = process.env.R2_ACCOUNT_ID;
+    if (!accountId) {
+      throw new Error('Missing R2_ACCOUNT_ID environment variable');
     }
 
-    const r2Url = `${publicUrl}/${uniqueFilename}`;
+    //const r2Url = `${publicUrl}/${uniqueFilename}`;
+    const r2Url = createR2Url(accountId, bucketName, uniqueFilename);
 
     return r2Url;
   } catch (error) {
@@ -136,16 +137,7 @@ export async function getImageFromR2(r2Url: string): Promise<R2FileStream> {
     throw new Error('Missing R2_IMAGES_BUCKET_NAME environment variable');
   }
 
-  // Extract key from URL
-  // URL format: https://[bucket-name].[account-id].r2.cloudflarestorage.com/[key]
-  const urlPattern = new RegExp(`https://${bucketName}\\..*\\.r2\\.cloudflarestorage\\.com/(.+)$`);
-  const match = r2Url.match(urlPattern);
-
-  if (!match || !match[1]) {
-    throw new Error(`Invalid R2 URL format: ${r2Url}`);
-  }
-
-  const key = match[1];
+  const key = extractKeyFromR2Url(bucketName, r2Url);
 
   const data = await client.send(
     new GetObjectCommand({
@@ -158,4 +150,21 @@ export async function getImageFromR2(r2Url: string): Promise<R2FileStream> {
     stream: data.Body as Readable,
     contentType: data.ContentType || 'application/octet-stream',
   };
+}
+
+function createR2Url(accountId: string, bucketName: string, key: string) {
+  // URL format: https://[bucket-name].[account-id].r2.cloudflarestorage.com/[key]
+  return `https://${bucketName}.${accountId}.r2.cloudflarestorage.com/${key}`;
+}
+
+function extractKeyFromR2Url(bucketName: string, r2Url: string): string {
+  const urlPattern = new RegExp(`https://${bucketName}\\..*\\.r2\\.cloudflarestorage\\.com/(.+)$`);
+  const match = r2Url.match(urlPattern);
+
+  if (!match || !match[1]) {
+    throw new Error(`Invalid R2 URL format: ${r2Url}`);
+  }
+
+  const key = match[1];
+  return key;
 }
