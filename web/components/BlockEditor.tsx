@@ -60,11 +60,11 @@ import { GalleryBlockComponent } from '@/components/blocks/GalleryBlock';
 import { ColumnBlockComponent } from '@/components/blocks/ColumnBlock';
 import { RowBlockComponent } from '@/components/blocks/RowBlock';
 import type { Block, BlocksArray } from '@ons-mierloos-theater/shared/schemas/blocks';
-import type { ImageMetadata } from '@ons-mierloos-theater/shared/db';
+import type { Image } from '@ons-mierloos-theater/shared/db';
 
 interface BlockEditorProps {
   initialBlocks?: BlocksArray;
-  availableImages?: ImageMetadata[];
+  availableImages?: Image[];
   name?: string;
   onChange?: (blocks: BlocksArray) => void;
   allowedBlockTypes?: Block['type'][];
@@ -72,7 +72,7 @@ interface BlockEditorProps {
 
 interface SortableBlockProps {
   block: Block;
-  availableImages: ImageMetadata[];
+  availableImages: Image[];
   onUpdate: (id: string, data: Partial<Block>) => void;
   onDelete: (id: string) => void;
   onMoveUp?: () => void;

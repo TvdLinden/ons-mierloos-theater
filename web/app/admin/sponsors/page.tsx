@@ -20,14 +20,7 @@ export default async function SponsorsAdminPage() {
       <AdminPageHeader
         title="Sponsors Beheer"
         breadcrumbs={[{ label: 'Sponsors' }]}
-        action={
-          <Link
-            href="/admin/sponsors/add"
-            className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-opacity-90 transition-colors"
-          >
-            + Sponsor toevoegen
-          </Link>
-        }
+        action={{ href: '/admin/sponsors/add', label: 'Toevoegen' }}
       />
 
       <DataTable headers={['Logo', 'Naam', 'Tier', 'Website', 'Volgorde', 'Status', 'Acties']}>

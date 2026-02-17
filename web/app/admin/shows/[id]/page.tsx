@@ -4,6 +4,7 @@ import { getShowByIdWithTagsAndPerformances } from '@ons-mierloos-theater/shared
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { StatCard } from '@/components/admin/StatCard';
 import { Button } from '@/components/ui';
+import { ButtonGroup } from '@/components/ui/button-group';
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -32,14 +33,18 @@ export default async function ShowDetailPage({ params }: Props) {
         subtitle={show.subtitle || undefined}
         breadcrumbs={[{ label: 'Voorstellingen', href: '/admin/shows' }, { label: show.title }]}
         action={
-          <div className="flex gap-2">
-            <Link href={`/admin/shows/${id}/performances`}>
-              <Button variant="secondary">Speeltijden</Button>
-            </Link>
-            <Link href={`/admin/shows/edit/${id}`}>
-              <Button variant="default">Bewerken</Button>
-            </Link>
-          </div>
+          <ButtonGroup>
+            {/* <Link href={`/admin/shows/${id}/performances`}> */}
+            <Button asChild variant="outline" size="sm">
+              <Link href={`/admin/shows/${id}/performances`}>Speeltijden</Link>
+            </Button>
+            {/* </Link> */}
+            {/* <Link href={`/admin/shows/edit/${id}`}> */}
+            <Button asChild variant="outline" size="sm">
+              <Link href={`/admin/shows/edit/${id}`}>Bewerken</Link>
+            </Button>
+            {/* </Link> */}
+          </ButtonGroup>
         }
       />
 

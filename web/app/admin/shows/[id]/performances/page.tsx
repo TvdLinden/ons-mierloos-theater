@@ -81,7 +81,7 @@ export default async function ShowPerformancesPage({ params }: Props) {
         ]}
         action={
           <Link href={`/admin/shows/edit/${id}`}>
-            <Button variant="secondary">Bewerk voorstelling</Button>
+            <Button variant="outline">Bewerk voorstelling</Button>
           </Link>
         }
       />

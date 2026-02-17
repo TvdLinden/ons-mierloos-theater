@@ -66,7 +66,7 @@ export default async function PerformanceDetailPage({ params }: Props) {
         action={
           <div className="flex gap-2">
             <Link href={`/admin/sales/shows/${performanceId}`}>
-              <Button variant="secondary">Verkoop</Button>
+              <Button variant="outline">Verkoop</Button>
             </Link>
           </div>
         }
