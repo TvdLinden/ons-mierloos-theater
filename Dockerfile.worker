@@ -16,5 +16,8 @@ COPY worker worker
 # Port for health checks
 EXPOSE 8080
 
+# Run from worker dir so tsx picks up worker/tsconfig.json (which has @/* path alias)
+WORKDIR /app/worker
+
 # tsx is installed via worker/package.json; env vars injected by the runtime
-CMD ["node", "--import", "tsx", "worker/scripts/start-worker.ts"]
+CMD ["node", "--import", "tsx", "scripts/start-worker.ts"]
