@@ -7,6 +7,8 @@ services:
       dockerfile: Dockerfile.worker
     env_file:
       - .env.local
+    ports:
+      - "8080:8080"
     restart: on-failure
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
