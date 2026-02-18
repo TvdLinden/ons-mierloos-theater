@@ -1,5 +1,5 @@
 import { relations } from 'drizzle-orm';
-import { decimal, uuid, customType, index, primaryKey, boolean } from 'drizzle-orm/pg-core';
+import { decimal, uuid, customType, index, primaryKey, boolean, serial } from 'drizzle-orm/pg-core';
 import { pgTable, pgEnum, varchar, text, integer, timestamp, jsonb } from 'drizzle-orm/pg-core';
 
 const showStatusValues = ['draft', 'published', 'archived'] as const;
@@ -306,6 +306,7 @@ export const orders = pgTable(
     customerName: varchar('customer_name', { length: 100 }).notNull(),
     customerEmail: varchar('customer_email', { length: 255 }).notNull(),
     totalAmount: decimal('total_amount', { precision: 10, scale: 2 }).notNull(),
+    invoiceNumber: serial('invoice_number'),
     status: orderStatus('status').default('pending').notNull(),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),

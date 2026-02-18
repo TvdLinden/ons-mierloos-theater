@@ -1,6 +1,8 @@
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import QRCode from 'qrcode';
 import { Ticket, Order, Performance, Show } from '../db';
+import { getSiteSettings } from '../queries/settings';
+import { brandTeal, loadLogoBytes } from './pdfHelpers';
 
 export type TicketData = Ticket & {
   performance: Performance & {
@@ -10,7 +12,7 @@ export type TicketData = Ticket & {
 };
 
 /**
- * Generate a PDF ticket with QR code and seat information
+ * Generate a PDF ticket with QR code, logo branding, and seat information
  */
 export async function generateTicketPDF(ticketData: TicketData): Promise<Buffer> {
   const { ticket, performance, show, order } = {
@@ -19,6 +21,12 @@ export async function generateTicketPDF(ticketData: TicketData): Promise<Buffer>
     show: ticketData.performance.show,
     order: ticketData.order,
   };
+
+  // Fetch site settings for footer contact info
+  const settings = await getSiteSettings();
+  const contactAddress = settings.contactAddress ?? 'Heer van Scherpenzeelweg 14, 5731 EW Mierlo';
+  const contactEmail = settings.contactEmail ?? 'info@onsmierloostheater.nl';
+  const contactPhone = settings.contactPhone;
 
   // Create PDF document
   const pdfDoc = await PDFDocument.create();
@@ -29,68 +37,83 @@ export async function generateTicketPDF(ticketData: TicketData): Promise<Buffer>
   const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
   const regularFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
 
-  // Generate QR code
-  const qrCodeDataUrl = await QRCode.toDataURL(ticket.qrToken, {
-    errorCorrectionLevel: 'M',
-    width: 200,
-    margin: 1,
-  });
-
-  // Convert QR code data URL to PNG bytes
-  const qrCodeBytes = Buffer.from(qrCodeDataUrl.split(',')[1], 'base64');
-  const qrCodeImage = await pdfDoc.embedPng(qrCodeBytes);
-  const qrCodeDims = qrCodeImage.scale(0.8);
-
   // Layout dimensions
   const margin = 50;
-  const qrSize = 160;
-  const qrX = width - margin - qrSize;
-  const qrY = height - margin - qrSize;
 
-  // Draw header
-  page.drawText('ONS MIERLOOS THEATER', {
+  // === HEADER: Logo + Branding ===
+  const logoBytes = loadLogoBytes();
+  let headerBottomY = height - margin;
+
+  if (logoBytes) {
+    const logoImage = await pdfDoc.embedPng(logoBytes);
+    const logoAspect = logoImage.width / logoImage.height;
+    const logoHeight = 50;
+    const logoWidth = logoHeight * logoAspect;
+
+    page.drawImage(logoImage, {
+      x: margin,
+      y: height - margin - logoHeight,
+      width: logoWidth,
+      height: logoHeight,
+    });
+
+    headerBottomY = height - margin - logoHeight - 10;
+  } else {
+    // Fallback: text-only header
+    page.drawText('ONS MIERLOOS THEATER', {
+      x: margin,
+      y: height - margin - 20,
+      size: 24,
+      font: boldFont,
+      color: brandTeal,
+    });
+
+    headerBottomY = height - margin - 30;
+  }
+
+  // Accent line below header
+  page.drawRectangle({
     x: margin,
-    y: height - margin - 20,
-    size: 24,
-    font: boldFont,
-    color: rgb(0.1, 0.1, 0.1),
+    y: headerBottomY,
+    width: width - 2 * margin,
+    height: 2,
+    color: brandTeal,
   });
 
+  headerBottomY -= 15;
+
+  // TOEGANGSBEWIJS + ticket number
   page.drawText('TOEGANGSBEWIJS', {
     x: margin,
-    y: height - margin - 45,
+    y: headerBottomY,
     size: 14,
-    font: regularFont,
-    color: rgb(0.3, 0.3, 0.3),
+    font: boldFont,
+    color: brandTeal,
   });
 
-  // Draw ticket number
   page.drawText(`Ticket: ${ticket.ticketNumber}`, {
-    x: margin,
-    y: height - margin - 70,
+    x: width - margin - boldFont.widthOfTextAtSize(`Ticket: ${ticket.ticketNumber}`, 10),
+    y: headerBottomY + 2,
     size: 10,
     font: regularFont,
     color: rgb(0.5, 0.5, 0.5),
   });
 
-  // Draw QR code
-  page.drawImage(qrCodeImage, {
-    x: qrX,
-    y: qrY,
-    width: qrSize,
-    height: qrSize,
+  // === QR CODE (top-right area) ===
+  const qrCodeDataUrl = await QRCode.toDataURL(ticket.qrToken, {
+    errorCorrectionLevel: 'M',
+    width: 200,
+    margin: 1,
   });
+  const qrCodeBytes = Buffer.from(qrCodeDataUrl.split(',')[1], 'base64');
+  const qrCodeImage = await pdfDoc.embedPng(qrCodeBytes);
 
-  page.drawText('Scan bij binnenkomst', {
-    x: qrX,
-    y: qrY - 20,
-    size: 10,
-    font: regularFont,
-    color: rgb(0.4, 0.4, 0.4),
-  });
+  const qrSize = 140;
+  const qrX = width - margin - qrSize;
+  const qrY = headerBottomY - 30 - qrSize;
 
-  // Draw show information
-  let currentY = height - margin - 120;
+  // === SHOW INFORMATION ===
+  let currentY = headerBottomY - 40;
 
   page.drawText(show.title, {
     x: margin,
@@ -100,7 +123,7 @@ export async function generateTicketPDF(ticketData: TicketData): Promise<Buffer>
     color: rgb(0, 0, 0),
   });
 
-  currentY -= 40;
+  currentY -= 35;
 
   // Performance date and time
   const performanceDate = new Date(performance.date);
@@ -124,14 +147,14 @@ export async function generateTicketPDF(ticketData: TicketData): Promise<Buffer>
   });
 
   page.drawText(dateStr, {
-    x: margin + 100,
+    x: margin + 80,
     y: currentY,
     size: 12,
     font: regularFont,
     color: rgb(0, 0, 0),
   });
 
-  currentY -= 25;
+  currentY -= 22;
 
   page.drawText('Tijd:', {
     x: margin,
@@ -142,57 +165,80 @@ export async function generateTicketPDF(ticketData: TicketData): Promise<Buffer>
   });
 
   page.drawText(timeStr, {
-    x: margin + 100,
+    x: margin + 80,
     y: currentY,
     size: 12,
     font: regularFont,
     color: rgb(0, 0, 0),
   });
 
-  currentY -= 40;
+  currentY -= 35;
 
-  // Seat information - HIGHLIGHTED SECTION
-  const seatBoxY = currentY - 60;
+  // === SEAT INFORMATION ===
   const seatBoxHeight = 80;
+  const seatBoxY = currentY - seatBoxHeight;
 
-  // Draw background box for seat info
+  // Teal accent left border
   page.drawRectangle({
     x: margin - 10,
     y: seatBoxY,
-    width: width - 2 * margin + 20,
+    width: 4,
     height: seatBoxHeight,
-    color: rgb(0.95, 0.95, 0.95),
-    borderColor: rgb(0.7, 0.7, 0.7),
-    borderWidth: 1,
+    color: brandTeal,
+  });
+
+  // Light background
+  page.drawRectangle({
+    x: margin - 6,
+    y: seatBoxY,
+    width: width - 2 * margin + 16,
+    height: seatBoxHeight,
+    color: rgb(0.96, 0.96, 0.96),
   });
 
   page.drawText('ZITPLAATS', {
-    x: margin,
+    x: margin + 4,
     y: currentY - 20,
-    size: 14,
+    size: 12,
     font: boldFont,
-    color: rgb(0, 0, 0),
+    color: rgb(0.3, 0.3, 0.3),
   });
 
   page.drawText(`Rij ${ticket.rowLetter}`, {
-    x: margin,
-    y: currentY - 50,
+    x: margin + 4,
+    y: currentY - 52,
     size: 32,
     font: boldFont,
-    color: rgb(0.2, 0.2, 0.8),
+    color: brandTeal,
   });
 
   page.drawText(`Stoel ${ticket.seatNumber}`, {
-    x: margin + 120,
-    y: currentY - 50,
+    x: margin + 124,
+    y: currentY - 52,
     size: 32,
     font: boldFont,
-    color: rgb(0.2, 0.2, 0.8),
+    color: brandTeal,
+  });
+
+  // === QR CODE (drawn after seat box so it renders on top) ===
+  page.drawImage(qrCodeImage, {
+    x: qrX,
+    y: qrY,
+    width: qrSize,
+    height: qrSize,
+  });
+
+  page.drawText('Scan bij binnenkomst', {
+    x: qrX + (qrSize - regularFont.widthOfTextAtSize('Scan bij binnenkomst', 9)) / 2,
+    y: qrY - 15,
+    size: 9,
+    font: regularFont,
+    color: rgb(0.4, 0.4, 0.4),
   });
 
   currentY = seatBoxY - 30;
 
-  // Customer information
+  // === CUSTOMER INFORMATION ===
   page.drawText('Naam:', {
     x: margin,
     y: currentY,
@@ -202,14 +248,14 @@ export async function generateTicketPDF(ticketData: TicketData): Promise<Buffer>
   });
 
   page.drawText(order.customerName, {
-    x: margin + 100,
+    x: margin + 80,
     y: currentY,
     size: 11,
     font: regularFont,
     color: rgb(0, 0, 0),
   });
 
-  currentY -= 25;
+  currentY -= 22;
 
   page.drawText('Email:', {
     x: margin,
@@ -220,14 +266,14 @@ export async function generateTicketPDF(ticketData: TicketData): Promise<Buffer>
   });
 
   page.drawText(order.customerEmail, {
-    x: margin + 100,
+    x: margin + 80,
     y: currentY,
     size: 11,
     font: regularFont,
     color: rgb(0, 0, 0),
   });
 
-  currentY -= 25;
+  currentY -= 22;
 
   page.drawText('Bestelling:', {
     x: margin,
@@ -238,33 +284,36 @@ export async function generateTicketPDF(ticketData: TicketData): Promise<Buffer>
   });
 
   page.drawText(order.id.substring(0, 13), {
-    x: margin + 100,
+    x: margin + 80,
     y: currentY,
     size: 11,
     font: regularFont,
     color: rgb(0, 0, 0),
   });
 
-  // Footer with theater info
-  const footerY = 80;
+  // === FOOTER ===
+  // Separator line
+  page.drawRectangle({
+    x: margin,
+    y: 100,
+    width: width - 2 * margin,
+    height: 1,
+    color: rgb(0.8, 0.8, 0.8),
+  });
+
+  let footerY = 82;
 
   page.drawText('Ons Mierloos Theater', {
     x: margin,
-    y: footerY + 40,
-    size: 11,
+    y: footerY,
+    size: 10,
     font: boldFont,
-    color: rgb(0, 0, 0),
+    color: brandTeal,
   });
 
-  page.drawText('Adres: Dorpsstraat 123, 1234 AB Mierlo', {
-    x: margin,
-    y: footerY + 20,
-    size: 9,
-    font: regularFont,
-    color: rgb(0.3, 0.3, 0.3),
-  });
+  footerY -= 16;
 
-  page.drawText('Tel: 0123-456789 | info@onsmierloos.nl', {
+  page.drawText(contactAddress, {
     x: margin,
     y: footerY,
     size: 9,
@@ -272,12 +321,30 @@ export async function generateTicketPDF(ticketData: TicketData): Promise<Buffer>
     color: rgb(0.3, 0.3, 0.3),
   });
 
+  footerY -= 14;
+
+  // Build contact line: email + optional phone
+  let contactLine = contactEmail;
+  if (contactPhone) {
+    contactLine += ` | ${contactPhone}`;
+  }
+
+  page.drawText(contactLine, {
+    x: margin,
+    y: footerY,
+    size: 9,
+    font: regularFont,
+    color: rgb(0.3, 0.3, 0.3),
+  });
+
+  footerY -= 18;
+
   // Important notice
   page.drawText(
     'Bewaar dit ticket en toon het bij de ingang. Vrije zitplaatskeuze bij binnenkomst.',
     {
       x: margin,
-      y: 40,
+      y: footerY,
       size: 8,
       font: regularFont,
       color: rgb(0.5, 0.5, 0.5),

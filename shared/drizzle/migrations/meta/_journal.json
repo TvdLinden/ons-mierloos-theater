@@ -211,6 +211,13 @@
       "when": 1771359110596,
       "tag": "0029_sad_swarm",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1771422398251,
+      "tag": "0030_hot_xavin",
+      "breakpoints": true
     }
   ]
 }

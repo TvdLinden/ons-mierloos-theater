@@ -1,8 +1,10 @@
 import nodemailer from 'nodemailer';
-import { Order, LineItem, Performance, CouponUsage, Coupon, PerformanceWithShow } from '../db';
+import { Order, LineItem, CouponUsage, Coupon, PerformanceWithShow } from '../db';
 import crypto from 'crypto';
-import { getTicketsByOrderId } from '../commands/tickets';
+import fs from 'fs';
+import path from 'path';
 import { generateTicketPDF, getTicketFilename } from './ticketGenerator';
+import { generateInvoicePDF, getInvoiceFilename } from './invoiceGenerator';
 import { db } from '../db';
 import { eq } from 'drizzle-orm';
 import { lineItems, tickets } from '../db/schema';
@@ -30,13 +32,6 @@ function createTransporter() {
     return null;
   }
 
-  console.log('Creating email transporter with:', {
-    host: SMTP_HOST,
-    port: SMTP_PORT,
-    secure: SMTP_PORT === 465,
-    user: SMTP_USER,
-  });
-
   return nodemailer.createTransport({
     host: SMTP_HOST,
     port: SMTP_PORT,
@@ -48,8 +43,106 @@ function createTransporter() {
   });
 }
 
+// ─── Shared design tokens ────────────────────────────────────────────────────
+const TEAL = '#00a098';
+const NAVY = '#1a1a2e';
+const CREAM = '#f7e9c1';
+
+let cachedLogoDataUrl: string | null | undefined = undefined;
+
+function loadLogoDataUrl(): string | null {
+  if (cachedLogoDataUrl !== undefined) return cachedLogoDataUrl;
+  try {
+    const logoPath = path.join(__dirname, '../assets/logo.png');
+    const bytes = fs.readFileSync(logoPath);
+    cachedLogoDataUrl = `data:image/png;base64,${bytes.toString('base64')}`;
+  } catch {
+    cachedLogoDataUrl = null;
+  }
+  return cachedLogoDataUrl;
+}
+
 /**
- * Generate HTML invoice/ticket email
+ * Wraps email body content in the shared branded shell (header + footer).
+ * Pass `unsubscribeUrl` to add an unsubscribe link in the footer.
+ */
+function emailShell(opts: { subtitle: string; content: string; unsubscribeUrl?: string }): string {
+  const year = new Date().getFullYear();
+  const unsubscribeBlock = opts.unsubscribeUrl
+    ? `<p style="margin:8px 0 0 0;">
+        <a href="${opts.unsubscribeUrl}" style="color:#999;text-decoration:underline;font-size:11px;">Uitschrijven van deze nieuwsbrief</a>
+      </p>`
+    : '';
+
+  return `<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin:0;padding:0;background:#f0f0f0;font-family:Arial,Helvetica,sans-serif;color:#333333;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f0f0;padding:24px 0;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
+
+        <!-- Header -->
+        <tr>
+          <td style="background:#ffffff;padding:28px 40px 20px 40px;border-radius:4px 4px 0 0;border:1px solid #e0e0e0;border-bottom:none;">
+            ${(() => {
+              const logo = loadLogoDataUrl();
+              return logo
+                ? `<img src="${logo}" alt="Ons Mierloos Theater" height="44" style="display:block;margin-bottom:16px;">`
+                : `<p style="margin:0 0 16px 0;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:${TEAL};font-weight:bold;">ONS MIERLOOS THEATER</p>`;
+            })()}
+            <p style="margin:0;font-size:17px;font-weight:bold;color:${NAVY};">${opts.subtitle}</p>
+          </td>
+        </tr>
+
+        <!-- Teal accent bar -->
+        <tr><td style="background:${TEAL};height:3px;font-size:0;line-height:0;">&nbsp;</td></tr>
+
+        <!-- Body -->
+        <tr>
+          <td style="background:#ffffff;padding:36px 40px;border-left:1px solid #e0e0e0;border-right:1px solid #e0e0e0;border-top:none;">
+            ${opts.content}
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td style="background:#f9f9f9;padding:20px 40px;border:1px solid #e0e0e0;border-top:none;border-radius:0 0 4px 4px;text-align:center;">
+            <p style="margin:0;font-size:12px;font-weight:bold;color:${TEAL};">Ons Mierloos Theater</p>
+            <p style="margin:6px 0 0 0;font-size:11px;color:#999;">Heer van Scherpenzeelweg 14, 5731 EW Mierlo</p>
+            <p style="margin:4px 0 0 0;font-size:11px;color:#999;">© ${year} ${FROM_NAME}. Alle rechten voorbehouden.</p>
+            ${unsubscribeBlock}
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
+
+/**
+ * Renders a teal-accented info box (matches the PDF callout style).
+ */
+function infoBox(content: string, tint = '#f5f5f5'): string {
+  return `<div style="background:${tint};border-left:4px solid ${TEAL};padding:14px 16px;margin:24px 0;border-radius:0 4px 4px 0;">${content}</div>`;
+}
+
+/**
+ * Renders a primary CTA button in brand teal.
+ */
+function ctaButton(label: string, url: string): string {
+  return `<div style="text-align:center;margin:32px 0;">
+    <a href="${url}" style="display:inline-block;background:${TEAL};color:#ffffff;padding:14px 40px;text-decoration:none;border-radius:4px;font-weight:bold;font-size:15px;letter-spacing:0.3px;">${label}</a>
+  </div>`;
+}
+
+/**
+ * Generate HTML for the order confirmation / ticket email
  */
 function generateTicketEmail(
   order: Order,
@@ -59,138 +152,94 @@ function generateTicketEmail(
   const itemsHtml = lineItems
     .map(
       (item) => `
-    <tr style="border-bottom: 1px solid #eee;">
-      <td style="padding: 12px 8px;">
-        <strong>${item.performance?.show?.title || 'Voorstelling'}</strong><br/>
-        <small style="color: #666;">
+    <tr>
+      <td style="padding:11px 8px;border-bottom:1px solid #eeeeee;font-size:14px;">
+        <strong style="color:${NAVY};">${item.performance?.show?.title || 'Voorstelling'}</strong><br>
+        <span style="color:#888;font-size:12px;">
           ${item.performance?.date ? new Date(item.performance.date).toLocaleString('nl-NL', { dateStyle: 'long', timeStyle: 'short' }) : ''}
-        </small>
+        </span>
       </td>
-      <td style="padding: 12px 8px; text-align: center;">${item.quantity}</td>
-      <td style="padding: 12px 8px; text-align: right;">€${item.pricePerTicket || '0.00'}</td>
-      <td style="padding: 12px 8px; text-align: right;">
+      <td style="padding:11px 8px;border-bottom:1px solid #eeeeee;text-align:center;font-size:14px;">${item.quantity}</td>
+      <td style="padding:11px 8px;border-bottom:1px solid #eeeeee;text-align:right;font-size:14px;">€${parseFloat(item.pricePerTicket || '0').toFixed(2)}</td>
+      <td style="padding:11px 8px;border-bottom:1px solid #eeeeee;text-align:right;font-size:14px;">
         <strong>€${(parseFloat(item.pricePerTicket || '0') * (item.quantity || 0)).toFixed(2)}</strong>
       </td>
-    </tr>
-  `,
+    </tr>`,
     )
     .join('');
-
-  // Generate coupon discount HTML if any coupons were applied
-  const couponDiscountHtml =
-    couponUsages.length > 0
-      ? couponUsages
-          .map(
-            (usage) => `
-        <tr style="background: #e8f5e9;">
-          <td colspan="3" style="padding: 12px 8px;">
-            <strong>🎟️ Kortingscode: ${usage.coupon?.code || 'Onbekend'}</strong>
-            ${usage.coupon?.description ? `<br/><small style="color: #666;">${usage.coupon.description}</small>` : ''}
-          </td>
-          <td style="padding: 12px 8px; text-align: right; color: #2e7d32;">
-            <strong>-€${usage.discountAmount}</strong>
-          </td>
-        </tr>
-      `,
-          )
-          .join('')
-      : '';
 
   const subtotal = lineItems.reduce(
     (sum, item) => sum + parseFloat(item.pricePerTicket || '0') * (item.quantity || 0),
     0,
   );
-  // const totalDiscount = couponUsages.reduce(
-  //   (sum, usage) => sum + parseFloat(usage.discountAmount || '0'),
-  //   0,
-  // );
 
-  return `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Je tickets voor ${FROM_NAME}</title>
-</head>
-<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-  <div style="background: linear-gradient(135deg, #1a1a2e 0%, #2d3748 100%); color: #f7e9c1; padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
-    <h1 style="margin: 0; font-size: 28px;">🎭 ${FROM_NAME}</h1>
-    <p style="margin: 10px 0 0 0; opacity: 0.9;">Bedankt voor je bestelling!</p>
-  </div>
-  
-  <div style="background: #fff; padding: 30px; border: 1px solid #ddd; border-top: none; border-radius: 0 0 8px 8px;">
-    <h2 style="color: #1a1a2e; margin-top: 0;">Je tickets zijn bevestigd!</h2>
-    
-    <p>Beste ${order.customerName},</p>
-    
-    <p>Je betaling is succesvol verwerkt. Hieronder vind je de details van je bestelling.</p>
-    
-    <div style="background: #f8f9fa; padding: 15px; border-radius: 6px; margin: 20px 0;">
-      <p style="margin: 5px 0;"><strong>Bestelnummer:</strong> ${order.id}</p>
-      <p style="margin: 5px 0;"><strong>Datum:</strong> ${new Date(order.createdAt || '').toLocaleDateString('nl-NL')}</p>
-      <p style="margin: 5px 0;"><strong>E-mail:</strong> ${order.customerEmail}</p>
-    </div>
-    
-    <h3 style="color: #1a1a2e; margin-top: 30px;">Bestelling</h3>
-    
-    <table style="width: 100%; border-collapse: collapse; margin: 15px 0;">
+  const couponDiscountHtml =
+    couponUsages.length > 0
+      ? `<tr>
+          <td colspan="3" style="padding:10px 8px;text-align:right;font-size:13px;color:#666;border-top:1px solid #eeeeee;">Subtotaal:</td>
+          <td style="padding:10px 8px;text-align:right;font-size:13px;color:#666;">€${subtotal.toFixed(2)}</td>
+        </tr>` +
+        couponUsages
+          .map(
+            (usage) => `
+        <tr style="background:#f0faf9;">
+          <td colspan="3" style="padding:10px 8px;font-size:13px;">
+            <strong style="color:${TEAL};">Kortingscode: ${usage.coupon?.code || 'Onbekend'}</strong>
+            ${usage.coupon?.description ? `<br><span style="color:#888;font-size:12px;">${usage.coupon.description}</span>` : ''}
+          </td>
+          <td style="padding:10px 8px;text-align:right;font-size:13px;color:#1a7a5e;"><strong>-€${usage.discountAmount}</strong></td>
+        </tr>`,
+          )
+          .join('')
+      : '';
+
+  const content = `
+    <p style="margin:0 0 6px 0;font-size:22px;font-weight:bold;color:${NAVY};">Je tickets zijn bevestigd!</p>
+    <p style="margin:0 0 24px 0;color:#555;">Beste ${order.customerName},<br><br>
+    Je betaling is succesvol verwerkt. Je tickets zijn als bijlage bij deze e-mail gevoegd.</p>
+
+    ${infoBox(`
+      <table cellpadding="0" cellspacing="0" style="width:100%;font-size:13px;">
+        <tr><td style="color:#888;padding:2px 0;width:120px;">Bestelnummer</td><td style="color:${NAVY};font-weight:bold;">${order.id.substring(0, 13)}</td></tr>
+        <tr><td style="color:#888;padding:2px 0;">Datum</td><td style="color:#333;">${new Date(order.createdAt || '').toLocaleDateString('nl-NL', { dateStyle: 'long' })}</td></tr>
+        <tr><td style="color:#888;padding:2px 0;">E-mail</td><td style="color:#333;">${order.customerEmail}</td></tr>
+      </table>`)}
+
+    <p style="margin:28px 0 10px 0;font-size:13px;font-weight:bold;color:#888;letter-spacing:1px;text-transform:uppercase;">Overzicht bestelling</p>
+
+    <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;font-size:14px;">
       <thead>
-        <tr style="background: #f8f9fa; border-bottom: 2px solid #ddd;">
-          <th style="padding: 12px 8px; text-align: left;">Voorstelling</th>
-          <th style="padding: 12px 8px; text-align: center;">Aantal</th>
-          <th style="padding: 12px 8px; text-align: right;">Prijs</th>
-          <th style="padding: 12px 8px; text-align: right;">Totaal</th>
+        <tr style="background:#f5f5f5;">
+          <th style="padding:10px 8px;text-align:left;font-size:12px;color:#888;font-weight:bold;border-bottom:2px solid #e0e0e0;">Voorstelling</th>
+          <th style="padding:10px 8px;text-align:center;font-size:12px;color:#888;font-weight:bold;border-bottom:2px solid #e0e0e0;">Aantal</th>
+          <th style="padding:10px 8px;text-align:right;font-size:12px;color:#888;font-weight:bold;border-bottom:2px solid #e0e0e0;">Prijs</th>
+          <th style="padding:10px 8px;text-align:right;font-size:12px;color:#888;font-weight:bold;border-bottom:2px solid #e0e0e0;">Totaal</th>
         </tr>
       </thead>
       <tbody>
         ${itemsHtml}
-        ${
-          couponUsages.length > 0
-            ? `
-        <tr style="border-top: 1px solid #ddd;">
-          <td colspan="3" style="padding: 12px 8px; text-align: right;">Subtotaal:</td>
-          <td style="padding: 12px 8px; text-align: right;">€${subtotal.toFixed(2)}</td>
-        </tr>
-        `
-            : ''
-        }
         ${couponDiscountHtml}
       </tbody>
       <tfoot>
-        <tr style="border-top: 2px solid #ddd;">
-          <td colspan="3" style="padding: 15px 8px; text-align: right;"><strong>Totaal betaald:</strong></td>
-          <td style="padding: 15px 8px; text-align: right;">
-            <strong style="font-size: 18px; color: #1a1a2e;">€${order.totalAmount}</strong>
+        <tr>
+          <td colspan="3" style="padding:14px 8px;text-align:right;font-weight:bold;border-top:2px solid ${TEAL};font-size:14px;">Totaal betaald:</td>
+          <td style="padding:14px 8px;text-align:right;border-top:2px solid ${TEAL};">
+            <strong style="font-size:18px;color:${TEAL};">€${order.totalAmount}</strong>
           </td>
         </tr>
       </tfoot>
     </table>
-    
-    <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 25px 0; border-radius: 4px;">
-      <p style="margin: 0;"><strong>ℹ️ Belangrijk:</strong></p>
-      <p style="margin: 10px 0 0 0;">Neem deze e-mail mee naar de voorstelling (digitaal of geprint). Dit is je toegangsbewijs.</p>
-    </div>
-    
-    <h3 style="color: #1a1a2e; margin-top: 30px;">Locatie</h3>
-    <p>Ons Mierloos Theater<br/>
-    Heer van Scherpenzeelweg 14<br/>
-    5731 EW Mierlo</p>
-    
-    <p style="margin-top: 30px;">Heb je vragen over je bestelling? Neem dan contact met ons op via <a href="mailto:info@onsmierloostheater.nl" style="color: #1a1a2e;">info@onsmierloostheater.nl</a>.</p>
-    
-    <p style="margin-top: 30px;">We kijken ernaar uit je te verwelkomen!</p>
-    
-    <p style="margin-top: 20px;">Met vriendelijke groet,<br/>
-    <strong>${FROM_NAME}</strong></p>
-  </div>
-  
-  <div style="text-align: center; padding: 20px; color: #666; font-size: 12px;">
-    <p>© ${new Date().getFullYear()} ${FROM_NAME}. Alle rechten voorbehouden.</p>
-  </div>
-</body>
-</html>
-  `;
+
+    ${infoBox(`<p style="margin:0;font-size:13px;color:#555;"><strong style="color:${NAVY};">Toegangsbewijs</strong><br>Je persoonlijke tickets zijn als PDF-bijlage meegestuurd. Toon je ticket (digitaal of geprint) bij de ingang.</p>`)}
+
+    <p style="margin:24px 0 6px 0;font-size:14px;color:#555;">
+      Heb je vragen? Neem contact met ons op via
+      <a href="mailto:info@onsmierloostheater.nl" style="color:${TEAL};text-decoration:none;">info@onsmierloostheater.nl</a>.
+    </p>
+    <p style="margin:0;font-size:14px;color:#555;">We kijken ernaar uit je te verwelkomen!</p>
+    <p style="margin:24px 0 0 0;font-size:14px;color:#555;">Met vriendelijke groet,<br><strong style="color:${NAVY};">${FROM_NAME}</strong></p>`;
+
+  return emailShell({ subtitle: 'Bedankt voor je bestelling!', content });
 }
 
 /**
@@ -249,7 +298,21 @@ export async function sendOrderConfirmationEmail(
       }),
     );
 
-    console.log(`✓ Generated ${attachments.length} PDF attachments`);
+    console.log(`✓ Generated ${attachments.length} PDF ticket attachments`);
+
+    // Generate invoice PDF
+    try {
+      const invoiceBuffer = await generateInvoicePDF(order, lineItems as any, couponUsages);
+      const invoiceFilename = getInvoiceFilename(order);
+      attachments.push({
+        filename: invoiceFilename,
+        content: invoiceBuffer,
+        contentType: 'application/pdf',
+      });
+      console.log(`✓ Generated invoice PDF: ${invoiceFilename}`);
+    } catch (invoiceError) {
+      console.error('⚠️ Failed to generate invoice PDF, continuing without it:', invoiceError);
+    }
 
     // Build optional List-Unsubscribe headers if the recipient is a mailing list subscriber
     let headers: Record<string, string> | undefined;
@@ -333,32 +396,7 @@ export async function sendMailingListEmail(
 
     console.log(`Sending mailing list email to ${subscribers.length} subscribers...`);
 
-    // Generate HTML email
-    const htmlContent = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${subject}</title>
-</head>
-<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-  <div style="background: linear-gradient(135deg, #1a1a2e 0%, #2d3748 100%); color: #f7e9c1; padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
-    <h1 style="margin: 0; font-size: 28px;">🎭 ${FROM_NAME}</h1>
-  </div>
-  
-  <div style="background: #fff; padding: 30px; border: 1px solid #ddd; border-top: none; border-radius: 0 0 8px 8px;">
-    <div style="white-space: pre-wrap;">${message}</div>
-    
-    <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
-    
-    <p style="font-size: 12px; color: #666; text-align: center;">
-      Je ontvangt deze e-mail omdat je bent geabonneerd op de nieuwsbrief van ${FROM_NAME}.
-    </p>
-  </div>
-</body>
-</html>
-    `;
+    const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
 
     // Send emails to all subscribers
     let sent = 0;
@@ -366,10 +404,23 @@ export async function sendMailingListEmail(
 
     for (const subscriber of subscribers) {
       try {
-        const headers: Record<string, string> | undefined = subscriber.unsubscribeToken
+        const unsubUrl = subscriber.unsubscribeToken
+          ? `${baseUrl}/api/mailing-list/unsubscribe?token=${subscriber.unsubscribeToken}`
+          : undefined;
+
+        const htmlContent = emailShell({
+          subtitle: subject,
+          content: `<div style="font-size:15px;line-height:1.7;color:#444;white-space:pre-wrap;">${message}</div>
+            <p style="margin:28px 0 0 0;font-size:12px;color:#aaa;text-align:center;">
+              Je ontvangt deze e-mail omdat je bent geabonneerd op de nieuwsbrief van ${FROM_NAME}.
+            </p>`,
+          unsubscribeUrl: unsubUrl,
+        });
+
+        const headers: Record<string, string> | undefined = unsubUrl
           ? {
-              'List-Unsubscribe': `<mailto:${FROM_EMAIL}?subject=unsubscribe>, <${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/mailing-list/unsubscribe?token=${subscriber.unsubscribeToken}>`,
-              'List-Unsubscribe-Post': `<${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/mailing-list/unsubscribe?token=${subscriber.unsubscribeToken}>; method=POST`,
+              'List-Unsubscribe': `<mailto:${FROM_EMAIL}?subject=unsubscribe>, <${unsubUrl}>`,
+              'List-Unsubscribe-Post': `<${unsubUrl}>; method=POST`,
             }
           : undefined;
 
@@ -428,54 +479,22 @@ export async function sendVerificationEmail(
 
   const verificationUrl = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/auth/verify-email?token=${token}`;
 
-  const htmlContent = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bevestig je e-mailadres</title>
-</head>
-<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-  <div style="background: linear-gradient(135deg, #1a1a2e 0%, #2d3748 100%); color: #f7e9c1; padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
-    <h1 style="margin: 0; font-size: 28px;">🎭 ${FROM_NAME}</h1>
-    <p style="margin: 10px 0 0 0; opacity: 0.9;">Welkom!</p>
-  </div>
-  
-  <div style="background: #fff; padding: 30px; border: 1px solid #ddd; border-top: none; border-radius: 0 0 8px 8px;">
-    <h2 style="color: #1a1a2e; margin-top: 0;">Bevestig je e-mailadres</h2>
-    
-    <p>Beste ${name},</p>
-    
-    <p>Bedankt voor je registratie bij ${FROM_NAME}! Om je account te activeren, klik je op de onderstaande knop:</p>
-    
-    <div style="text-align: center; margin: 30px 0;">
-      <a href="${verificationUrl}" 
-         style="display: inline-block; background: #1a1a2e; color: #f7e9c1; padding: 15px 40px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 16px;">
-        Bevestig e-mailadres
-      </a>
-    </div>
-    
-    <p style="color: #666; font-size: 14px;">Of kopieer deze link naar je browser:</p>
-    <p style="word-break: break-all; background: #f8f9fa; padding: 10px; border-radius: 4px; font-size: 12px; color: #666;">
-      ${verificationUrl}
-    </p>
-    
-    <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 25px 0; border-radius: 4px;">
-      <p style="margin: 0;"><strong>⚠️ Let op:</strong></p>
-      <p style="margin: 10px 0 0 0;">Deze link is 24 uur geldig. Als je deze e-mail niet hebt aangevraagd, kun je hem negeren.</p>
-    </div>
-    
-    <p style="margin-top: 30px;">Met vriendelijke groet,<br/>
-    <strong>${FROM_NAME}</strong></p>
-  </div>
-  
-  <div style="text-align: center; padding: 20px; color: #666; font-size: 12px;">
-    <p>© ${new Date().getFullYear()} ${FROM_NAME}. Alle rechten voorbehouden.</p>
-  </div>
-</body>
-</html>
-  `;
+  const htmlContent = emailShell({
+    subtitle: 'Welkom bij Ons Mierloos Theater!',
+    content: `
+      <p style="margin:0 0 6px 0;font-size:22px;font-weight:bold;color:${NAVY};">Bevestig je e-mailadres</p>
+      <p style="margin:0 0 24px 0;color:#555;">Beste ${name},<br><br>
+      Bedankt voor je registratie! Klik op de knop hieronder om je account te activeren.</p>
+
+      ${ctaButton('Bevestig e-mailadres', verificationUrl)}
+
+      <p style="margin:0 0 6px 0;font-size:13px;color:#888;">Of kopieer deze link naar je browser:</p>
+      <p style="word-break:break-all;background:#f5f5f5;padding:10px 12px;border-radius:4px;font-size:11px;color:#666;margin:0 0 24px 0;">${verificationUrl}</p>
+
+      ${infoBox(`<p style="margin:0;font-size:13px;color:#555;"><strong style="color:${NAVY};">Let op:</strong> Deze link is 24 uur geldig. Als je deze e-mail niet hebt aangevraagd, kun je hem negeren.</p>`)}
+
+      <p style="margin:24px 0 0 0;font-size:14px;color:#555;">Met vriendelijke groet,<br><strong style="color:${NAVY};">${FROM_NAME}</strong></p>`,
+  });
 
   try {
     await transporter.sendMail({
@@ -517,70 +536,36 @@ export async function sendQueuedPaymentEmail(data: {
   const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
   const orderStatusUrl = `${baseUrl}/order/${data.orderId}?email=${encodeURIComponent(data.to)}`;
 
-  const htmlContent = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Je bestelling wordt verwerkt</title>
-</head>
-<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-  <div style="background: linear-gradient(135deg, #1a1a2e 0%, #2d3748 100%); color: #f7e9c1; padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
-    <h1 style="margin: 0; font-size: 28px;">🎭 ${FROM_NAME}</h1>
-    <p style="margin: 10px 0 0 0; opacity: 0.9;">Bedankt voor je bestelling!</p>
-  </div>
+  const htmlContent = emailShell({
+    subtitle: 'Je bestelling wordt verwerkt',
+    content: `
+      <p style="margin:0 0 6px 0;font-size:22px;font-weight:bold;color:${NAVY};">Je bestelling is aangemaakt!</p>
+      <p style="margin:0 0 24px 0;color:#555;">Hallo ${data.customerName},<br><br>
+      Je plaatsen zijn gereserveerd. We maken je betaallink klaar — je ontvangt deze binnen enkele minuten.</p>
 
-  <div style="background: #fff; padding: 30px; border: 1px solid #ddd; border-top: none; border-radius: 0 0 8px 8px;">
-    <h2 style="color: #1a1a2e; margin-top: 0;">Je bestelling is aangemaakt!</h2>
+      ${infoBox(`
+        <table cellpadding="0" cellspacing="0" style="width:100%;font-size:13px;">
+          <tr><td style="color:#888;padding:2px 0;width:120px;">Bestelling</td><td style="color:${NAVY};font-weight:bold;">#${data.orderNumber}</td></tr>
+          <tr><td style="color:#888;padding:2px 0;">Totaal</td><td style="color:#333;">€${data.totalAmount}</td></tr>
+          <tr><td style="color:#888;padding:2px 0;">Status</td><td style="color:${TEAL};font-weight:bold;">Wacht op betaling</td></tr>
+        </table>`)}
 
-    <p>Hallo ${data.customerName},</p>
+      <p style="margin:0 0 10px 0;font-size:13px;font-weight:bold;color:#888;letter-spacing:1px;text-transform:uppercase;">Volgende stappen</p>
+      <ol style="margin:0 0 24px 0;padding-left:20px;font-size:14px;color:#444;line-height:2;">
+        <li>Je ontvangt binnen enkele minuten een e-mail met de betaallink</li>
+        <li>Klik op de link om je betaling te voltooien</li>
+        <li>Je plaatsen blijven <strong>15 minuten</strong> gereserveerd</li>
+      </ol>
 
-    <p>Je bestelling is succesvol aangemaakt en je plaatsen zijn gereserveerd.</p>
+      ${infoBox(`<p style="margin:0;font-size:13px;color:#555;"><strong style="color:${NAVY};">Belangrijk:</strong> Rond je betaling op tijd af om je plaatsen te behouden.</p>`)}
 
-    <div style="background: #f8f9fa; padding: 20px; margin: 20px 0; border-radius: 8px;">
-      <h3 style="margin-top: 0; color: #1a1a2e;">Bestelling #${data.orderNumber}</h3>
-      <p style="margin: 5px 0;"><strong>Totaal:</strong> €${data.totalAmount}</p>
-      <p style="margin: 5px 0;"><strong>Status:</strong> <span style="color: #ffc107;">⏱️ Wacht op betaling</span></p>
-    </div>
+      ${ctaButton('Bekijk mijn bestelling', orderStatusUrl)}
 
-    <h3 style="color: #1a1a2e;">⏱️ Wat gebeurt er nu?</h3>
-    <p>We maken momenteel je betaallink aan. Dit duurt normaal gesproken <strong>minder dan 5 minuten</strong>.</p>
-
-    <h3 style="color: #1a1a2e;">📧 Volgende stappen:</h3>
-    <ol style="line-height: 2;">
-      <li>Je ontvangt binnen enkele minuten een nieuwe e-mail met de betaallink</li>
-      <li>Klik op de link om je betaling te voltooien</li>
-      <li>Je plaatsen blijven <strong>15 minuten</strong> gereserveerd vanaf het moment van bestelling</li>
-    </ol>
-
-    <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 25px 0; border-radius: 4px;">
-      <p style="margin: 0;"><strong>⚠️ Belangrijk:</strong></p>
-      <p style="margin: 10px 0 0 0;">Rond je betaling binnen 15 minuten af om je plaatsen te behouden.</p>
-    </div>
-
-    <p>Je kunt de status van je bestelling ook bekijken via:</p>
-    <div style="text-align: center; margin: 30px 0;">
-      <a href="${orderStatusUrl}"
-         style="display: inline-block; background: #1a1a2e; color: #f7e9c1; padding: 15px 40px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 16px;">
-        Bekijk mijn bestelling
-      </a>
-    </div>
-
-    <p style="color: #666; font-size: 14px; margin-top: 30px;">
-      Vragen? Neem contact op via <a href="mailto:info@onsmierloostheater.nl" style="color: #1a1a2e;">info@onsmierloostheater.nl</a>
-    </p>
-
-    <p style="margin-top: 30px;">Met vriendelijke groet,<br/>
-    <strong>${FROM_NAME}</strong></p>
-  </div>
-
-  <div style="text-align: center; padding: 20px; color: #666; font-size: 12px;">
-    <p>© ${new Date().getFullYear()} ${FROM_NAME}. Alle rechten voorbehouden.</p>
-  </div>
-</body>
-</html>
-  `;
+      <p style="margin:0;font-size:14px;color:#555;">
+        Vragen? Mail naar <a href="mailto:info@onsmierloostheater.nl" style="color:${TEAL};text-decoration:none;">info@onsmierloostheater.nl</a>.
+      </p>
+      <p style="margin:24px 0 0 0;font-size:14px;color:#555;">Met vriendelijke groet,<br><strong style="color:${NAVY};">${FROM_NAME}</strong></p>`,
+  });
 
   try {
     await transporter.sendMail({
@@ -618,54 +603,22 @@ export async function sendPasswordResetEmail(
 
   const resetUrl = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/auth/reset-password?token=${token}`;
 
-  const htmlContent = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Wachtwoord opnieuw instellen</title>
-</head>
-<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-  <div style="background: linear-gradient(135deg, #1a1a2e 0%, #2d3748 100%); color: #f7e9c1; padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
-    <h1 style="margin: 0; font-size: 28px;">🎭 ${FROM_NAME}</h1>
-    <p style="margin: 10px 0 0 0; opacity: 0.9;">Wachtwoord herstellen</p>
-  </div>
-  
-  <div style="background: #fff; padding: 30px; border: 1px solid #ddd; border-top: none; border-radius: 0 0 8px 8px;">
-    <h2 style="color: #1a1a2e; margin-top: 0;">Reset je wachtwoord</h2>
-    
-    <p>Beste ${name},</p>
-    
-    <p>We hebben een verzoek ontvangen om het wachtwoord van je account opnieuw in te stellen. Klik op de onderstaande knop om een nieuw wachtwoord in te stellen:</p>
-    
-    <div style="text-align: center; margin: 30px 0;">
-      <a href="${resetUrl}" 
-         style="display: inline-block; background: #1a1a2e; color: #f7e9c1; padding: 15px 40px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 16px;">
-        Wachtwoord opnieuw instellen
-      </a>
-    </div>
-    
-    <p style="color: #666; font-size: 14px;">Of kopieer deze link naar je browser:</p>
-    <p style="word-break: break-all; background: #f8f9fa; padding: 10px; border-radius: 4px; font-size: 12px; color: #666;">
-      ${resetUrl}
-    </p>
-    
-    <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 25px 0; border-radius: 4px;">
-      <p style="margin: 0;"><strong>⚠️ Let op:</strong></p>
-      <p style="margin: 10px 0 0 0;">Deze link is 1 uur geldig. Als je deze e-mail niet hebt aangevraagd, kun je hem negeren. Je wachtwoord blijft dan ongewijzigd.</p>
-    </div>
-    
-    <p style="margin-top: 30px;">Met vriendelijke groet,<br/>
-    <strong>${FROM_NAME}</strong></p>
-  </div>
-  
-  <div style="text-align: center; padding: 20px; color: #666; font-size: 12px;">
-    <p>© ${new Date().getFullYear()} ${FROM_NAME}. Alle rechten voorbehouden.</p>
-  </div>
-</body>
-</html>
-  `;
+  const htmlContent = emailShell({
+    subtitle: 'Wachtwoord herstellen',
+    content: `
+      <p style="margin:0 0 6px 0;font-size:22px;font-weight:bold;color:${NAVY};">Reset je wachtwoord</p>
+      <p style="margin:0 0 24px 0;color:#555;">Beste ${name},<br><br>
+      We hebben een verzoek ontvangen om je wachtwoord opnieuw in te stellen. Klik op de knop hieronder om een nieuw wachtwoord te kiezen.</p>
+
+      ${ctaButton('Wachtwoord opnieuw instellen', resetUrl)}
+
+      <p style="margin:0 0 6px 0;font-size:13px;color:#888;">Of kopieer deze link naar je browser:</p>
+      <p style="word-break:break-all;background:#f5f5f5;padding:10px 12px;border-radius:4px;font-size:11px;color:#666;margin:0 0 24px 0;">${resetUrl}</p>
+
+      ${infoBox(`<p style="margin:0;font-size:13px;color:#555;"><strong style="color:${NAVY};">Let op:</strong> Deze link is 1 uur geldig. Als je dit verzoek niet hebt gedaan, kun je deze e-mail negeren. Je wachtwoord blijft ongewijzigd.</p>`)}
+
+      <p style="margin:24px 0 0 0;font-size:14px;color:#555;">Met vriendelijke groet,<br><strong style="color:${NAVY};">${FROM_NAME}</strong></p>`,
+  });
 
   try {
     await transporter.sendMail({
