@@ -1,3 +1,5 @@
+import { Client } from 'pg';
+
 import {
   getNextJobs,
   updateJobStatus,
@@ -7,12 +9,60 @@ import {
 import { handlePaymentCreation } from './handlers/paymentCreationHandler';
 import { handlePaymentWebhook } from './handlers/paymentWebhookHandler';
 import { handleOrphanedOrderCleanup } from './handlers/orphanedOrderCleanupHandler';
-// Future handlers can be imported here
-// import { handlePDFGeneration } from './handlers/pdfGenerationHandler';
 
+const MINUTE = 60 * 1000;
 const POLLING_INTERVAL = parseInt(process.env.WORKER_POLLING_INTERVAL || '5000', 10);
 const MAX_EXECUTION_ATTEMPTS = parseInt(process.env.WORKER_MAX_ATTEMPTS || '5', 10);
-const MAX_BACKOFF_INTERVAL = 300000; // 5 minutes
+const MAX_BACKOFF_INTERVAL = MINUTE * 10; // 10 minutes
+
+let wakeUp: (() => void) | null = null;
+let listener: Client | null = null;
+let listenerRetryCount = 0;
+let pendingNotifications = false;
+let isShuttingDown = false;
+
+function exponentialBackoff(attempt: number, baseDelay = 1000, maxDelay = 30000): number {
+  const delay = Math.min(baseDelay * 2 ** attempt, maxDelay);
+  return delay;
+}
+
+async function setupListener() {
+  listener = new Client({
+    connectionString: process.env.DATABASE_URL,
+  });
+
+  listener.on('error', async (err) => {
+    console.error('❌ listener lost, reconnecting:', err);
+    await reconnectListener();
+  });
+
+  await listener.connect();
+  await listener.query('LISTEN job_notifications');
+  listenerRetryCount = 0;
+
+  listener.on('notification', (msg) => {
+    if (msg.channel === 'job_notifications') {
+      pendingNotifications = true;
+      if (wakeUp) {
+        wakeUp();
+        wakeUp = null;
+      }
+    }
+  });
+
+  console.log('Listening for job notifications...');
+}
+
+async function reconnectListener() {
+  try {
+    listener?.removeAllListeners();
+    await listener?.end();
+  } catch {}
+
+  listener = null;
+
+  setTimeout(setupListener, exponentialBackoff(listenerRetryCount++, 2000, MINUTE * 5));
+}
 
 /**
  * Main worker function that polls database for jobs and processes them
@@ -22,18 +72,19 @@ export async function startWorker() {
   console.log('🚀 Starting job worker...');
   console.log(`📋 Polling interval: ${POLLING_INTERVAL}ms`);
   console.log(`🔁 Max attempts: ${MAX_EXECUTION_ATTEMPTS}`);
+  await setupListener();
 
   let currentInterval = POLLING_INTERVAL;
   let jobCount = 0;
 
-  while (true) {
+  while (!isShuttingDown) {
     try {
       const nextJobs = await getNextJobs(10);
 
       if (nextJobs.length === 0) {
         // No jobs, gradually increase polling interval to reduce DB load
         currentInterval = Math.min(currentInterval * 1.5, MAX_BACKOFF_INTERVAL);
-        await sleep(currentInterval);
+        await waitForNotificationOrTimeout(currentInterval);
         continue;
       }
 
@@ -56,7 +107,7 @@ export async function startWorker() {
       currentInterval = Math.min(currentInterval * 2, MAX_BACKOFF_INTERVAL);
     }
 
-    await sleep(currentInterval);
+    await waitForNotificationOrTimeout(currentInterval);
   }
 }
 
@@ -125,17 +176,30 @@ async function processJob(job: Job): Promise<void> {
   }
 }
 
-/**
- * Helper function to sleep for specified milliseconds
- */
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
+function waitForNotificationOrTimeout(ms: number): Promise<void> {
+  if (pendingNotifications) {
+    pendingNotifications = false;
+    return Promise.resolve();
+  }
 
-/**
- * Graceful shutdown handler
- */
-let isShuttingDown = false;
+  return new Promise((resolve) => {
+    const timeout = setTimeout(() => {
+      wakeUp = null;
+      resolve();
+    }, ms);
+
+    // If a notification is received, wake up immediately
+    wakeUp = () => {
+      clearTimeout(timeout);
+
+      if (pendingNotifications) {
+        pendingNotifications = false;
+      }
+      wakeUp = null;
+      resolve();
+    };
+  });
+}
 
 export function setupGracefulShutdown() {
   const shutdown = () => {
@@ -144,6 +208,11 @@ export function setupGracefulShutdown() {
     isShuttingDown = true;
     console.log('\n🛑 Graceful shutdown initiated...');
     console.log('⏳ Waiting for current jobs to complete...');
+
+    try {
+      listener?.end();
+      listener = null;
+    } catch {}
 
     // Give jobs 30 seconds to complete
     setTimeout(() => {

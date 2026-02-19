@@ -10,6 +10,7 @@
     "@ons-mierloos-theater/shared": "*",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
+    "node-cron": "^4.2.1",
     "tsx": "^4.21.0"
   },
   "devDependencies": {

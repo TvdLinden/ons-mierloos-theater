@@ -1,12 +1,13 @@
 import { db } from '../db';
 import { jobs } from '../db/schema';
-import { eq, and, isNull, lte, or, inArray } from 'drizzle-orm';
+import { eq, and, isNull, lte, or, inArray, sql } from 'drizzle-orm';
 
 export type JobType =
   | 'pdf_generation'
   | 'payment_creation'
   | 'payment_webhook'
   | 'orphaned_order_cleanup'
+  | 'orphaned_jobs_cleanup'
   | 'email';
 
 export interface Job {
@@ -35,15 +36,21 @@ export async function createJob(
   data: Record<string, any>,
   priority = 0,
 ): Promise<string> {
-  const result = await db
-    .insert(jobs)
-    .values({
-      type,
-      status: 'pending',
-      data,
-      priority,
-    })
-    .returning({ id: jobs.id });
+  const result = await db.transaction(async (tx) => {
+    const inserted = await tx
+      .insert(jobs)
+      .values({
+        type,
+        status: 'pending',
+        data,
+        priority,
+      })
+      .returning({ id: jobs.id });
+
+    await tx.execute(sql`NOTIFY job_notifications`);
+
+    return inserted;
+  });
 
   console.log(`[JOB_CREATED] ${type} - ID: ${result[0].id}`);
   return result[0].id;
@@ -60,27 +67,39 @@ export async function getNextJobs(limit = 10): Promise<Job[]> {
   const now = new Date();
 
   return await db.transaction(async (tx) => {
-    // Fetch pending jobs that are ready for retry
-    const nextJobs = (await tx.query.jobs.findMany({
-      where: and(
-        eq(jobs.status, 'pending'),
-        or(isNull(jobs.nextRetryAt), lte(jobs.nextRetryAt, now)),
-      ),
-      orderBy: (jobs, { desc, asc }) => [desc(jobs.priority), asc(jobs.createdAt)],
-      limit,
+    // Atomically select and update jobs using row-level locks to avoid races
+    const result = await tx.execute(sql`
+      WITH cte AS (
+        SELECT id
+        FROM jobs
+        WHERE status = 'pending'
+          AND (next_retry_at IS NULL OR next_retry_at <= NOW())
+        ORDER BY priority DESC, created_at ASC
+        FOR UPDATE SKIP LOCKED
+        LIMIT ${limit}
+      )
+      UPDATE jobs
+      SET status = 'processing', updated_at = NOW()
+      FROM cte
+      WHERE jobs.id = cte.id
+      RETURNING *;
+    `);
+
+    const rows = result.rows || [];
+
+    return rows.map((r: any) => ({
+      id: r.id,
+      type: r.type,
+      status: r.status,
+      data: r.data,
+      result: r.result,
+      errorMessage: r.error_message ?? null,
+      executionCount: r.execution_count,
+      nextRetryAt: r.next_retry_at ? new Date(r.next_retry_at) : null,
+      createdAt: new Date(r.created_at),
+      updatedAt: new Date(r.updated_at),
+      completedAt: r.completed_at ? new Date(r.completed_at) : null,
     })) as Job[];
-
-    // Atomically mark all fetched jobs as processing in same transaction
-    // This prevents other workers from fetching the same jobs
-    if (nextJobs.length > 0) {
-      const jobIds = nextJobs.map((j) => j.id);
-      await tx
-        .update(jobs)
-        .set({ status: 'processing', updatedAt: new Date() })
-        .where(inArray(jobs.id, jobIds));
-    }
-
-    return nextJobs;
   });
 }
 
@@ -194,7 +213,7 @@ export async function cleanupOldJobs(olderThanDays = 30): Promise<number> {
     .where(
       and(
         or(eq(jobs.status, 'completed'), eq(jobs.status, 'failed')),
-        lte(jobs.completedAt, cutoffDate),
+        or(lte(jobs.completedAt, cutoffDate), lte(jobs.updatedAt, cutoffDate)),
       ),
     );
 
