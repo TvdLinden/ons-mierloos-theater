@@ -56,12 +56,12 @@ export function SeatMap({
             )} */}
 
             {/* Normal zone indicator */}
-            {normalMax >= normalMin && (
+            {/* {normalMax >= normalMin && (
               <div
                 className="absolute top-0 bottom-0 border-l-2 border-border opacity-40"
                 style={{ left: `${(normalMin - 1) * 40 + 64}px` }}
               ></div>
-            )}
+            )} */}
 
             {/* Right zone indicator */}
             {/* {seatsPerRow > normalMax && (
