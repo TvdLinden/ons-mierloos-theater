@@ -50,27 +50,6 @@ export function SeatMap({
 
           {/* Seats container with zone indicators */}
           <div className="flex gap-1 relative">
-            {/* Left zone indicator */}
-            {/* {seatsPerRow >= 2 && (
-              <div className="absolute -left-0.5 top-0 bottom-0 w-16 border-l-2 border-border opacity-40"></div>
-            )} */}
-
-            {/* Normal zone indicator */}
-            {/* {normalMax >= normalMin && (
-              <div
-                className="absolute top-0 bottom-0 border-l-2 border-border opacity-40"
-                style={{ left: `${(normalMin - 1) * 40 + 64}px` }}
-              ></div>
-            )} */}
-
-            {/* Right zone indicator */}
-            {/* {seatsPerRow > normalMax && (
-              <div
-                className="absolute top-0 bottom-0 border-l-2 border-border opacity-40"
-                style={{ left: `${normalMax * 40 + 64}px` }}
-              ></div>
-            )} */}
-
             {/* Seats */}
             {Array.from({ length: seatsPerRow }).map((_, seatIndex) => {
               const seatNumber = seatIndex + 1;

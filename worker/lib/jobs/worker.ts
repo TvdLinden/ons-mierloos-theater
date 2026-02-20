@@ -42,6 +42,7 @@ async function setupListener() {
 
   listener.on('notification', (msg) => {
     if (msg.channel === 'job_notifications') {
+      console.log('🔔 Received job notification');
       pendingNotifications = true;
       if (wakeUp) {
         wakeUp();
