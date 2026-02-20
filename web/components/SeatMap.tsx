@@ -51,9 +51,9 @@ export function SeatMap({
           {/* Seats container with zone indicators */}
           <div className="flex gap-1 relative">
             {/* Left zone indicator */}
-            {seatsPerRow >= 2 && (
+            {/* {seatsPerRow >= 2 && (
               <div className="absolute -left-0.5 top-0 bottom-0 w-16 border-l-2 border-border opacity-40"></div>
-            )}
+            )} */}
 
             {/* Normal zone indicator */}
             {normalMax >= normalMin && (
@@ -64,12 +64,12 @@ export function SeatMap({
             )}
 
             {/* Right zone indicator */}
-            {seatsPerRow > normalMax && (
+            {/* {seatsPerRow > normalMax && (
               <div
                 className="absolute top-0 bottom-0 border-l-2 border-border opacity-40"
                 style={{ left: `${normalMax * 40 + 64}px` }}
               ></div>
-            )}
+            )} */}
 
             {/* Seats */}
             {Array.from({ length: seatsPerRow }).map((_, seatIndex) => {
@@ -133,9 +133,7 @@ export function SeatMap({
                       </div>
                     )}
                     {!readonly && isReserved && (
-                      <p className="mt-1 text-muted-foreground italic">
-                        Klik om te schakelen
-                      </p>
+                      <p className="mt-1 text-muted-foreground italic">Klik om te schakelen</p>
                     )}
                   </HoverCardContent>
                 </HoverCard>
