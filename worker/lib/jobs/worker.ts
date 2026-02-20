@@ -20,6 +20,7 @@ let listener: Client | null = null;
 let listenerRetryCount = 0;
 let pendingNotifications = false;
 let isShuttingDown = false;
+let activeJobCount = 0;
 
 function exponentialBackoff(attempt: number, baseDelay = 1000, maxDelay = 30000): number {
   const delay = Math.min(baseDelay * 2 ** attempt, maxDelay);
@@ -27,7 +28,7 @@ function exponentialBackoff(attempt: number, baseDelay = 1000, maxDelay = 30000)
 }
 
 async function setupListener() {
-  const connectionString = process.env.DIRECT_DATABASE_URL || process.env.DIRECT_DATABASE_URL;
+  const connectionString = process.env.DIRECT_DATABASE_URL || process.env.DATABASE_URL;
 
   if (!process.env.DIRECT_DATABASE_URL) {
     console.warn('⚠️  DIRECT_DATABASE_URL not set, LISTEN/NOTIFY may not work through a pooler');
@@ -98,16 +99,20 @@ export async function startWorker() {
       console.log(`📋 Found ${nextJobs.length} jobs to process`);
       currentInterval = POLLING_INTERVAL; // Reset interval when jobs found
 
-      // Process jobs sequentially to avoid overwhelming the system
-      for (const job of nextJobs) {
-        try {
-          await processJob(job);
-          jobCount++;
-        } catch (error) {
-          console.error(`❌ Error processing job ${job.id}:`, error);
-          // Continue with next job
-        }
-      }
+      // Process the batch in parallel
+      await Promise.allSettled(
+        nextJobs.map(async (job) => {
+          activeJobCount++;
+          try {
+            await processJob(job);
+            jobCount++;
+          } catch (error) {
+            console.error(`❌ Error processing job ${job.id}:`, error);
+          } finally {
+            activeJobCount--;
+          }
+        }),
+      );
     } catch (error) {
       console.error('💥 Worker error:', error);
       // Increase interval on critical error
@@ -209,7 +214,7 @@ function waitForNotificationOrTimeout(ms: number): Promise<void> {
 }
 
 export function setupGracefulShutdown() {
-  const shutdown = () => {
+  const shutdown = async () => {
     if (isShuttingDown) return;
 
     isShuttingDown = true;
@@ -221,11 +226,20 @@ export function setupGracefulShutdown() {
       listener = null;
     } catch {}
 
-    // Give jobs 30 seconds to complete
-    setTimeout(() => {
-      console.log('✅ Worker shutdown complete');
-      process.exit(0);
-    }, 30000);
+    const forceQuitTimeout = setTimeout(() => {
+      console.error('💥 Shutdown timed out, forcing exit');
+      process.exit(1);
+    }, 60000);
+
+    while (activeJobCount > 0) {
+      console.log(`⏳ Waiting for ${activeJobCount} active jobs to finish...`);
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+
+    clearTimeout(forceQuitTimeout);
+    console.log('✅ All jobs finished. Worker shutdown complete.');
+    process.exitCode = 0;
+    return;
   };
 
   process.on('SIGTERM', shutdown);

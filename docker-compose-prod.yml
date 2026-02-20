@@ -23,7 +23,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.worker
-    command: ['node', '--import', 'tsx', 'scripts/start-schedular.ts']
+    command: ['node', '--import', 'tsx', 'scripts/start-scheduler.ts']
     env_file:
       - .env.local
     restart: on-failure

@@ -5,7 +5,7 @@ import { startWorker, setupGracefulShutdown } from '@/lib/jobs/worker';
 
 const PORT = process.env.PORT || 8080;
 
-// Create Express app for health checks (required by Cloud Run)
+// Create Express app for health checks, required for cloud platforms to monitor worker health
 const app = express();
 
 app.get('/health', (req, res) => {
