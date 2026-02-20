@@ -21,30 +21,20 @@ let listenerRetryCount = 0;
 let pendingNotifications = false;
 let isShuttingDown = false;
 
-function getDirectConnectionUrl(urlString: string): string {
-  const url = new URL(urlString);
-
-  if (!url.hostname.endsWith('.pooler.supabase.com')) {
-    return urlString; // not a pooler URL, use as-is
-  }
-
-  // aws-0-eu-west-2.pooler.supabase.com → db.aws-0-eu-west-2.supabase.co
-  const region = url.hostname.replace('.pooler.supabase.com', '');
-  url.hostname = `db.${region}.supabase.co`;
-  url.port = '5432';
-  url.searchParams.delete('pgbouncer');
-
-  return url.toString();
-}
-
 function exponentialBackoff(attempt: number, baseDelay = 1000, maxDelay = 30000): number {
   const delay = Math.min(baseDelay * 2 ** attempt, maxDelay);
   return delay;
 }
 
 async function setupListener() {
+  const connectionString = process.env.DIRECT_DATABASE_URL || process.env.DIRECT_DATABASE_URL;
+
+  if (!process.env.DIRECT_DATABASE_URL) {
+    console.warn('⚠️  DIRECT_DATABASE_URL not set, LISTEN/NOTIFY may not work through a pooler');
+  }
+
   listener = new Client({
-    connectionString: getDirectConnectionUrl(process.env.DATABASE_URL!),
+    connectionString: connectionString,
   });
 
   listener.on('error', async (err) => {
