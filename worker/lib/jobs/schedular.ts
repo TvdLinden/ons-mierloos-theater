@@ -14,14 +14,18 @@ function register(name: string, expression: string, handler: () => Promise<void>
   });
 }
 
-const dailyExpression = '0 0 * * *';
-register('orphaned_order_cleanup', dailyExpression, async () => {
-  await createJob('orphaned_order_cleanup', {});
-});
+export async function start() {
+  console.log('🚀 Starting scheduler...');
 
-const hourlyExpression = '0 * * * *';
-register('orphaned_jobs_cleanup', hourlyExpression, async () => {
-  await createJob('orphaned_jobs_cleanup', {});
-});
+  const dailyExpression = '0 0 * * *';
+  register('orphaned_order_cleanup', dailyExpression, async () => {
+    await createJob('orphaned_order_cleanup', {});
+  });
 
-console.log('🚀 Scheduler started');
+  const hourlyExpression = '0 * * * *';
+  register('orphaned_jobs_cleanup', hourlyExpression, async () => {
+    await createJob('orphaned_jobs_cleanup', {});
+  });
+
+  console.log('🚀 Scheduler started');
+}
