@@ -7,7 +7,7 @@ export type JobType =
   | 'payment_creation'
   | 'payment_webhook'
   | 'orphaned_order_cleanup'
-  | 'orphaned_jobs_cleanup'
+  | 'cleanup_old_jobs'
   | 'email';
 
 export interface Job {

@@ -9,6 +9,7 @@ import {
 import { handlePaymentCreation } from './handlers/paymentCreationHandler';
 import { handlePaymentWebhook } from './handlers/paymentWebhookHandler';
 import { handleOrphanedOrderCleanup } from './handlers/orphanedOrderCleanupHandler';
+import { handleCleanupOldJobs } from './handlers/cleanupOldJobsHandler';
 
 const MINUTE = 60 * 1000;
 const POLLING_INTERVAL = parseInt(process.env.WORKER_POLLING_INTERVAL || '5000', 10);
@@ -157,6 +158,10 @@ async function processJob(job: Job): Promise<void> {
 
       case 'orphaned_order_cleanup':
         result = await handleOrphanedOrderCleanup(id, data as any);
+        break;
+
+      case 'cleanup_old_jobs':
+        result = await handleCleanupOldJobs(id, data as any);
         break;
 
       // Future job types

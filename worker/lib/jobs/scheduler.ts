@@ -17,14 +17,13 @@ function register(name: string, expression: string, handler: () => Promise<void>
 export async function start() {
   console.log('🚀 Starting scheduler...');
 
-  const dailyExpression = '0 0 * * *';
-  register('orphaned_order_cleanup', dailyExpression, async () => {
+  const hourlyExpression = '0 * * * *';
+  register('orphaned_order_cleanup', hourlyExpression, async () => {
     await createJob('orphaned_order_cleanup', {});
   });
 
-  const hourlyExpression = '0 * * * *';
-  register('orphaned_jobs_cleanup', hourlyExpression, async () => {
-    await createJob('orphaned_jobs_cleanup', {});
+  register('cleanup_old_jobs', hourlyExpression, async () => {
+    await createJob('cleanup_old_jobs', {});
   });
 
   console.log('🚀 Scheduler started');
