@@ -131,7 +131,7 @@ export const tickets = pgTable(
       .references(() => orders.id, { onDelete: 'cascade' })
       .notNull(),
     ticketNumber: varchar('ticket_number', { length: 50 }).notNull().unique(),
-    rowLetter: varchar('row_letter', { length: 2 }).notNull(), // "A", "B", etc.
+    rowNumber: integer('row_number').notNull(), // 1, 2, 3, etc.
     seatNumber: integer('seat_number').notNull(), // 1, 2, 3, etc.
     wheelchairAccess: boolean('wheelchair_access').notNull().default(false),
     qrToken: uuid('qr_token').notNull().unique().defaultRandom(),

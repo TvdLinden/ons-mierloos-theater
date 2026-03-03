@@ -61,7 +61,7 @@ export default async function PerformanceSalesPage({ params }: PerformanceSalesP
   const wheelchairBookings = await db
     .select({
       customerName: orders.customerName,
-      rowLetter: tickets.rowLetter,
+      rowNumber: tickets.rowNumber,
       seatNumber: tickets.seatNumber,
     })
     .from(tickets)
@@ -73,11 +73,11 @@ export default async function PerformanceSalesPage({ params }: PerformanceSalesP
         eq(orders.status, 'paid'),
       ),
     )
-    .orderBy(tickets.rowLetter, tickets.seatNumber);
+    .orderBy(tickets.rowNumber, tickets.seatNumber);
 
   const wheelchairByCustomer = new Map<string, string[]>();
   for (const booking of wheelchairBookings) {
-    const seat = `${booking.rowLetter}${booking.seatNumber}`;
+    const seat = `Rij ${booking.rowNumber} Stoel ${booking.seatNumber}`;
     const existing = wheelchairByCustomer.get(booking.customerName) || [];
     existing.push(seat);
     wheelchairByCustomer.set(booking.customerName, existing);

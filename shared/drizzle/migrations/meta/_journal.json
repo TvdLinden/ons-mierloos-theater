@@ -218,6 +218,13 @@
       "when": 1771422398251,
       "tag": "0030_hot_xavin",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1772570223880,
+      "tag": "0031_pink_black_queen",
+      "breakpoints": true
     }
   ]
 }

@@ -275,7 +275,11 @@ export async function sendOrderConfirmationEmail(
       with: {
         performance: {
           with: {
-            show: true,
+            show: {
+              with: {
+                image: true,
+              },
+            },
           },
         },
         order: true,

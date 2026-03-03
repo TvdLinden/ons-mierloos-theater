@@ -1,12 +1,22 @@
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import QRCode from 'qrcode';
-import { Ticket, Order, Performance, Show } from '../db';
+import { Readable } from 'stream';
+import { Ticket, Order, Performance, Show, Image } from '../db';
 import { getSiteSettings } from '../queries/settings';
 import { brandTeal, loadLogoBytes } from './pdfHelpers';
+import { getImageFromR2 } from './r2ImageStorage';
+
+async function streamToBuffer(stream: Readable): Promise<Buffer> {
+  const chunks: Buffer[] = [];
+  for await (const chunk of stream) {
+    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+  }
+  return Buffer.concat(chunks);
+}
 
 export type TicketData = Ticket & {
   performance: Performance & {
-    show: Show;
+    show: Show & { image: Image | null };
   };
   order: Order;
 };
@@ -112,13 +122,65 @@ export async function generateTicketPDF(ticketData: TicketData): Promise<Buffer>
   const qrX = width - margin - qrSize;
   const qrY = headerBottomY - 30 - qrSize;
 
+  // === SHOW IMAGE (fetch from R2 upfront) ===
+  // Layout: left column (image) | middle column (show info) | right column (QR)
+  // The image column is 90pt wide. When no image, show info starts at margin.
+  const imgColWidth = 90;
+  const imgColGap = 15;
+
+  let embeddedShowImage: Awaited<ReturnType<typeof pdfDoc.embedPng>> | null = null;
+  let showImgX = margin;
+  let showImgY = 0;
+  let showImgWidth = 0;
+  let showImgHeight = 0;
+
+  if (show.image?.r2Url) {
+    try {
+      const { stream, contentType } = await getImageFromR2(show.image.r2Url);
+      const imageBytes = await streamToBuffer(stream);
+      const mimeType = contentType ?? show.image.mimetype ?? 'image/jpeg';
+
+      embeddedShowImage =
+        mimeType === 'image/png'
+          ? await pdfDoc.embedPng(imageBytes)
+          : await pdfDoc.embedJpg(imageBytes);
+
+      // Scale to fit the image column (max 90pt wide, max 100pt tall)
+      const maxImgHeight = 100;
+      const aspectRatio = embeddedShowImage.width / embeddedShowImage.height;
+
+      showImgWidth = imgColWidth;
+      showImgHeight = showImgWidth / aspectRatio;
+      if (showImgHeight > maxImgHeight) {
+        showImgHeight = maxImgHeight;
+        showImgWidth = showImgHeight * aspectRatio;
+      }
+
+      // Top of image aligns with the top of the show info section
+      showImgX = margin;
+      showImgY = headerBottomY - 30 - showImgHeight;
+    } catch {
+      embeddedShowImage = null;
+    }
+  }
+
+  // Show info starts to the right of the image column when an image is present
+  const showInfoX = embeddedShowImage ? margin + imgColWidth + imgColGap : margin;
+
   // === SHOW INFORMATION ===
   let currentY = headerBottomY - 40;
 
+  // Scale title font down if it would overflow into the QR column
+  const maxTitleWidth = qrX - showInfoX - 15;
+  let titleSize = 20;
+  while (boldFont.widthOfTextAtSize(show.title, titleSize) > maxTitleWidth && titleSize > 13) {
+    titleSize--;
+  }
+
   page.drawText(show.title, {
-    x: margin,
+    x: showInfoX,
     y: currentY,
-    size: 20,
+    size: titleSize,
     font: boldFont,
     color: rgb(0, 0, 0),
   });
@@ -138,8 +200,11 @@ export async function generateTicketPDF(ticketData: TicketData): Promise<Buffer>
     minute: '2-digit',
   });
 
+  const labelX = showInfoX;
+  const valueX = showInfoX + 80;
+
   page.drawText('Datum:', {
-    x: margin,
+    x: labelX,
     y: currentY,
     size: 12,
     font: boldFont,
@@ -147,7 +212,7 @@ export async function generateTicketPDF(ticketData: TicketData): Promise<Buffer>
   });
 
   page.drawText(dateStr, {
-    x: margin + 80,
+    x: valueX,
     y: currentY,
     size: 12,
     font: regularFont,
@@ -157,7 +222,7 @@ export async function generateTicketPDF(ticketData: TicketData): Promise<Buffer>
   currentY -= 22;
 
   page.drawText('Tijd:', {
-    x: margin,
+    x: labelX,
     y: currentY,
     size: 12,
     font: boldFont,
@@ -165,7 +230,7 @@ export async function generateTicketPDF(ticketData: TicketData): Promise<Buffer>
   });
 
   page.drawText(timeStr, {
-    x: margin + 80,
+    x: valueX,
     y: currentY,
     size: 12,
     font: regularFont,
@@ -204,7 +269,7 @@ export async function generateTicketPDF(ticketData: TicketData): Promise<Buffer>
     color: rgb(0.3, 0.3, 0.3),
   });
 
-  page.drawText(`Rij ${ticket.rowLetter}`, {
+  page.drawText(`Rij ${ticket.rowNumber}`, {
     x: margin + 4,
     y: currentY - 52,
     size: 32,
@@ -220,7 +285,16 @@ export async function generateTicketPDF(ticketData: TicketData): Promise<Buffer>
     color: brandTeal,
   });
 
-  // === QR CODE (drawn after seat box so it renders on top) ===
+  // === SHOW IMAGE + QR CODE (drawn after seat box so they render on top) ===
+  if (embeddedShowImage) {
+    page.drawImage(embeddedShowImage, {
+      x: showImgX,
+      y: showImgY,
+      width: showImgWidth,
+      height: showImgHeight,
+    });
+  }
+
   page.drawImage(qrCodeImage, {
     x: qrX,
     y: qrY,

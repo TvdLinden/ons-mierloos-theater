@@ -27,7 +27,7 @@ export default async function PerformanceDetailPage({ params }: Props) {
   // Fetch assigned seats for this performance (all orders with tickets)
   const assignedTickets = await db
     .select({
-      rowLetter: tickets.rowLetter,
+      rowNumber: tickets.rowNumber,
       seatNumber: tickets.seatNumber,
       wheelchairAccess: tickets.wheelchairAccess,
       customerName: orders.customerName,
@@ -40,17 +40,17 @@ export default async function PerformanceDetailPage({ params }: Props) {
 
   // Convert to arrays/maps for JSON serialization
   const reservedSeats = assignedTickets.map(
-    (t) => `${t.rowLetter.charCodeAt(0) - 65}-${t.seatNumber}`,
+    (t) => `${t.rowNumber - 1}-${t.seatNumber}`,
   );
   const wheelchairSeats = assignedTickets
     .filter((t) => t.wheelchairAccess)
-    .map((t) => `${t.rowLetter.charCodeAt(0) - 65}-${t.seatNumber}`);
+    .map((t) => `${t.rowNumber - 1}-${t.seatNumber}`);
 
   // Build seat info map: seatId -> { customerName, orderId, orderStatus }
   const seatInfo: Record<string, { customerName: string; orderId: string; orderStatus: string }> =
     {};
   for (const t of assignedTickets) {
-    const seatId = `${t.rowLetter.charCodeAt(0) - 65}-${t.seatNumber}`;
+    const seatId = `${t.rowNumber - 1}-${t.seatNumber}`;
     seatInfo[seatId] = {
       customerName: t.customerName,
       orderId: t.orderId,

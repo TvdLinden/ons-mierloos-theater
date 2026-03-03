@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
           message: `Dit ticket is al gescand op ${new Date(ticket.scannedAt).toLocaleString('nl-NL')}`,
           ticket: {
             ticketNumber: ticket.ticketNumber,
-            row: ticket.rowLetter,
+            row: ticket.rowNumber,
             seat: ticket.seatNumber,
             scannedAt: ticket.scannedAt,
           },
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
       message: 'Ticket geldig - toegang verleend',
       ticket: {
         ticketNumber: ticket.ticketNumber,
-        row: ticket.rowLetter,
+        row: ticket.rowNumber,
         seat: ticket.seatNumber,
         customerName: ticket.order.customerName,
         showTitle: ticket.performance.show.title,
@@ -108,7 +108,7 @@ export async function GET(request: NextRequest) {
       valid: !ticket.scannedAt,
       ticket: {
         ticketNumber: ticket.ticketNumber,
-        row: ticket.rowLetter,
+        row: ticket.rowNumber,
         seat: ticket.seatNumber,
         customerName: ticket.order.customerName,
         showTitle: ticket.performance.show.title,

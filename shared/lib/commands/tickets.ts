@@ -25,14 +25,13 @@ export async function createTicketsForLineItem(
 
   // Query actually occupied seats for this performance
   const existingTickets = await db
-    .select({ rowLetter: tickets.rowLetter, seatNumber: tickets.seatNumber })
+    .select({ rowNumber: tickets.rowNumber, seatNumber: tickets.seatNumber })
     .from(tickets)
     .where(eq(tickets.performanceId, performanceId));
 
   const occupiedSeats = new Set<string>();
   for (const t of existingTickets) {
-    const rowIndex = t.rowLetter.charCodeAt(0) - 65; // A=0, B=1, ...
-    occupiedSeats.add(`${rowIndex}-${t.seatNumber}`);
+    occupiedSeats.add(`${t.rowNumber - 1}-${t.seatNumber}`);
   }
 
   // Assign seats using the smart algorithm
@@ -45,14 +44,14 @@ export async function createTicketsForLineItem(
   }
 
   const ticketsToCreate: CreateTicket[] = assignedSeats.map(({ rowIndex, seatNumber, wheelchairAccess }) => {
-    const rowLetter = String.fromCharCode(65 + rowIndex);
-    const ticketNumber = `${performance.showId.substring(0, 4).toUpperCase()}-${performanceId.substring(0, 4).toUpperCase()}-${rowLetter}${seatNumber}`;
+    const rowNumber = rowIndex + 1;
+    const ticketNumber = `${performance.showId.substring(0, 4).toUpperCase()}-${performanceId.substring(0, 4).toUpperCase()}-R${rowNumber}S${seatNumber}`;
     return {
       lineItemId,
       performanceId,
       orderId,
       ticketNumber,
-      rowLetter,
+      rowNumber,
       seatNumber,
       wheelchairAccess,
     };
