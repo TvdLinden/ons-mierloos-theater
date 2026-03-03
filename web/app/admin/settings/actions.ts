@@ -30,7 +30,7 @@ export async function updateSiteSettingsAction(data: {
   try {
     await updateSiteSettings(data);
     revalidatePath('/admin/settings');
-    revalidateTag(SITE_SETTINGS_TAG);
+    revalidateTag(SITE_SETTINGS_TAG, 'max');
     return { success: true };
   } catch (error) {
     console.error('Error updating site settings:', error);
@@ -52,7 +52,7 @@ export async function updateSeoSettingsAction(data: {
   try {
     await updateSeoSettings(data);
     revalidatePath('/admin/settings');
-    revalidateTag(SITE_SETTINGS_TAG);
+    revalidateTag(SITE_SETTINGS_TAG, 'max');
     return { success: true };
   } catch (error) {
     console.error('Error updating SEO settings:', error);
@@ -72,7 +72,7 @@ export async function createSnippetAction(data: {
   try {
     const snippet = await createCustomCodeSnippet(data);
     revalidatePath('/admin/settings');
-    revalidateTag(SITE_SETTINGS_TAG);
+    revalidateTag(SITE_SETTINGS_TAG, 'max');
     return { success: true, snippet };
   } catch (error) {
     console.error('Error creating snippet:', error);
@@ -95,7 +95,7 @@ export async function updateSnippetAction(
   try {
     const snippet = await updateCustomCodeSnippet(id, data);
     revalidatePath('/admin/settings');
-    revalidateTag(SITE_SETTINGS_TAG);
+    revalidateTag(SITE_SETTINGS_TAG, 'max');
     return { success: true, snippet };
   } catch (error) {
     console.error('Error updating snippet:', error);
@@ -109,7 +109,7 @@ export async function deleteSnippetAction(id: string) {
   try {
     await deleteCustomCodeSnippet(id);
     revalidatePath('/admin/settings');
-    revalidateTag(SITE_SETTINGS_TAG);
+    revalidateTag(SITE_SETTINGS_TAG, 'max');
     return { success: true };
   } catch (error) {
     console.error('Error deleting snippet:', error);
