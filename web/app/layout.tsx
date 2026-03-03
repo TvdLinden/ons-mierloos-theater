@@ -7,7 +7,6 @@ import {
   getCachedSiteSettings,
   getCachedEnabledSnippetsByLocation,
 } from '@/lib/queries/cachedSettings';
-import { CodeSnippetInjection } from '@/components/CodeSnippetInjection';
 import {
   allFontVariableClasses,
   getFontByKey,
@@ -75,7 +74,13 @@ export default async function RootLayout({
   return (
     <html lang="nl" className={allFontVariableClasses()} style={fontStyle}>
       <head>
-        <CodeSnippetInjection snippets={headSnippets} />
+        {/* Head snippets rendered as raw HTML */}
+        {headSnippets.map((snippet) => (
+          <div
+            key={snippet.id}
+            dangerouslySetInnerHTML={{ __html: snippet.html }}
+          />
+        ))}
       </head>
       <body className="antialiased">
         {bodyStartSnippets.length > 0 && (
