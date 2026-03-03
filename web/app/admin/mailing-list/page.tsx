@@ -1,15 +1,32 @@
 import { requireRole } from '@/lib/utils/auth';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { StatCard } from '@/components/admin/StatCard';
-import { getActiveSubscribersCount } from '@ons-mierloos-theater/shared/queries/mailingList';
+import {
+  getAllActiveSubscribers,
+  getActiveSubscribersCount,
+} from '@ons-mierloos-theater/shared/queries/mailingList';
 import { sendMailingListEmail } from '@ons-mierloos-theater/shared/utils/email';
 import { revalidatePath } from 'next/cache';
 import MailingListForm from '@/components/MailingListForm';
+import { ExportDropdown } from '@/components/admin/ExportDropdown';
+import type { ExportData } from '@ons-mierloos-theater/shared/utils/export';
 
 export default async function MailingListPage() {
   await requireRole(['admin']);
 
   const subscriberCount = await getActiveSubscribersCount();
+
+  async function getMailingListExportData(): Promise<ExportData> {
+    'use server';
+    const subscribers = await getAllActiveSubscribers();
+    const headers = ['E-mailadres', 'Naam', 'Ingeschreven op'];
+    const rows = subscribers.map((s) => [
+      s.email,
+      s.name ?? '',
+      s.subscribedAt ? new Date(s.subscribedAt).toLocaleDateString('nl-NL') : '',
+    ]);
+    return { headers, rows };
+  }
 
   async function handleSendEmail(
     prevState: { error?: string; success?: boolean },
@@ -41,7 +58,16 @@ export default async function MailingListPage() {
 
   return (
     <>
-      <AdminPageHeader title="Nieuwsbrief Versturen" breadcrumbs={[{ label: 'Nieuwsbrief' }]} />
+      <AdminPageHeader
+        title="Nieuwsbrief Versturen"
+        breadcrumbs={[{ label: 'Nieuwsbrief' }]}
+        action={
+          <ExportDropdown
+            getExportData={getMailingListExportData}
+            filename="nieuwsbrief-abonnees"
+          />
+        }
+      />
 
       <div className="mb-8">
         <StatCard label="Actieve Abonnees" value={subscriberCount} valueColor="text-primary" />
