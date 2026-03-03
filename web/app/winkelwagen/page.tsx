@@ -1,5 +1,5 @@
 import { CartPageClient } from './CartPageClient';
-import { getUpcomingShows } from '@ons-mierloos-theater/shared/queries/shows';
+import { getUpcomingShows } from '@/lib/queries/shows';
 
 export default async function CartPage() {
   // Get a few upcoming shows for recommendations

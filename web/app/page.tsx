@@ -1,9 +1,6 @@
 import type { Metadata } from 'next';
-import {
-  getUpcomingShows,
-  getRecentlyPassedShows,
-} from '@ons-mierloos-theater/shared/queries/shows';
-import { getActiveNewsArticles } from '@ons-mierloos-theater/shared/queries/content';
+import { getUpcomingShows, getRecentlyPassedShows } from '@/lib/queries/shows';
+import { getActiveNewsArticles } from '@/lib/queries/content';
 import HeroCarousel from '@/components/HeroCarousel';
 import FeaturedShows from '@/components/FeaturedShows';
 import NewsletterSection from '@/components/NewsletterSection';

@@ -51,12 +51,12 @@ export default async function ShowPerformancesPage({ params }: Props) {
         status,
         notes: notes || null,
       });
-
-      redirect(`/admin/shows/${id}/performances`);
     } catch (error) {
       console.error('Error adding performance:', error);
       return { error: 'Opslaan mislukt.' };
     }
+
+    redirect(`/admin/shows/${id}/performances`);
   }
 
   async function handleDeletePerformance(performanceId: string) {
@@ -129,7 +129,7 @@ export default async function ShowPerformancesPage({ params }: Props) {
                     <p className="text-sm text-gray-500 mt-1">{performance.notes}</p>
                   )}
                 </div>
-                <div className="flex gap-2 flex-shrink-0">
+                <div className="flex gap-2 shrink-0">
                   <Link href={`/admin/shows/${id}/performances/${performance.id}`}>
                     <Button variant="ghost" size="sm">
                       Detail

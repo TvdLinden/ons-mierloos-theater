@@ -2,9 +2,10 @@ import type { Metadata } from 'next';
 import { Playfair_Display, Crimson_Pro } from 'next/font/google';
 import './globals.css';
 import ClientLayout from './client-layout';
-import { getNavigationLinks } from '@ons-mierloos-theater/shared/queries/content';
-import { getActiveSocialMediaLinks } from '@ons-mierloos-theater/shared/queries/socialMedia';
-import { cacheTag } from 'next/cache';
+import { getNavigationLinks } from '@/lib/queries/content';
+import { getActiveSocialMediaLinks } from '@/lib/queries/socialMedia';
+
+export const dynamic = 'force-dynamic';
 
 const playfairDisplay = Playfair_Display({
   variable: '--font-display',
@@ -45,9 +46,6 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  'use cache';
-  cacheTag('navigation');
-  cacheTag('social-media-links');
   const [headerLinks, footerLinks, socialMediaLinks] = await Promise.all([
     getNavigationLinks('header'),
     getNavigationLinks('footer'),

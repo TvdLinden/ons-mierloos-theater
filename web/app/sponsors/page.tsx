@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import Image from 'next/image';
-import { getActiveSponsors } from '@ons-mierloos-theater/shared/queries/sponsors';
+import { getActiveSponsors } from '@/lib/queries/sponsors';
 import { getImageUrl } from '@ons-mierloos-theater/shared/utils/image';
 
 export const metadata: Metadata = {
