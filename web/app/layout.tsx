@@ -1,23 +1,23 @@
 import type { Metadata } from 'next';
-import { Playfair_Display, Crimson_Pro } from 'next/font/google';
 import './globals.css';
 import ClientLayout from './client-layout';
 import { getNavigationLinks } from '@/lib/queries/content';
 import { getActiveSocialMediaLinks } from '@/lib/queries/socialMedia';
+import {
+  getCachedSiteSettings,
+  getCachedEnabledSnippetsByLocation,
+} from '@/lib/queries/cachedSettings';
+import { CodeSnippetInjection } from '@/components/CodeSnippetInjection';
+import {
+  allFontVariableClasses,
+  getFontByKey,
+  DISPLAY_FONTS,
+  BODY_FONTS,
+  DEFAULT_DISPLAY_FONT_KEY,
+  DEFAULT_BODY_FONT_KEY,
+} from '@/lib/fonts';
 
 export const dynamic = 'force-dynamic';
-
-const playfairDisplay = Playfair_Display({
-  variable: '--font-display',
-  subsets: ['latin'],
-  display: 'swap',
-});
-
-const crimsonPro = Crimson_Pro({
-  variable: '--font-body',
-  subsets: ['latin'],
-  display: 'swap',
-});
 
 export const metadata: Metadata = {
   title: 'Ons Mierloos Theater',
@@ -46,15 +46,45 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const [headerLinks, footerLinks, socialMediaLinks] = await Promise.all([
+  const [
+    headerLinks,
+    footerLinks,
+    socialMediaLinks,
+    headSnippets,
+    bodyStartSnippets,
+    bodyEndSnippets,
+    siteSettings,
+  ] = await Promise.all([
     getNavigationLinks('header'),
     getNavigationLinks('footer'),
     getActiveSocialMediaLinks(),
+    getCachedEnabledSnippetsByLocation('head'),
+    getCachedEnabledSnippetsByLocation('body_start'),
+    getCachedEnabledSnippetsByLocation('body_end'),
+    getCachedSiteSettings(),
   ]);
 
+  const displayFont = getFontByKey(siteSettings.fontDisplay, DISPLAY_FONTS, DEFAULT_DISPLAY_FONT_KEY);
+  const bodyFont = getFontByKey(siteSettings.fontBody, BODY_FONTS, DEFAULT_BODY_FONT_KEY);
+
+  const fontStyle = {
+    '--font-display': `var(${displayFont.cssVar})`,
+    '--font-body': `var(${bodyFont.cssVar})`,
+  } as React.CSSProperties;
+
   return (
-    <html lang="nl">
-      <body className={`${playfairDisplay.variable} ${crimsonPro.variable} antialiased`}>
+    <html lang="nl" className={allFontVariableClasses()} style={fontStyle}>
+      <head>
+        <CodeSnippetInjection snippets={headSnippets} />
+      </head>
+      <body className="antialiased">
+        {bodyStartSnippets.length > 0 && (
+          <div
+            dangerouslySetInnerHTML={{
+              __html: bodyStartSnippets.map((s) => s.html).join('\n'),
+            }}
+          />
+        )}
         <ClientLayout
           headerLinks={headerLinks}
           footerLinks={footerLinks}
@@ -62,6 +92,13 @@ export default async function RootLayout({
         >
           {children}
         </ClientLayout>
+        {bodyEndSnippets.length > 0 && (
+          <div
+            dangerouslySetInnerHTML={{
+              __html: bodyEndSnippets.map((s) => s.html).join('\n'),
+            }}
+          />
+        )}
       </body>
     </html>
   );

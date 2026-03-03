@@ -225,6 +225,20 @@
       "when": 1772570223880,
       "tag": "0031_pink_black_queen",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1772571926423,
+      "tag": "0032_giant_randall_flagg",
+      "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1772572739484,
+      "tag": "0033_outgoing_starbolt",
+      "breakpoints": true
     }
   ]
 }

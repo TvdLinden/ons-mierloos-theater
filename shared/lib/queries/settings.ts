@@ -1,6 +1,7 @@
 import { db } from '../db';
-import { siteSettings, seoSettings } from '../db/schema';
-import { eq } from 'drizzle-orm';
+import { siteSettings, seoSettings, customCodeSnippets } from '../db/schema';
+import { eq, asc } from 'drizzle-orm';
+import type { CustomCodeSnippet } from '../db';
 
 export interface SiteSettings {
   id?: string;
@@ -13,6 +14,8 @@ export interface SiteSettings {
   faviconImageId: string | null;
   primaryColor: string | null;
   secondaryColor: string | null;
+  fontDisplay: string | null;
+  fontBody: string | null;
   smtpHost: string | null;
   smtpPort: number | null;
   smtpUser: string | null;
@@ -52,6 +55,8 @@ export async function getSiteSettings(): Promise<SiteSettings> {
       faviconImageId: null,
       primaryColor: null,
       secondaryColor: null,
+      fontDisplay: null,
+      fontBody: null,
       smtpHost: null,
       smtpPort: null,
       smtpUser: null,
@@ -109,4 +114,60 @@ export async function updateSeoSettings(settings: Partial<SeoSettings>) {
       .set(payload as any)
       .where(eq(seoSettings.id, existing[0].id));
   }
+}
+
+// --- Custom Code Snippets ---
+
+export async function getAllCustomCodeSnippets(): Promise<CustomCodeSnippet[]> {
+  return db
+    .select()
+    .from(customCodeSnippets)
+    .orderBy(asc(customCodeSnippets.sortOrder), asc(customCodeSnippets.createdAt));
+}
+
+export async function getEnabledSnippetsByLocation(location: string): Promise<CustomCodeSnippet[]> {
+  return db
+    .select()
+    .from(customCodeSnippets)
+    .where(eq(customCodeSnippets.location, location))
+    .orderBy(asc(customCodeSnippets.sortOrder), asc(customCodeSnippets.createdAt));
+}
+
+export interface CustomCodeSnippetData {
+  name: string;
+  location: string;
+  html: string;
+  isEnabled?: boolean;
+  sortOrder?: number;
+}
+
+export async function createCustomCodeSnippet(data: CustomCodeSnippetData): Promise<CustomCodeSnippet> {
+  const rows = await db
+    .insert(customCodeSnippets)
+    .values({
+      name: data.name,
+      location: data.location,
+      html: data.html,
+      isEnabled: data.isEnabled ?? true,
+      sortOrder: data.sortOrder ?? 0,
+    })
+    .returning();
+  return rows[0];
+}
+
+export async function updateCustomCodeSnippet(
+  id: string,
+  data: Partial<CustomCodeSnippetData>,
+): Promise<CustomCodeSnippet> {
+  const payload: Record<string, unknown> = { ...data, updatedAt: new Date() };
+  const rows = await db
+    .update(customCodeSnippets)
+    .set(payload)
+    .where(eq(customCodeSnippets.id, id))
+    .returning();
+  return rows[0];
+}
+
+export async function deleteCustomCodeSnippet(id: string): Promise<void> {
+  await db.delete(customCodeSnippets).where(eq(customCodeSnippets.id, id));
 }

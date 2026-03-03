@@ -3,9 +3,13 @@
 import {
   updateSiteSettings,
   updateSeoSettings,
+  createCustomCodeSnippet,
+  updateCustomCodeSnippet,
+  deleteCustomCodeSnippet,
 } from '@ons-mierloos-theater/shared/queries/settings';
 import { requireRole } from '@/lib/utils/auth';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
+import { SITE_SETTINGS_TAG } from '@/lib/queries/cachedSettings';
 
 export async function updateSiteSettingsAction(data: {
   siteName: string;
@@ -14,9 +18,8 @@ export async function updateSiteSettingsAction(data: {
   contactPhone?: string;
   contactAddress?: string;
   logoImageId?: string | null;
-  faviconImageId?: string | null;
-  primaryColor?: string;
-  secondaryColor?: string;
+  fontDisplay?: string | null;
+  fontBody?: string | null;
   smtpHost?: string;
   smtpPort?: number;
   smtpUser?: string;
@@ -27,7 +30,7 @@ export async function updateSiteSettingsAction(data: {
   try {
     await updateSiteSettings(data);
     revalidatePath('/admin/settings');
-    revalidatePath('/', 'layout');
+    revalidateTag(SITE_SETTINGS_TAG);
     return { success: true };
   } catch (error) {
     console.error('Error updating site settings:', error);
@@ -49,10 +52,67 @@ export async function updateSeoSettingsAction(data: {
   try {
     await updateSeoSettings(data);
     revalidatePath('/admin/settings');
-    revalidatePath('/', 'layout');
+    revalidateTag(SITE_SETTINGS_TAG);
     return { success: true };
   } catch (error) {
     console.error('Error updating SEO settings:', error);
     return { success: false, error: 'Failed to update SEO settings' };
+  }
+}
+
+export async function createSnippetAction(data: {
+  name: string;
+  location: string;
+  html: string;
+  isEnabled?: boolean;
+  sortOrder?: number;
+}) {
+  await requireRole(['admin']);
+
+  try {
+    const snippet = await createCustomCodeSnippet(data);
+    revalidatePath('/admin/settings');
+    revalidateTag(SITE_SETTINGS_TAG);
+    return { success: true, snippet };
+  } catch (error) {
+    console.error('Error creating snippet:', error);
+    return { success: false, error: 'Kon het snippet niet aanmaken' };
+  }
+}
+
+export async function updateSnippetAction(
+  id: string,
+  data: {
+    name?: string;
+    location?: string;
+    html?: string;
+    isEnabled?: boolean;
+    sortOrder?: number;
+  },
+) {
+  await requireRole(['admin']);
+
+  try {
+    const snippet = await updateCustomCodeSnippet(id, data);
+    revalidatePath('/admin/settings');
+    revalidateTag(SITE_SETTINGS_TAG);
+    return { success: true, snippet };
+  } catch (error) {
+    console.error('Error updating snippet:', error);
+    return { success: false, error: 'Kon het snippet niet bijwerken' };
+  }
+}
+
+export async function deleteSnippetAction(id: string) {
+  await requireRole(['admin']);
+
+  try {
+    await deleteCustomCodeSnippet(id);
+    revalidatePath('/admin/settings');
+    revalidateTag(SITE_SETTINGS_TAG);
+    return { success: true };
+  } catch (error) {
+    console.error('Error deleting snippet:', error);
+    return { success: false, error: 'Kon het snippet niet verwijderen' };
   }
 }

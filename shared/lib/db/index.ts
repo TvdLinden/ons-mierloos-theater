@@ -47,6 +47,7 @@ import {
   grantedPermissionsRelations,
   jobs,
   jobsRelations,
+  customCodeSnippets,
 } from './schema';
 
 export type User = typeof users.$inferSelect;
@@ -103,6 +104,8 @@ export type Image = typeof images.$inferSelect;
  * @deprecated Use Image type directly instead
  */
 export type ImageMetadata = Image;
+
+export type CustomCodeSnippet = typeof customCodeSnippets.$inferSelect;
 
 export type ClientApplication = typeof clientApplications.$inferSelect;
 export type ClientSecret = typeof clientSecrets.$inferSelect;
@@ -165,6 +168,7 @@ const db = drizzle(pool, {
     grantedPermissionsRelations,
     jobs,
     jobsRelations,
+    customCodeSnippets,
   },
 });
 

@@ -7,9 +7,23 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle, Check } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { updateSiteSettingsAction } from './actions';
 import { ImageSelector } from '@/components/ImageSelector';
 import type { SiteSettings } from '@ons-mierloos-theater/shared/queries/settings';
+import {
+  DISPLAY_FONTS,
+  BODY_FONTS,
+  DEFAULT_DISPLAY_FONT_KEY,
+  DEFAULT_BODY_FONT_KEY,
+  type FontDefinition,
+} from '@/lib/fonts';
 
 interface SiteSettingsFormProps {
   initialData: SiteSettings;
@@ -27,9 +41,8 @@ export function SiteSettingsForm({ initialData, availableImages }: SiteSettingsF
     contactPhone: initialData.contactPhone || '',
     contactAddress: initialData.contactAddress || '',
     logoImageId: initialData.logoImageId || null,
-    faviconImageId: initialData.faviconImageId || null,
-    primaryColor: initialData.primaryColor || '#000000',
-    secondaryColor: initialData.secondaryColor || '#ffffff',
+    fontDisplay: initialData.fontDisplay || DEFAULT_DISPLAY_FONT_KEY,
+    fontBody: initialData.fontBody || DEFAULT_BODY_FONT_KEY,
     smtpHost: initialData.smtpHost || '',
     smtpPort: initialData.smtpPort || 587,
     smtpUser: initialData.smtpUser || '',
@@ -113,7 +126,7 @@ export function SiteSettingsForm({ initialData, availableImages }: SiteSettingsF
         />
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div>
         <ImageSelector
           label="Logo"
           selectedImageId={formData.logoImageId}
@@ -121,52 +134,24 @@ export function SiteSettingsForm({ initialData, availableImages }: SiteSettingsF
           onSelect={(id) => setFormData({ ...formData, logoImageId: id })}
           imageSize="medium"
         />
-
-        <ImageSelector
-          label="Favicon"
-          selectedImageId={formData.faviconImageId}
-          availableImages={availableImages}
-          onSelect={(id) => setFormData({ ...formData, faviconImageId: id })}
-          imageSize="small"
-        />
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <div>
-          <Label htmlFor="primaryColor">Primaire Kleur</Label>
-          <div className="flex gap-2">
-            <Input
-              id="primaryColor"
-              type="color"
-              value={formData.primaryColor}
-              onChange={(e) => setFormData({ ...formData, primaryColor: e.target.value })}
-              className="w-20 h-10"
-            />
-            <Input
-              value={formData.primaryColor}
-              onChange={(e) => setFormData({ ...formData, primaryColor: e.target.value })}
-              placeholder="#000000"
-            />
-          </div>
-        </div>
-
-        <div>
-          <Label htmlFor="secondaryColor">Secundaire Kleur</Label>
-          <div className="flex gap-2">
-            <Input
-              id="secondaryColor"
-              type="color"
-              value={formData.secondaryColor}
-              onChange={(e) => setFormData({ ...formData, secondaryColor: e.target.value })}
-              className="w-20 h-10"
-            />
-            <Input
-              value={formData.secondaryColor}
-              onChange={(e) => setFormData({ ...formData, secondaryColor: e.target.value })}
-              placeholder="#ffffff"
-            />
-          </div>
-        </div>
+      <div className="border-t pt-6 space-y-6">
+        <h3 className="text-lg font-semibold">Lettertypen</h3>
+        <FontSelector
+          label="Titelfont"
+          description="Gebruikt voor koppen en titels op de site."
+          fonts={DISPLAY_FONTS}
+          selectedKey={formData.fontDisplay}
+          onSelect={(key) => setFormData({ ...formData, fontDisplay: key })}
+        />
+        <FontSelector
+          label="Tekstfont"
+          description="Gebruikt voor alinea's en algemene bodytekst."
+          fonts={BODY_FONTS}
+          selectedKey={formData.fontBody}
+          onSelect={(key) => setFormData({ ...formData, fontBody: key })}
+        />
       </div>
 
       <div className="border-t pt-6">
@@ -218,5 +203,55 @@ export function SiteSettingsForm({ initialData, availableImages }: SiteSettingsF
         {isPending ? 'Opslaan...' : 'Instellingen Opslaan'}
       </Button>
     </form>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// FontSelector
+// ---------------------------------------------------------------------------
+
+interface FontSelectorProps {
+  label: string;
+  description: string;
+  fonts: FontDefinition[];
+  selectedKey: string;
+  onSelect: (key: string) => void;
+}
+
+function FontSelector({ label, description, fonts, selectedKey, onSelect }: FontSelectorProps) {
+  const selected = fonts.find((f) => f.key === selectedKey) ?? fonts[0];
+
+  return (
+    <div className="space-y-2">
+      <div>
+        <Label className="text-sm font-medium">{label}</Label>
+        <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
+      </div>
+
+      <Select value={selectedKey} onValueChange={onSelect}>
+        <SelectTrigger className="w-full max-w-xs">
+          <SelectValue>
+            <span style={{ fontFamily: `var(${selected.cssVar})` }}>{selected.label}</span>
+          </SelectValue>
+        </SelectTrigger>
+        <SelectContent>
+          {fonts.map((font) => (
+            <SelectItem key={font.key} value={font.key}>
+              <span style={{ fontFamily: `var(${font.cssVar})` }} className="text-base">
+                {font.label}
+              </span>
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      {/* Live preview strip */}
+      <p
+        className="text-xl text-muted-foreground"
+        style={{ fontFamily: `var(${selected.cssVar})` }}
+      >
+        {selected.sample}
+      </p>
+    </div>
   );
 }
