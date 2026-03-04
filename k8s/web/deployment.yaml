@@ -1,0 +1,47 @@
+# Deployment manages the lifecycle of web pods and handles rolling updates.
+# Unlike docker-compose, k8s Deployments can scale horizontally (replicas > 1).
+# The web service is stateless so scaling is safe.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+  namespace: theater
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      containers:
+        - name: web
+          image: ons-mierloos-theater/web:latest
+          # imagePullPolicy: Never tells k8s to use a locally built image.
+          # Required when using minikube's Docker daemon (eval $(minikube docker-env)).
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 3000
+          # envFrom loads all keys from a ConfigMap/Secret as environment variables.
+          # Equivalent to `env_file` in docker-compose.
+          envFrom:
+            - configMapRef:
+                name: theater-config
+            - secretRef:
+                name: theater-secrets
+          # readinessProbe: pod only receives traffic once this passes.
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          # livenessProbe: pod is restarted if this fails.
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 30

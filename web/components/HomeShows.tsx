@@ -10,9 +10,7 @@ type HomeShowsProps = {
 export default function HomeShows({ shows }: HomeShowsProps) {
   return (
     <section id="performances" className="w-full mb-12">
-      <h1 className="text-5xl font-bold text-center text-primary mb-10 font-serif">
-        Voorstellingen
-      </h1>
+      <h1 className="text-5xl font-bold text-center text-primary mb-10">Voorstellingen</h1>
       <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
         {shows.length === 0 ? (
           <div className="text-center text-primary/70">

@@ -1,0 +1,13 @@
+# PersistentVolumeClaim — equivalent to the `pgdata` named volume in docker-compose.
+# ReadWriteOnce means only one node can mount this at a time (fine for a single postgres pod).
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc
+  namespace: theater
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi

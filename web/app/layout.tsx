@@ -63,7 +63,11 @@ export default async function RootLayout({
     getCachedSiteSettings(),
   ]);
 
-  const displayFont = getFontByKey(siteSettings.fontDisplay, DISPLAY_FONTS, DEFAULT_DISPLAY_FONT_KEY);
+  const displayFont = getFontByKey(
+    siteSettings.fontDisplay,
+    DISPLAY_FONTS,
+    DEFAULT_DISPLAY_FONT_KEY,
+  );
   const bodyFont = getFontByKey(siteSettings.fontBody, BODY_FONTS, DEFAULT_BODY_FONT_KEY);
 
   const fontStyle = {
@@ -76,10 +80,7 @@ export default async function RootLayout({
       <head>
         {/* Head snippets rendered as raw HTML */}
         {headSnippets.map((snippet) => (
-          <div
-            key={snippet.id}
-            dangerouslySetInnerHTML={{ __html: snippet.html }}
-          />
+          <div key={snippet.id} dangerouslySetInnerHTML={{ __html: snippet.html }} />
         ))}
       </head>
       <body className="antialiased">

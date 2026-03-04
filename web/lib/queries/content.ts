@@ -2,6 +2,7 @@ import { cacheLife, cacheTag } from 'next/cache';
 import {
   getNavigationLinks as _getNavigationLinks,
   getActiveNewsArticles as _getActiveNewsArticles,
+  getHomepageContent as _getHomepageContent,
 } from '@ons-mierloos-theater/shared/queries/content';
 
 export async function getNavigationLinks(
@@ -20,4 +21,13 @@ export async function getActiveNewsArticles(
   cacheLife({ revalidate: 900, expire: 31536000 });
   cacheTag('news');
   return _getActiveNewsArticles(...args);
+}
+
+export async function getHomepageContent(
+  ...args: Parameters<typeof _getHomepageContent>
+): ReturnType<typeof _getHomepageContent> {
+  'use cache';
+  cacheLife({ revalidate: 900, expire: 31536000 });
+  cacheTag('homepage');
+  return _getHomepageContent(...args);
 }

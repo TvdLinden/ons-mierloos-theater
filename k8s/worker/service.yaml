@@ -1,0 +1,13 @@
+# Internal-only ClusterIP Service for the worker's health check endpoint.
+# Not exposed outside the cluster — only used by k8s probes.
+apiVersion: v1
+kind: Service
+metadata:
+  name: worker
+  namespace: theater
+spec:
+  selector:
+    app: worker
+  ports:
+    - port: 8080
+      targetPort: 8080

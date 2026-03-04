@@ -22,8 +22,15 @@ export default function FeaturedShowCard({ show }: FeaturedShowCardProps) {
   const price = nextPerformance?.price || basePrice;
 
   return (
-    <Link href={`/voorstellingen/${slug}`} className="group block">
-      <div className="bg-surface rounded-lg overflow-hidden shadow hover:shadow-lg transition-all duration-300">
+    <Link
+      href={`/voorstellingen/${slug}`}
+      className="group block"
+      data-component="featured-show-card"
+    >
+      <div
+        className="bg-surface border border-border rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2"
+        data-element="card"
+      >
         {/* Thumbnail */}
         <div className="relative aspect-4/3 overflow-hidden">
           <Image
@@ -37,7 +44,7 @@ export default function FeaturedShowCard({ show }: FeaturedShowCardProps) {
 
         {/* Content */}
         <div className="p-4">
-          <h3 className="font-serif text-lg font-semibold text-primary line-clamp-1 group-hover:text-primary/80 transition-colors">
+          <h3 className="text-lg font-semibold text-primary line-clamp-1 group-hover:text-primary/80 transition-colors">
             {title}
           </h3>
 

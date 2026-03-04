@@ -15,9 +15,6 @@
   --color-success: #00a098;
   --color-error: #dc2626;
   --color-warning: #f59e0b;
-
-  --font-display: 'Playfair Display', Georgia, serif;
-  --font-body: 'Crimson Pro', 'Crimson Text', Georgia, serif;
 }
 
 * {
@@ -27,7 +24,7 @@
 body {
   background: white;
   color: #171717;
-  font-family: var(--font-body);
+  /* font-family: var(--font-body); */
 }
 
 @theme inline {

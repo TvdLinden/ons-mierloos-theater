@@ -85,7 +85,7 @@ export default function HeroCarousel({ shows, autoplayDelay = 5000 }: HeroCarous
                 {/* Content */}
                 <div className="absolute inset-0 flex flex-col justify-end p-6 md:p-12 lg:p-16">
                   <div className="max-w-3xl">
-                    <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold text-white font-serif mb-2 md:mb-4 drop-shadow-lg">
+                    <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold text-white mb-2 md:mb-4 drop-shadow-lg">
                       {show.title}
                     </h2>
                     {show.subtitle && (

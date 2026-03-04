@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
 import { getUpcomingShows, getRecentlyPassedShows } from '@/lib/queries/shows';
-import { getActiveNewsArticles } from '@/lib/queries/content';
+import { getActiveNewsArticles, getHomepageContent } from '@/lib/queries/content';
 import HeroCarousel from '@/components/HeroCarousel';
+import HeroIntro from '@/components/HeroIntro';
 import FeaturedShows from '@/components/FeaturedShows';
 import NewsletterSection from '@/components/NewsletterSection';
 import HomeNews from '@/components/HomeNews';
@@ -23,10 +24,15 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
-  const results = await Promise.all([getUpcomingShows(0, 10), getActiveNewsArticles(3)]);
+  const results = await Promise.all([
+    getUpcomingShows(0, 10),
+    getActiveNewsArticles(3),
+    getHomepageContent(),
+  ]);
 
   let shows = results[0];
   const newsArticles = results[1];
+  const homepageContent = results[2];
   // Determine if we're showing upcoming or recently passed shows
   let isShowingRecentlyPassed = false;
   if (shows.length === 0) {
@@ -42,9 +48,15 @@ export default async function HomePage() {
   const sectionLabel = isShowingRecentlyPassed ? 'Pas gespeeld' : 'Uitgelicht';
 
   return (
-    <div className="flex min-h-screen flex-col bg-surface font-sans">
+    <div
+      className="flex min-h-screen flex-col bg-linear-to-bb from-background via-primary/5 to-background"
+      data-section="homepage"
+    >
       {/* Hero Carousel - Full width */}
       <HeroCarousel shows={heroShows} />
+
+      {/* Hero Intro - Floating overlay on carousel */}
+      {/* <HeroIntro introText={homepageContent?.introText} /> */}
 
       <main className="grow w-full max-w-7xl flex-col items-center justify-between py-8 px-8 mx-auto sm:items-start">
         {/* Featured Shows or Empty State */}
@@ -52,9 +64,7 @@ export default async function HomePage() {
           <FeaturedShows shows={featuredShows} label={sectionLabel} />
         ) : (
           <section className="w-full text-center py-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-primary mb-4 font-serif">
-              Uitgelicht
-            </h2>
+            <h2 className="text-4xl md:text-5xl font-bold text-primary mb-4">Uitgelicht</h2>
             <p className="text-lg text-gray-600 mb-8">
               Er zijn momenteel geen voorstellingen beschikbaar. Kom binnenkort terug!
             </p>

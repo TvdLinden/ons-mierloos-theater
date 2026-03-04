@@ -1,6 +1,6 @@
 import { db } from '../db';
 import { siteSettings, seoSettings, customCodeSnippets } from '../db/schema';
-import { eq, asc } from 'drizzle-orm';
+import { eq, asc, and } from 'drizzle-orm';
 import type { CustomCodeSnippet } from '../db';
 
 export interface SiteSettings {
@@ -129,7 +129,7 @@ export async function getEnabledSnippetsByLocation(location: string): Promise<Cu
   return db
     .select()
     .from(customCodeSnippets)
-    .where(eq(customCodeSnippets.location, location))
+    .where(and(eq(customCodeSnippets.isEnabled, true), eq(customCodeSnippets.location, location)))
     .orderBy(asc(customCodeSnippets.sortOrder), asc(customCodeSnippets.createdAt));
 }
 
@@ -141,7 +141,9 @@ export interface CustomCodeSnippetData {
   sortOrder?: number;
 }
 
-export async function createCustomCodeSnippet(data: CustomCodeSnippetData): Promise<CustomCodeSnippet> {
+export async function createCustomCodeSnippet(
+  data: CustomCodeSnippetData,
+): Promise<CustomCodeSnippet> {
   const rows = await db
     .insert(customCodeSnippets)
     .values({

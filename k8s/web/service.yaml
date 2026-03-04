@@ -1,0 +1,17 @@
+# NodePort exposes the service on a static port on the minikube node.
+# Access it with: minikube service web -n theater
+#
+# In production you would use type: LoadBalancer (cloud) or an Ingress instead.
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+  namespace: theater
+spec:
+  type: NodePort
+  selector:
+    app: web
+  ports:
+    - port: 3000        # Port the Service listens on inside the cluster
+      targetPort: 3000  # Port the container is actually listening on
+      nodePort: 30000   # External port on the node (30000–32767 range)

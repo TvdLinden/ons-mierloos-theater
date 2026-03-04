@@ -282,9 +282,9 @@ export function NewsArticlesList({
 
       {/* Add/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <form onSubmit={handleSubmit}>
-            <DialogHeader>
+        <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
+          <form onSubmit={handleSubmit} className="flex flex-col overflow-hidden">
+            <DialogHeader className="shrink-0">
               <DialogTitle>{editingArticle ? 'Artikel Bewerken' : 'Nieuw Artikel'}</DialogTitle>
               <DialogDescription>
                 {editingArticle
@@ -292,7 +292,7 @@ export function NewsArticlesList({
                   : 'Voeg een nieuw nieuws artikel toe aan de homepagina'}
               </DialogDescription>
             </DialogHeader>
-            <div className="space-y-4 py-4">
+            <div className="space-y-4 py-4 flex-1 overflow-y-auto">
               <div>
                 <label htmlFor="title" className="text-sm font-medium">
                   Titel
@@ -412,7 +412,7 @@ export function NewsArticlesList({
                 </label>
               </div>
             </div>
-            <DialogFooter>
+            <DialogFooter className="flex-shrink-0 border-t pt-4 mt-4">
               <Button
                 type="button"
                 variant="outline"

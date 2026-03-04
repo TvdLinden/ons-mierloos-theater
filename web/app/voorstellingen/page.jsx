@@ -79,13 +79,11 @@ export default async function ShowsPage({ searchParams }) {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-surface font-sans">
+    <div className="flex min-h-screen flex-col bg-surface">
       <main className="grow w-full max-w-7xl flex-col items-center justify-between py-16 px-8 mx-auto sm:items-start">
         {/* Voorstellingen Sectie */}
         <section id="performances" className="w-full mb-12">
-          <h1 className="text-5xl font-bold text-center text-primary mb-10 font-serif">
-            Voorstellingen
-          </h1>
+          <h1 className="text-5xl font-bold text-center text-primary mb-10">Voorstellingen</h1>
 
           {/* Tag Filter */}
           {tags && tags.length > 0 && (

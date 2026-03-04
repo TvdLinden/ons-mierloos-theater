@@ -1,6 +1,10 @@
 'use client';
 
 import { useState } from 'react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export default function MailingListSignup() {
   const [email, setEmail] = useState('');
@@ -38,58 +42,62 @@ export default function MailingListSignup() {
   };
 
   return (
-    <div className="bg-surface p-6 rounded-lg shadow-lg">
-      <h3 className="text-2xl font-bold mb-4 text-primary">Nieuwsbrief</h3>
-      <p className="text-textSecondary mb-4">
-        Blijf op de hoogte van nieuwe voorstellingen en speciale aanbiedingen.
-      </p>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label htmlFor="mailing-name" className="block text-sm font-medium mb-1">
-            Naam (optioneel)
-          </label>
-          <input
-            id="mailing-name"
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Je naam"
-            disabled={status === 'loading'}
-            className="w-full px-4 py-2 border border-secondary rounded focus:outline-none focus:ring-2 focus:ring-accent disabled:opacity-50"
-          />
-        </div>
-        <div>
-          <label htmlFor="mailing-email" className="block text-sm font-medium mb-1">
-            E-mailadres *
-          </label>
-          <input
-            id="mailing-email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="je@email.nl"
-            required
-            disabled={status === 'loading'}
-            className="w-full px-4 py-2 border border-secondary rounded focus:outline-none focus:ring-2 focus:ring-accent disabled:opacity-50"
-          />
-        </div>
-        <button
-          type="submit"
-          disabled={status === 'loading'}
-          className="w-full px-6 py-3 bg-accent text-surface rounded font-semibold hover:bg-secondary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+    <form onSubmit={handleSubmit} className="space-y-4" data-component="mailing-list-form">
+      <div className="space-y-2" data-field="name-field">
+        <Label
+          htmlFor="mailing-name"
+          className="text-accent-foreground font-medium"
+          data-element="field-label"
         >
-          {status === 'loading' ? 'Bezig...' : 'Inschrijven'}
-        </button>
-        {message && (
-          <div
-            className={`p-3 rounded ${
-              status === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-            }`}
-          >
-            {message}
-          </div>
-        )}
-      </form>
-    </div>
+          Naam (optioneel)
+        </Label>
+        <Input
+          id="mailing-name"
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Je naam"
+          disabled={status === 'loading'}
+          className="!bg-accent-foreground/20 !border-accent-foreground/50 !text-accent-foreground !placeholder:text-accent-foreground/70 focus-visible:!border-primary focus-visible:!ring-primary/50"
+          data-element="form-input"
+        />
+      </div>
+      <div className="space-y-2" data-field="email-field">
+        <Label
+          htmlFor="mailing-email"
+          className="text-accent-foreground font-medium"
+          data-element="field-label"
+        >
+          E-mailadres *
+        </Label>
+        <Input
+          id="mailing-email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="je@email.nl"
+          required
+          disabled={status === 'loading'}
+          className="!bg-accent-foreground/20 !border-accent-foreground/50 !text-accent-foreground !placeholder:text-accent-foreground/70 focus-visible:!border-primary focus-visible:!ring-primary/50"
+          data-element="form-input"
+        />
+      </div>
+      <Button
+        type="submit"
+        disabled={status === 'loading'}
+        className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-semibold"
+        data-element="submit-button"
+      >
+        {status === 'loading' ? 'Bezig...' : 'Inschrijven'}
+      </Button>
+      {message && (
+        <Alert
+          variant={status === 'success' ? 'success' : 'destructive'}
+          data-element="form-message"
+        >
+          <AlertDescription>{message}</AlertDescription>
+        </Alert>
+      )}
+    </form>
   );
 }

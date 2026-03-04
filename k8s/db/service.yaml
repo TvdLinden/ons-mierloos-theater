@@ -1,0 +1,16 @@
+# Headless Service (clusterIP: None) — required by the StatefulSet's serviceName field.
+# With clusterIP: None, DNS returns the pod IP directly instead of a virtual IP.
+# Other pods connect to postgres via: db:5432
+# The StatefulSet pod is also reachable at: db-0.db.theater.svc.cluster.local:5432
+apiVersion: v1
+kind: Service
+metadata:
+  name: db
+  namespace: theater
+spec:
+  clusterIP: None
+  selector:
+    app: db
+  ports:
+    - port: 5432
+      targetPort: 5432

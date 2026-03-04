@@ -1,0 +1,17 @@
+# Non-sensitive configuration shared across all pods.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: theater-config
+  namespace: theater
+data:
+  NEXTAUTH_URL: "http://localhost:3000"
+  MOLLIE_WEBHOOK_URL: "http://localhost:3000/api/mollie/webhook"
+  USE_MOCK_PAYMENT: "false"
+  FROM_EMAIL: "info@onsmierloostheater.nl"
+  FROM_NAME: "Ons Mierloos Theater"
+  R2_IMAGES_BUCKET_NAME: "ons-mierloos-theater-images"
+  APP_URL: "http://localhost:3000"
+  # Postgres credentials (non-secret parts, used by the StatefulSet)
+  POSTGRES_DB: "database"
+  POSTGRES_USER: "username"

@@ -1,0 +1,44 @@
+# Scheduler runs node-cron jobs (daily/hourly cleanup).
+# Uses the same Docker image as the worker but overrides the command —
+# the same pattern as docker-compose-prod.yml's `command` override.
+# replicas: 1 — must stay at 1. Multiple schedulers would create duplicate jobs.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scheduler
+  namespace: theater
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: scheduler
+  template:
+    metadata:
+      labels:
+        app: scheduler
+    spec:
+      containers:
+        - name: scheduler
+          image: ons-mierloos-theater/worker:latest
+          imagePullPolicy: Never
+          # Override the default CMD from Dockerfile.worker to run the scheduler instead.
+          command: ["node", "--import", "tsx", "scripts/start-scheduler.ts"]
+          ports:
+            - containerPort: 8080  # Health check endpoint
+          envFrom:
+            - configMapRef:
+                name: theater-config
+            - secretRef:
+                name: theater-secrets
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 30
