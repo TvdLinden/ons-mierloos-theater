@@ -6,7 +6,7 @@ import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
 import Youtube from '@tiptap/extension-youtube';
 import { Markdown } from '@tiptap/markdown';
-import DOMPurify from 'isomorphic-dompurify';
+import DOMPurify from 'dompurify';
 import {
   Bold,
   Italic,

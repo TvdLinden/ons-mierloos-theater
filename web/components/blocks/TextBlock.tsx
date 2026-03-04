@@ -4,7 +4,7 @@ import { useRef, useState } from 'react';
 import WysiwygEditor, { WysiwygEditorRef } from '@/components/WysiwygEditor';
 import type { TextBlock } from '@ons-mierloos-theater/shared/schemas/blocks';
 import { cn } from '@/lib/utils';
-import DOMPurify from 'isomorphic-dompurify';
+import DOMPurify from 'dompurify';
 import {
   Label,
   Select,
