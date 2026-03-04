@@ -10,3 +10,4 @@ coverage
 npm-debug.log
 yarn-error.log
 *.tsbuildinfo
+scripts/mock-ticket.pdf
