@@ -3,7 +3,7 @@
   "private": true,
   "exports": {
     "./db": "./lib/db/index.ts",
-    "./db/schema": "./lib/db/schema.ts",
+    "./db/schema": "./lib/db/schema/index.ts",
     "./commands/*": "./lib/commands/*.ts",
     "./queries/*": "./lib/queries/*.ts",
     "./utils/*": "./lib/utils/*.ts",
