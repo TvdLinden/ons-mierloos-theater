@@ -5,6 +5,7 @@ import DateDisplay from '@/components/DateDisplay';
 import Link from 'next/link';
 import { ShowWithTagsAndPerformances, Tag } from '@ons-mierloos-theater/shared/db';
 import { getShowImageUrl } from '@/lib/utils/performanceImages';
+import { getFocalPointStyle } from '@ons-mierloos-theater/shared/utils/focalPoints';
 import TagsContainer from './TagsContainer';
 import { useState, useRef, useEffect } from 'react';
 import { ChevronDown } from 'lucide-react';
@@ -58,6 +59,7 @@ export default function PerformanceCard({ show, href }: PerformanceCardProps) {
             fill
             className="object-cover group-hover:scale-105 transition-transform duration-300"
             sizes="(max-width: 768px) 100vw, 448px"
+            style={getFocalPointStyle(show.image?.focalPoints, 'card')}
           />
         </div>
 

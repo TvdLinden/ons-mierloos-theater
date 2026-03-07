@@ -84,6 +84,7 @@ export type ShowWithPerformances = Show & {
 export type ShowWithTagsAndPerformances = Show & {
   tags: Tag[];
   performances: Performance[];
+  image?: Image | null;
 };
 
 export type PerformanceWithShow = Performance & {
@@ -104,6 +105,11 @@ export type Image = typeof images.$inferSelect;
  * @deprecated Use Image type directly instead
  */
 export type ImageMetadata = Image;
+
+// Focal point types
+export type FocalPoint = { x: number; y: number };
+export type FocalPointContext = 'hero' | 'card' | 'carousel' | 'thumbnail' | 'gallery';
+export type FocalPoints = Partial<Record<FocalPointContext, FocalPoint>>;
 
 export type CustomCodeSnippet = typeof customCodeSnippets.$inferSelect;
 

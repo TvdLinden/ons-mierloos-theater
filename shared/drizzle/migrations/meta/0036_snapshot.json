@@ -1,6 +1,6 @@
 {
-  "id": "6964772f-3c2d-4d1f-b194-329a7faab89e",
-  "prevId": "4361f297-981e-44d3-af0b-ea887e1c0d3e",
+  "id": "5c382356-947d-46d4-882c-b947da5320c9",
+  "prevId": "9f505b34-6515-419a-acc4-da957c3ca047",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -943,6 +943,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "focal_points": {
+          "name": "focal_points",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
         "uploaded_at": {
           "name": "uploaded_at",
           "type": "timestamp with time zone",
@@ -1511,6 +1517,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "slug": {
+          "name": "slug",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
         "content": {
           "name": "content",
           "type": "text",
@@ -1603,6 +1615,21 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
+        },
+        "news_articles_slug_idx": {
+          "name": "news_articles_slug_idx",
+          "columns": [
+            {
+              "expression": "slug",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
       "foreignKeys": {
@@ -1617,7 +1644,13 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "news_articles_slug_unique": {
+          "name": "news_articles_slug_unique",
+          "nullsNotDistinct": false,
+          "columns": ["slug"]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -2563,6 +2596,18 @@
         "secondary_color": {
           "name": "secondary_color",
           "type": "varchar(7)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "font_display": {
+          "name": "font_display",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "font_body": {
+          "name": "font_body",
+          "type": "varchar(50)",
           "primaryKey": false,
           "notNull": false
         },

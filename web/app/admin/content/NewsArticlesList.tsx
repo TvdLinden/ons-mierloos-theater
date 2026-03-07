@@ -34,6 +34,7 @@ import {
 import { Plus, Edit, Trash2, ImageIcon, X } from 'lucide-react';
 import type { NewsArticle } from '@ons-mierloos-theater/shared/db';
 import Image from 'next/image';
+import { generateSlug } from '@ons-mierloos-theater/shared/utils/slug';
 import {
   createNewsArticleAction,
   updateNewsArticleAction,
@@ -48,6 +49,7 @@ interface NewsArticlesListProps {
 
 interface ArticleFormData {
   title: string;
+  slug: string;
   content: string;
   imageId: string | null;
   publishedAt: string;
@@ -69,6 +71,7 @@ export function NewsArticlesList({
   const [editingArticle, setEditingArticle] = useState<NewsArticle | null>(null);
   const [formData, setFormData] = useState<ArticleFormData>({
     title: '',
+    slug: '',
     content: '',
     imageId: null,
     publishedAt: new Date().toISOString().slice(0, 16),
@@ -82,6 +85,7 @@ export function NewsArticlesList({
   const resetForm = () => {
     setFormData({
       title: '',
+      slug: '',
       content: '',
       imageId: null,
       publishedAt: new Date().toISOString().slice(0, 16),
@@ -96,10 +100,20 @@ export function NewsArticlesList({
     setDialogOpen(true);
   };
 
+  const handleGenerateSlug = () => {
+    const titleInput = document.querySelector<HTMLInputElement>('input[name="title"]');
+    const slugInput = document.querySelector<HTMLInputElement>('input[name="slug"]');
+    if (titleInput && slugInput) {
+      slugInput.value = generateSlug(titleInput.value || formData.title || '');
+      setFormData({ ...formData, slug: slugInput.value });
+    }
+  };
+
   const handleEdit = (article: NewsArticle) => {
     setEditingArticle(article);
     setFormData({
       title: article.title,
+      slug: article.slug || '',
       content: article.content,
       imageId: article.imageId || null,
       publishedAt: article.publishedAt
@@ -121,6 +135,7 @@ export function NewsArticlesList({
         if (editingArticle) {
           const result = await updateNewsArticleAction(editingArticle.id, {
             title: formData.title,
+            slug: formData.slug,
             content: content,
             imageId: formData.imageId,
             publishedAt: new Date(formData.publishedAt),
@@ -132,7 +147,10 @@ export function NewsArticlesList({
                 a.id === editingArticle.id
                   ? {
                       ...a,
-                      ...formData,
+                      title: formData.title,
+                      slug: formData.slug,
+                      content: content,
+                      imageId: formData.imageId,
                       publishedAt: new Date(formData.publishedAt),
                       active: formData.active ? 1 : 0,
                     }
@@ -145,6 +163,7 @@ export function NewsArticlesList({
         } else {
           const result = await createNewsArticleAction({
             title: formData.title,
+            slug: formData.slug,
             content: content,
             imageId: formData.imageId,
             publishedAt: new Date(formData.publishedAt),
@@ -299,11 +318,39 @@ export function NewsArticlesList({
                 </label>
                 <Input
                   id="title"
+                  name="title"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   placeholder="Nieuws artikel titel"
                   required
                 />
+              </div>
+              <div>
+                <label htmlFor="slug" className="text-sm font-medium">
+                  Slug
+                </label>
+                <div className="flex gap-2">
+                  <Input
+                    id="slug"
+                    name="slug"
+                    value={formData.slug}
+                    onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                    placeholder="bijv: mijn-artikel"
+                    pattern="[a-z0-9-]+"
+                    required
+                  />
+                  <Button
+                    type="button"
+                    onClick={handleGenerateSlug}
+                    variant="outline"
+                    className="shrink-0"
+                  >
+                    Genereer
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  URL-vriendelijke naam: alleen kleine letters, cijfers en streepjes.
+                </p>
               </div>
               <div>
                 <label htmlFor="content" className="text-sm font-medium">

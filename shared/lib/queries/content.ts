@@ -71,6 +71,18 @@ export async function getNewsArticleById(id: string) {
 }
 
 /**
+ * Get news article by slug with image relation
+ */
+export async function getNewsArticleBySlug(slug: string) {
+  return await db.query.newsArticles.findFirst({
+    where: eq(newsArticles.slug, slug),
+    with: {
+      image: true,
+    },
+  });
+}
+
+/**
  * Get navigation link by ID
  */
 export async function getNavigationLinkById(id: string): Promise<NavigationLink | null> {

@@ -44,7 +44,7 @@ export default async function SettingsPage() {
               <CardDescription>Beheer site naam, contactgegevens en logo</CardDescription>
             </CardHeader>
             <CardContent>
-              <SiteSettingsForm initialData={siteSettings} availableImages={images} />
+              <SiteSettingsForm initialData={siteSettings} />
             </CardContent>
           </Card>
         </TabsContent>

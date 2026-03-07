@@ -63,6 +63,7 @@ export async function POST(req: NextRequest) {
       r2Url,
       originalWidth: metadata.width || null,
       originalHeight: metadata.height || null,
+      focalPoints: null,
     });
 
     // 9. Return image ID and R2 URL

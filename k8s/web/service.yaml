@@ -12,6 +12,6 @@ spec:
   selector:
     app: web
   ports:
-    - port: 3000        # Port the Service listens on inside the cluster
-      targetPort: 3000  # Port the container is actually listening on
-      nodePort: 30000   # External port on the node (30000–32767 range)
+    - port: 3000 # Port the Service listens on inside the cluster
+      targetPort: 3000 # Port the container is actually listening on
+      nodePort: 30000 # External port on the node (30000–32767 range)

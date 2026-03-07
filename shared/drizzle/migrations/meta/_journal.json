@@ -239,6 +239,27 @@
       "when": 1772572739484,
       "tag": "0033_outgoing_starbolt",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1772893085680,
+      "tag": "0034_natural_gateway",
+      "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1772893242205,
+      "tag": "0035_giant_spitfire",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1772895952651,
+      "tag": "0036_flawless_satana",
+      "breakpoints": true
     }
   ]
 }

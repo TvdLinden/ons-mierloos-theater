@@ -9,11 +9,16 @@ import {
   CarouselPrevious,
 } from '@/components/ui/carousel';
 import { ChevronRight } from 'lucide-react';
+import { getFocalPointStyle } from '@ons-mierloos-theater/shared/utils/focalPoints';
 
-import type { NewsArticle } from '@ons-mierloos-theater/shared/db';
+import type { NewsArticle, Image as ImageType } from '@ons-mierloos-theater/shared/db';
+
+type NewsArticleWithImage = NewsArticle & {
+  image?: ImageType | null;
+};
 
 type HomeNewsProps = {
-  articles: NewsArticle[];
+  articles: NewsArticleWithImage[];
 };
 
 export default function HomeNews({ articles }: HomeNewsProps) {
@@ -34,12 +39,23 @@ export default function HomeNews({ articles }: HomeNewsProps) {
   };
 
   return (
-    <section className="w-screen relative left-[calc(-50vw+50%)] py-24 px-4 bg-gradient-to-b from-primary/10 via-primary/5 to-background" data-section="home-news">
+    <section
+      className="w-screen relative left-[calc(-50vw+50%)] py-24 px-4 bg-gradient-to-b from-primary/10 via-primary/5 to-background"
+      data-section="home-news"
+    >
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-16">
-          <h2 className="text-5xl md:text-6xl font-bold text-primary mb-4 tracking-tight" data-element="section-title">Nieuws</h2>
-          <div className="w-20 h-1.5 bg-gradient-to-r from-primary to-primary/60 rounded-full" data-element="accent-bar"></div>
+          <h2
+            className="text-5xl md:text-6xl font-bold text-primary mb-4 tracking-tight"
+            data-element="section-title"
+          >
+            Nieuws
+          </h2>
+          <div
+            className="w-20 h-1.5 bg-gradient-to-r from-primary to-primary/60 rounded-full"
+            data-element="accent-bar"
+          ></div>
         </div>
 
         {/* Carousel */}
@@ -57,7 +73,7 @@ export default function HomeNews({ articles }: HomeNewsProps) {
 
               return (
                 <CarouselItem key={article.id} className="md:basis-1/2 lg:basis-1/3 pl-0">
-                  <Link href={`/nieuws/${article.id}`} className="group h-full block">
+                  <Link href={`/nieuws/${article.slug}`} className="group h-full block">
                     <Card className="overflow-hidden h-full border-0 shadow-lg hover:shadow-2xl transition-shadow duration-300 bg-white dark:bg-slate-950">
                       {/* Image Container */}
                       {article.imageId && (
@@ -68,6 +84,7 @@ export default function HomeNews({ articles }: HomeNewsProps) {
                             fill
                             className="object-cover transition-transform duration-600 ease-out group-hover:scale-108"
                             sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                            style={getFocalPointStyle(article.image?.focalPoints, 'card')}
                           />
                           {/* Gradient Overlay */}
                           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent transition-opacity duration-400 group-hover:opacity-75" />

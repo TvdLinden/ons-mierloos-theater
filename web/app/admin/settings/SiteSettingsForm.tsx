@@ -27,10 +27,9 @@ import {
 
 interface SiteSettingsFormProps {
   initialData: SiteSettings;
-  availableImages: Array<{ id: string; filename: string | null }>;
 }
 
-export function SiteSettingsForm({ initialData, availableImages }: SiteSettingsFormProps) {
+export function SiteSettingsForm({ initialData }: SiteSettingsFormProps) {
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -130,7 +129,6 @@ export function SiteSettingsForm({ initialData, availableImages }: SiteSettingsF
         <ImageSelector
           label="Logo"
           selectedImageId={formData.logoImageId}
-          availableImages={availableImages}
           onSelect={(id) => setFormData({ ...formData, logoImageId: id })}
           imageSize="medium"
         />

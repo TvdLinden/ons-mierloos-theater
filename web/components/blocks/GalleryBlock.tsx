@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import * as React from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,6 +25,7 @@ import {
   SelectItem,
 } from '@/components/ui/select';
 import { getImageUrl } from '@ons-mierloos-theater/shared/utils/image-url';
+import { getFocalPointStyle } from '@ons-mierloos-theater/shared/utils/focalPoints';
 
 import type { GalleryBlock } from '@ons-mierloos-theater/shared/schemas/blocks';
 import type { ImageMetadata } from '@ons-mierloos-theater/shared/db';
@@ -55,7 +57,12 @@ function FullscreenImageDialog({
   );
 }
 
-export function GalleryBlockDisplay({ block }: { block: GalleryBlock }) {
+interface GalleryBlockDisplayProps {
+  block: GalleryBlock;
+  images?: ImageMetadata[];
+}
+
+export function GalleryBlockDisplay({ block, images = [] }: GalleryBlockDisplayProps) {
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
 
   const sizes = {
@@ -74,22 +81,26 @@ export function GalleryBlockDisplay({ block }: { block: GalleryBlock }) {
     <div className="my-8 w-full max-w-[65ch]">
       <Carousel className="w-full" opts={{ align: 'start' }}>
         <CarouselContent>
-          {block.imageIds.map((imageId) => (
-            <CarouselItem key={imageId} className={`basis-1/${visibleCount}`}>
-              <div
-                className="relative w-full aspect-video cursor-pointer"
-                onClick={() => setFullscreenImage(imageId)}
-              >
-                <Image
-                  src={getImageUrl(imageId)} // Use 'sm' size for thumbnails
-                  alt="Gallery image"
-                  width={width}
-                  height={height}
-                  className="object-cover rounded"
-                />
-              </div>
-            </CarouselItem>
-          ))}
+          {block.imageIds.map((imageId) => {
+            const imageData = images.find((img) => img.id === imageId);
+            return (
+              <CarouselItem key={imageId} className={`basis-1/${visibleCount}`}>
+                <div
+                  className="relative w-full aspect-video cursor-pointer"
+                  onClick={() => setFullscreenImage(imageId)}
+                >
+                  <Image
+                    src={getImageUrl(imageId)}
+                    alt="Gallery image"
+                    width={width}
+                    height={height}
+                    className="object-cover rounded"
+                    style={getFocalPointStyle(imageData?.focalPoints as any, 'gallery')}
+                  />
+                </div>
+              </CarouselItem>
+            );
+          })}
         </CarouselContent>
         <CarouselPrevious />
         <CarouselNext />
@@ -107,13 +118,35 @@ export function GalleryBlockDisplay({ block }: { block: GalleryBlock }) {
 // Edit-only component
 interface GalleryBlockEditProps {
   block: GalleryBlock;
-  availableImages: ImageMetadata[];
   onChange: (data: Partial<GalleryBlock>) => void;
 }
 
-export function GalleryBlockEdit({ block, availableImages, onChange }: GalleryBlockEditProps) {
+export function GalleryBlockEdit({ block, onChange }: GalleryBlockEditProps) {
   const [showPicker, setShowPicker] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [availableImages, setAvailableImages] = useState<ImageMetadata[]>([]);
+  const [isLoadingImages, setIsLoadingImages] = useState(false);
+
+  // Fetch images on mount
+  React.useEffect(() => {
+    const fetchImages = async () => {
+      setIsLoadingImages(true);
+      try {
+        const response = await fetch('/api/images');
+        if (response.ok) {
+          const data = await response.json();
+          setAvailableImages(data.images || []);
+        }
+      } catch (error) {
+        console.error('Failed to fetch images:', error);
+      } finally {
+        setIsLoadingImages(false);
+      }
+    };
+
+    fetchImages();
+  }, []);
+
   const selectedImages = availableImages.filter((img) => block.imageIds.includes(img.id));
 
   const handleToggleImage = (imageId: string) => {
@@ -152,10 +185,11 @@ export function GalleryBlockEdit({ block, availableImages, onChange }: GalleryBl
             <div key={image.id} className="relative group">
               <div className="relative w-full aspect-square">
                 <Image
-                  src={getImageUrl(image.id, 'sm')}
+                  src={getImageUrl(image.id)}
                   alt="Selected image preview"
                   fill
                   className="object-cover rounded"
+                  style={getFocalPointStyle(image.focalPoints as any, 'gallery')}
                 />
               </div>
               <button
@@ -261,6 +295,7 @@ export function GalleryBlockEdit({ block, availableImages, onChange }: GalleryBl
                     alt="Beschikbare afbeelding"
                     fill
                     className="object-cover rounded"
+                    style={getFocalPointStyle(image.focalPoints as any, 'gallery')}
                   />
                   {isSelected && (
                     <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
@@ -284,18 +319,33 @@ export function GalleryBlockEdit({ block, availableImages, onChange }: GalleryBl
 interface GalleryBlockComponentProps {
   block: GalleryBlock;
   mode: 'edit' | 'display';
-  availableImages?: ImageMetadata[];
   onChange?: (data: Partial<GalleryBlock>) => void;
 }
 
-export function GalleryBlockComponent({
-  block,
-  mode,
-  availableImages = [],
-  onChange,
-}: GalleryBlockComponentProps) {
+export function GalleryBlockComponent({ block, mode, onChange }: GalleryBlockComponentProps) {
+  const [images, setImages] = React.useState<ImageMetadata[]>([]);
+
+  // Fetch images for display mode
+  React.useEffect(() => {
+    if (mode === 'display') {
+      const fetchImages = async () => {
+        try {
+          const response = await fetch('/api/images');
+          if (response.ok) {
+            const data = await response.json();
+            setImages(data.images || []);
+          }
+        } catch (error) {
+          console.error('Failed to fetch images:', error);
+        }
+      };
+
+      fetchImages();
+    }
+  }, [mode]);
+
   if (mode === 'display') {
-    return <GalleryBlockDisplay block={block} />;
+    return <GalleryBlockDisplay block={block} images={images} />;
   }
-  return <GalleryBlockEdit block={block} availableImages={availableImages} onChange={onChange!} />;
+  return <GalleryBlockEdit block={block} onChange={onChange!} />;
 }

@@ -22,9 +22,9 @@ spec:
           image: ons-mierloos-theater/worker:latest
           imagePullPolicy: Never
           # Override the default CMD from Dockerfile.worker to run the scheduler instead.
-          command: ["node", "--import", "tsx", "scripts/start-scheduler.ts"]
+          command: ['node', '--import', 'tsx', 'scripts/start-scheduler.ts']
           ports:
-            - containerPort: 8080  # Health check endpoint
+            - containerPort: 8080 # Health check endpoint
           envFrom:
             - configMapRef:
                 name: theater-config

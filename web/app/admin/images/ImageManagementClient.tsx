@@ -1,15 +1,30 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useRef } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useActionState } from 'react';
-import { deleteImageAction, uploadImageAction, pruneImagesAction } from './actions';
+import {
+  deleteImageAction,
+  uploadImageAction,
+  pruneImagesAction,
+  updateImageFocalPointsAction,
+} from './actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
-import { Trash2, Upload, AlertCircle, Eraser } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Trash2, Upload, AlertCircle, Eraser, Settings2 } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import FocalPointEditor, { type FocalPointEditorHandle } from '@/components/FocalPointEditor';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { getFocalPointStyle } from '@ons-mierloos-theater/shared/utils/focalPoints';
 import {
   Pagination,
   PaginationContent,
@@ -53,8 +68,69 @@ export default function ImageManagementClient({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [pruneDialogOpen, setPruneDialogOpen] = useState(false);
   const [imageToDelete, setImageToDelete] = useState<string | null>(null);
+  const [editingImage, setEditingImage] = useState<(typeof images)[number] | null>(null);
+  const [savingFocalPoints, setSavingFocalPoints] = useState(false);
+  const [selectedImages, setSelectedImages] = useState<Set<string>>(new Set());
+  const focalPointEditorRef = useRef<FocalPointEditorHandle>(null);
 
   const [uploadState, uploadAction, uploadPending] = useActionState(uploadImageAction, undefined);
+
+  const toggleImageSelection = (imageId: string) => {
+    const newSelected = new Set(selectedImages);
+    if (newSelected.has(imageId)) {
+      newSelected.delete(imageId);
+    } else {
+      newSelected.add(imageId);
+    }
+    setSelectedImages(newSelected);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedImages.size === images.length) {
+      setSelectedImages(new Set());
+    } else {
+      setSelectedImages(new Set(images.map((img) => img.id)));
+    }
+  };
+
+  const getFocalPointsDisplay = (
+    focalPoints: Record<string, { x: number; y: number }> | null | undefined,
+  ) => {
+    if (!focalPoints || Object.keys(focalPoints).length === 0) {
+      return null;
+    }
+    const contexts = Object.keys(focalPoints).sort();
+    return (
+      <div className="flex flex-wrap gap-1 mt-2">
+        {contexts.map((ctx) => (
+          <span
+            key={ctx}
+            className="inline-block px-2 py-0.5 text-xs rounded bg-primary/20 text-primary"
+          >
+            {ctx}
+          </span>
+        ))}
+      </div>
+    );
+  };
+
+  const handleSaveFocalPoints = async () => {
+    if (!editingImage || !focalPointEditorRef.current) return;
+
+    setSavingFocalPoints(true);
+    try {
+      const focalPoints = focalPointEditorRef.current.getFocalPoints();
+      const result = await updateImageFocalPointsAction(editingImage.id, focalPoints);
+      if (result.success) {
+        setEditingImage(null);
+        startTransition(() => {
+          router.refresh();
+        });
+      }
+    } finally {
+      setSavingFocalPoints(false);
+    }
+  };
 
   const handleDelete = async (imageId: string) => {
     setImageToDelete(imageId);
@@ -187,47 +263,90 @@ export default function ImageManagementClient({
         {images.length === 0 ? (
           <p className="text-center text-muted-foreground py-8">Geen afbeeldingen gevonden.</p>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {images.map((image) => (
-              <Card key={image.id} className="overflow-hidden">
-                <CardContent className="p-0">
-                  <div className="relative aspect-square bg-muted">
-                    <Image
-                      src={`/api/images/${image.id}?size=sm`}
-                      alt={image.filename || 'Afbeelding'}
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                      loading="lazy"
-                    />
-                  </div>
-                  <div className="p-3 space-y-2">
-                    <p
-                      className="text-xs text-muted-foreground truncate"
-                      title={image.filename || ''}
-                    >
-                      {image.filename || 'Geen naam'}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {image.uploadedAt
-                        ? new Date(image.uploadedAt).toLocaleDateString('nl-NL')
-                        : 'Onbekend'}
-                    </p>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      className="w-full"
-                      onClick={() => handleDelete(image.id)}
-                      disabled={deletingId === image.id || isPending}
-                    >
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      {deletingId === image.id ? 'Verwijderen...' : 'Verwijder'}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          <>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="select-all"
+                  checked={selectedImages.size === images.length && images.length > 0}
+                  onCheckedChange={toggleSelectAll}
+                />
+                <label htmlFor="select-all" className="text-sm font-medium cursor-pointer">
+                  Alles selecteren
+                </label>
+              </div>
+              {selectedImages.size > 0 && (
+                <p className="text-sm text-muted-foreground">{selectedImages.size} geselecteerd</p>
+              )}
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {images.map((image) => (
+                <Card
+                  key={image.id}
+                  className={`overflow-hidden transition-all ${
+                    selectedImages.has(image.id) ? 'ring-2 ring-primary' : ''
+                  }`}
+                >
+                  <CardContent className="p-0">
+                    <div className="relative aspect-square bg-muted">
+                      <Image
+                        src={`/api/images/${image.id}?size=sm`}
+                        alt={image.filename || 'Afbeelding'}
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                        loading="lazy"
+                        style={getFocalPointStyle(image.focalPoints as any, 'thumbnail')}
+                      />
+                      <div className="absolute top-2 right-2 bg-background/80 backdrop-blur-sm rounded-md p-1.5">
+                        <Checkbox
+                          checked={selectedImages.has(image.id)}
+                          onCheckedChange={() => toggleImageSelection(image.id)}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      </div>
+                    </div>
+                    <div className="p-3 space-y-2">
+                      <p
+                        className="text-xs text-muted-foreground truncate"
+                        title={image.filename || ''}
+                      >
+                        {image.filename || 'Geen naam'}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {image.uploadedAt
+                          ? new Date(image.uploadedAt).toLocaleDateString('nl-NL')
+                          : 'Onbekend'}
+                      </p>
+                      {getFocalPointsDisplay(image.focalPoints as any)}
+                      <div className="space-y-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full"
+                          onClick={() => setEditingImage(image)}
+                          disabled={isPending}
+                        >
+                          <Settings2 className="mr-2 h-4 w-4" />
+                          Focuspunten
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          className="w-full"
+                          onClick={() => handleDelete(image.id)}
+                          disabled={deletingId === image.id || isPending}
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          {deletingId === image.id ? 'Verwijderen...' : 'Verwijder'}
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </>
         )}
       </div>
 
@@ -354,6 +473,45 @@ export default function ImageManagementClient({
           </PaginationContent>
         </Pagination>
       )}
+
+      {/* Focal Point Editor Dialog */}
+      <Dialog open={!!editingImage} onOpenChange={(open) => !open && setEditingImage(null)}>
+        <DialogContent className="max-w-4xl flex flex-col max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle>Focuspunten bewerken</DialogTitle>
+          </DialogHeader>
+          <div className="overflow-y-auto flex-1">
+            {editingImage && (
+              <FocalPointEditor
+                ref={focalPointEditorRef}
+                image={editingImage}
+                onClose={() => {
+                  setEditingImage(null);
+                  startTransition(() => {
+                    router.refresh();
+                  });
+                }}
+                onSave={async () => {
+                  // onSave is not used anymore, but kept for type compatibility
+                }}
+                isSaving={savingFocalPoints}
+              />
+            )}
+          </div>
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setEditingImage(null)}
+              disabled={savingFocalPoints}
+            >
+              Annuleren
+            </Button>
+            <Button onClick={handleSaveFocalPoints} disabled={savingFocalPoints}>
+              {savingFocalPoints ? 'Opslaan...' : 'Opslaan'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

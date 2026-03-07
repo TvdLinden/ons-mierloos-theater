@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import { ShowWithTagsAndPerformances } from '@ons-mierloos-theater/shared/db';
 import { getShowImageUrl } from '@/lib/utils/performanceImages';
+import { getFocalPointStyle } from '@ons-mierloos-theater/shared/utils/focalPoints';
 import Tag from './Tag';
 
 export type ShowHeroProps = {
@@ -25,6 +26,7 @@ export default function ShowHero({ show }: ShowHeroProps) {
             fill
             priority
             className="object-cover"
+            style={getFocalPointStyle(show.image?.focalPoints, 'hero')}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
         </>

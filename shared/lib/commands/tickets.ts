@@ -43,19 +43,21 @@ export async function createTicketsForLineItem(
     );
   }
 
-  const ticketsToCreate: CreateTicket[] = assignedSeats.map(({ rowIndex, seatNumber, wheelchairAccess }) => {
-    const rowNumber = rowIndex + 1;
-    const ticketNumber = `${performance.showId.substring(0, 4).toUpperCase()}-${performanceId.substring(0, 4).toUpperCase()}-R${rowNumber}S${seatNumber}`;
-    return {
-      lineItemId,
-      performanceId,
-      orderId,
-      ticketNumber,
-      rowNumber,
-      seatNumber,
-      wheelchairAccess,
-    };
-  });
+  const ticketsToCreate: CreateTicket[] = assignedSeats.map(
+    ({ rowIndex, seatNumber, wheelchairAccess }) => {
+      const rowNumber = rowIndex + 1;
+      const ticketNumber = `${performance.showId.substring(0, 4).toUpperCase()}-${performanceId.substring(0, 4).toUpperCase()}-R${rowNumber}S${seatNumber}`;
+      return {
+        lineItemId,
+        performanceId,
+        orderId,
+        ticketNumber,
+        rowNumber,
+        seatNumber,
+        wheelchairAccess,
+      };
+    },
+  );
 
   const createdTickets = await db.insert(tickets).values(ticketsToCreate).returning();
 

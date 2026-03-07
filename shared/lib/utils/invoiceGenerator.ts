@@ -166,7 +166,13 @@ export async function generateInvoicePDF(
   });
 
   const headerY = y;
-  page.drawText('Omschrijving', { x: colX.desc + 4, y: headerY, size: 9, font: boldFont, color: gray });
+  page.drawText('Omschrijving', {
+    x: colX.desc + 4,
+    y: headerY,
+    size: 9,
+    font: boldFont,
+    color: gray,
+  });
   page.drawText('Aantal', { x: colX.qty, y: headerY, size: 9, font: boldFont, color: gray });
   page.drawText('Prijs', { x: colX.price, y: headerY, size: 9, font: boldFont, color: gray });
   drawTextRight(page, 'Totaal', colX.total, headerY, boldFont, 9, gray);
@@ -190,10 +196,22 @@ export async function generateInvoicePDF(
     y -= 14;
     // Performance date (smaller, gray)
     if (perfDate) {
-      page.drawText(perfDate, { x: colX.desc + 4, y, size: 8, font: regularFont, color: lightGray });
+      page.drawText(perfDate, {
+        x: colX.desc + 4,
+        y,
+        size: 8,
+        font: regularFont,
+        color: lightGray,
+      });
     }
     // Qty, price, total on first line
-    page.drawText(String(qty), { x: colX.qty, y: y + 14, size: 10, font: regularFont, color: black });
+    page.drawText(String(qty), {
+      x: colX.qty,
+      y: y + 14,
+      size: 10,
+      font: regularFont,
+      color: black,
+    });
     page.drawText(formatCurrency(price), {
       x: colX.price,
       y: y + 14,
@@ -270,7 +288,13 @@ export async function generateInvoicePDF(
   const btwAmount = totalAmount - totalExclBTW;
 
   // Totaal excl. BTW
-  page.drawText('Totaal excl. BTW', { x: colX.price - 40, y, size: 10, font: regularFont, color: gray });
+  page.drawText('Totaal excl. BTW', {
+    x: colX.price - 40,
+    y,
+    size: 10,
+    font: regularFont,
+    color: gray,
+  });
   drawTextRight(page, formatCurrency(totalExclBTW), colX.total, y, regularFont, 10, gray);
   y -= 18;
 

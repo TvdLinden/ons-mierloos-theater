@@ -38,6 +38,7 @@ export async function handleImageUpload(imageFile: File): Promise<ImageUploadRes
       r2Url,
       originalWidth: metadata.width || null,
       originalHeight: metadata.height || null,
+      focalPoints: null,
     });
 
     return {

@@ -1,4 +1,4 @@
-import { db, Image } from '../db';
+import { db, Image, type FocalPoints } from '../db';
 import { images } from '../db/schema';
 import { eq, inArray } from 'drizzle-orm';
 import { findUnusedImages } from '../queries/images';
@@ -96,4 +96,14 @@ export async function removeUnusedImages(): Promise<number> {
   await db.delete(images).where(inArray(images.id, danglingIds));
 
   return danglingIds.length;
+}
+
+/**
+ * Update focal points for an image
+ */
+export async function updateImageFocalPoints(
+  id: string,
+  focalPoints: FocalPoints | null,
+): Promise<void> {
+  await db.update(images).set({ focalPoints }).where(eq(images.id, id));
 }

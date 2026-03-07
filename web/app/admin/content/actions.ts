@@ -93,6 +93,7 @@ export async function updateHomepageContentAction(data: {
 // News Articles Actions
 export async function createNewsArticleAction(data: {
   title: string;
+  slug: string;
   content: string;
   publishedAt?: Date;
   active?: number;
@@ -102,6 +103,7 @@ export async function createNewsArticleAction(data: {
     const article = await createNewsArticle(data);
     revalidatePath('/admin/content');
     revalidatePath('/');
+    revalidatePath('/nieuws');
     return { success: true, article };
   } catch (error) {
     console.error('Error creating news article:', error);
@@ -113,6 +115,7 @@ export async function updateNewsArticleAction(
   id: string,
   data: {
     title?: string;
+    slug?: string;
     content?: string;
     publishedAt?: Date;
     active?: number;
@@ -123,6 +126,10 @@ export async function updateNewsArticleAction(
     await updateNewsArticle(id, data);
     revalidatePath('/admin/content');
     revalidatePath('/');
+    revalidatePath('/nieuws');
+    if (data.slug) {
+      revalidatePath(`/nieuws/${data.slug}`);
+    }
     return { success: true };
   } catch (error) {
     console.error('Error updating news article:', error);
@@ -137,6 +144,7 @@ export async function deleteNewsArticleAction(
     await deleteNewsArticle(id);
     revalidatePath('/admin/content');
     revalidatePath('/');
+    revalidatePath('/nieuws');
     return { success: true };
   } catch (error) {
     console.error('Error deleting news article:', error);
@@ -152,6 +160,7 @@ export async function toggleNewsArticleActiveAction(
     await updateNewsArticle(id, { active });
     revalidatePath('/admin/content');
     revalidatePath('/');
+    revalidatePath('/nieuws');
     return { success: true };
   } catch (error) {
     console.error('Error toggling article active status:', error);

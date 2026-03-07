@@ -22,25 +22,13 @@ export function CodeSnippetInjection({ snippets }: Props) {
         if (scriptMatch) {
           const attrs = parseAttrs(scriptMatch[1] || '');
           const inner = scriptMatch[2] || '';
-          return (
-            <script
-              key={snippet.id}
-              {...attrs}
-              dangerouslySetInnerHTML={{ __html: inner }}
-            />
-          );
+          return <script key={snippet.id} {...attrs} dangerouslySetInnerHTML={{ __html: inner }} />;
         }
 
         if (styleMatch) {
           const attrs = parseAttrs(styleMatch[1] || '');
           const inner = styleMatch[2] || '';
-          return (
-            <style
-              key={snippet.id}
-              {...attrs}
-              dangerouslySetInnerHTML={{ __html: inner }}
-            />
-          );
+          return <style key={snippet.id} {...attrs} dangerouslySetInnerHTML={{ __html: inner }} />;
         }
 
         // Anything else (link, meta, etc.) — render as a fragment with

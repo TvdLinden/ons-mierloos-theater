@@ -1,7 +1,6 @@
 import ShowForm, { ShowFormState } from '@/components/ShowForm';
 import { notFound } from 'next/navigation';
 import { getAllTags } from '@ons-mierloos-theater/shared/queries/tags';
-import { getAllImages } from '@ons-mierloos-theater/shared/queries/images';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { getShowByIdWithTagsAndPerformances } from '@ons-mierloos-theater/shared/queries/shows';
 import { handleUpsertShow } from '../../actions';
@@ -15,7 +14,7 @@ export default async function EditShowPage(props: { params: Promise<{ id: string
   const show = await getShowByIdWithTagsAndPerformances(id);
   if (!show) return notFound();
 
-  const [availableTags, availableImages] = await Promise.all([getAllTags(), getAllImages(0, 1000)]);
+  const availableTags = await getAllTags();
 
   const boundAction = handleUpsertShow.bind(null, id);
 
@@ -57,7 +56,6 @@ export default async function EditShowPage(props: { params: Promise<{ id: string
         action={boundAction}
         initial={initialData}
         availableTags={availableTags}
-        availableImages={availableImages}
         cancelHref={`/admin/shows/${id}`}
         performancesHref={`/admin/shows/${id}/performances`}
       />

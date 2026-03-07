@@ -5,7 +5,9 @@ import type { BlocksArray, Block } from '@ons-mierloos-theater/shared/schemas/bl
  * Walks the block tree recursively, finds data: URIs in text block HTML, uploads them,
  * and returns blocks with cleaned HTML containing r2Url and data-image-id attributes.
  */
-export async function uploadImagesFromBlocks(blocks: BlocksArray | null): Promise<BlocksArray | null> {
+export async function uploadImagesFromBlocks(
+  blocks: BlocksArray | null,
+): Promise<BlocksArray | null> {
   if (!blocks) return null;
 
   const processedBlocks = await Promise.all(blocks.map((block) => processBlock(block)));
@@ -21,9 +23,7 @@ async function processBlock(block: Block): Promise<Block> {
 
   // Recursively process children in column/row blocks
   if ('children' in block && Array.isArray(block.children)) {
-    const processedChildren = await Promise.all(
-      block.children.map((child) => processBlock(child))
-    );
+    const processedChildren = await Promise.all(block.children.map((child) => processBlock(child)));
     return { ...block, children: processedChildren };
   }
 
@@ -66,9 +66,7 @@ async function uploadImagesInHTML(html: string): Promise<string> {
 /**
  * Uploads a data URI image to R2 and returns {id, r2Url}.
  */
-async function uploadDataURIImage(
-  dataUri: string
-): Promise<{ id: string; r2Url: string }> {
+async function uploadDataURIImage(dataUri: string): Promise<{ id: string; r2Url: string }> {
   const response = await fetch('/api/upload', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

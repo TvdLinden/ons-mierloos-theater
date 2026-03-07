@@ -1,6 +1,11 @@
 'use server';
 
-import { deleteImage, removeUnusedImages } from '@ons-mierloos-theater/shared/commands/images';
+import {
+  deleteImage,
+  removeUnusedImages,
+  updateImageFocalPoints,
+} from '@ons-mierloos-theater/shared/commands/images';
+import type { FocalPoints } from '@ons-mierloos-theater/shared/db';
 import { getImageUsage } from '@ons-mierloos-theater/shared/queries/images';
 import { handleImageUpload } from '@/lib/utils/imageUpload';
 import { validateImageFile } from '@/lib/utils/performanceFormHelpers';
@@ -83,6 +88,27 @@ export async function pruneImagesAction(): Promise<{
     return {
       success: false,
       error: 'Er is een fout opgetreden bij het opschonen van afbeeldingen.',
+    };
+  }
+}
+
+export async function updateImageFocalPointsAction(
+  imageId: string,
+  focalPoints: FocalPoints,
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    await updateImageFocalPoints(imageId, focalPoints);
+    revalidatePath('/admin/images');
+    revalidatePath('/');
+    revalidatePath('/voorstellingen');
+    revalidatePath('/nieuws');
+
+    return { success: true };
+  } catch (error) {
+    console.error('Error updating image focal points:', error);
+    return {
+      success: false,
+      error: 'Er is een fout opgetreden bij het bijwerken van focuspunten.',
     };
   }
 }

@@ -20,9 +20,7 @@ export async function syncImageUsages(
     // Delete existing usages for this entity
     await tx
       .delete(imageUsages)
-      .where(
-        and(eq(imageUsages.entityType, entityType), eq(imageUsages.entityId, entityId)),
-      );
+      .where(and(eq(imageUsages.entityType, entityType), eq(imageUsages.entityId, entityId)));
 
     // Extract and insert new usages
     if (blocks) {

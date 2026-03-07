@@ -1,12 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { usePagination } from '@/hooks/usePagination';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { ImageIcon, X } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui';
+import { getFocalPointStyle } from '@ons-mierloos-theater/shared/utils/focalPoints';
+import type { Image as ImageType } from '@ons-mierloos-theater/shared/db';
 import {
   Pagination,
   PaginationContent,
@@ -19,21 +21,43 @@ import {
 interface ImageSelectorProps {
   label: string;
   selectedImageId: string | null;
-  availableImages: Array<{ id: string; filename: string | null }>;
   onSelect: (imageId: string | null) => void;
   imageSize?: 'small' | 'medium' | 'large';
   imagesPerPage?: number;
+  focalPointContext?: 'hero' | 'card' | 'carousel' | 'thumbnail' | 'gallery';
 }
 
 export function ImageSelector({
   label,
   selectedImageId,
-  availableImages,
   onSelect,
   imageSize = 'medium',
   imagesPerPage = 12,
+  focalPointContext = 'thumbnail',
 }: ImageSelectorProps) {
   const [showPicker, setShowPicker] = useState(false);
+  const [availableImages, setAvailableImages] = useState<Partial<ImageType>[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchImages = async () => {
+      setIsLoading(true);
+      try {
+        const response = await fetch('/api/images');
+        if (response.ok) {
+          const data = await response.json();
+          setAvailableImages(data.images || []);
+        }
+      } catch (error) {
+        console.error('Failed to fetch images:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchImages();
+  }, []);
+
   const sizeMap = {
     small: { container: 'w-16 h-16', grid: 'grid-cols-3' },
     medium: { container: 'w-32 h-32', grid: 'grid-cols-4' },
@@ -69,8 +93,12 @@ export function ImageSelector({
               src={`/api/images/${selectedImageId}`}
               alt={label}
               fill
-              className="object-contain"
+              className="object-cover"
               sizes="200px"
+              style={getFocalPointStyle(
+                availableImages.find((img) => img.id === selectedImageId)?.focalPoints as any,
+                focalPointContext,
+              )}
             />
           </div>
           <Button
@@ -127,6 +155,7 @@ export function ImageSelector({
                     className="object-cover rounded"
                     sizes="100px"
                     loading="lazy"
+                    style={getFocalPointStyle(img.focalPoints as any, focalPointContext)}
                   />
                 </button>
               ))}

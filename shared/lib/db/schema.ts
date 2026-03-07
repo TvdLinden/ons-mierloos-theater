@@ -217,6 +217,7 @@ export const images = pgTable('images', {
   r2Url: text('r2_url').notNull(), // R2 public URL (required after Phase 6)
   originalWidth: integer('original_width'), // Original image width
   originalHeight: integer('original_height'), // Original image height
+  focalPoints: jsonb('focal_points'), // Per-context focal points for cropping
   uploadedAt: timestamp('uploaded_at', { withTimezone: true }).defaultNow(),
 });
 
@@ -596,6 +597,7 @@ export const newsArticles = pgTable(
   {
     id: uuid('id').primaryKey().defaultRandom(),
     title: varchar('title', { length: 255 }).notNull(),
+    slug: varchar('slug', { length: 255 }).unique().notNull(),
     content: text('content').notNull(),
     imageId: uuid('image_id').references(() => images.id, { onDelete: 'set null' }),
     publishedAt: timestamp('published_at', { withTimezone: true }),
@@ -608,6 +610,7 @@ export const newsArticles = pgTable(
     index('news_articles_published_at_idx').on(table.publishedAt),
     index('news_articles_active_idx').on(table.active),
     index('news_articles_display_order_idx').on(table.displayOrder),
+    index('news_articles_slug_idx').on(table.slug),
   ],
 );
 

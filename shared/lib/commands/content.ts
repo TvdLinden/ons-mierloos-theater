@@ -65,6 +65,7 @@ export async function upsertHomepageContent(data: {
  */
 export async function createNewsArticle(data: {
   title: string;
+  slug: string;
   content: string;
   imageId?: string;
   publishedAt?: Date;
@@ -85,7 +86,10 @@ export async function createNewsArticle(data: {
 /**
  * Update news article
  */
-export async function updateNewsArticle(id: string, data: Partial<NewsArticle>): Promise<void> {
+export async function updateNewsArticle(
+  id: string,
+  data: Partial<Omit<NewsArticle, 'id' | 'createdAt'>>,
+): Promise<void> {
   await db
     .update(newsArticles)
     .set({ ...data, updatedAt: new Date() })

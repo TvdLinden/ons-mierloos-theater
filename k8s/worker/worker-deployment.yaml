@@ -20,7 +20,7 @@ spec:
           image: ons-mierloos-theater/worker:latest
           imagePullPolicy: Never
           ports:
-            - containerPort: 8080  # Health check endpoint
+            - containerPort: 8080 # Health check endpoint
           envFrom:
             - configMapRef:
                 name: theater-config

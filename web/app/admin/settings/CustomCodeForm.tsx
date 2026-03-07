@@ -98,9 +98,7 @@ export function CustomCodeForm({ initialSnippets }: CustomCodeFormProps) {
       } else if (editingId) {
         const result = await updateSnippetAction(editingId, formData);
         if (result.success && result.snippet) {
-          setSnippets((prev) =>
-            prev.map((s) => (s.id === editingId ? result.snippet! : s)),
-          );
+          setSnippets((prev) => prev.map((s) => (s.id === editingId ? result.snippet! : s)));
           closeForm();
           setMessage({ type: 'success', text: 'Snippet bijgewerkt' });
         } else {

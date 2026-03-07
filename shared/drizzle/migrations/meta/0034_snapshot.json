@@ -1,6 +1,6 @@
 {
-  "id": "6964772f-3c2d-4d1f-b194-329a7faab89e",
-  "prevId": "4361f297-981e-44d3-af0b-ea887e1c0d3e",
+  "id": "cad112d3-cdc2-4957-a0de-26bbf02466fa",
+  "prevId": "20ff2f88-b3ad-4097-ae68-7fc120967189",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -1511,6 +1511,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "slug": {
+          "name": "slug",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
         "content": {
           "name": "content",
           "type": "text",
@@ -1603,6 +1609,21 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
+        },
+        "news_articles_slug_idx": {
+          "name": "news_articles_slug_idx",
+          "columns": [
+            {
+              "expression": "slug",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
       "foreignKeys": {
@@ -1617,7 +1638,13 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "news_articles_slug_unique": {
+          "name": "news_articles_slug_unique",
+          "nullsNotDistinct": false,
+          "columns": ["slug"]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -2563,6 +2590,18 @@
         "secondary_color": {
           "name": "secondary_color",
           "type": "varchar(7)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "font_display": {
+          "name": "font_display",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "font_body": {
+          "name": "font_body",
+          "type": "varchar(50)",
           "primaryKey": false,
           "notNull": false
         },

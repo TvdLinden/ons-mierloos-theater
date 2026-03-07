@@ -39,9 +39,7 @@ export default async function PerformanceDetailPage({ params }: Props) {
     .where(eq(tickets.performanceId, performanceId));
 
   // Convert to arrays/maps for JSON serialization
-  const reservedSeats = assignedTickets.map(
-    (t) => `${t.rowNumber - 1}-${t.seatNumber}`,
-  );
+  const reservedSeats = assignedTickets.map((t) => `${t.rowNumber - 1}-${t.seatNumber}`);
   const wheelchairSeats = assignedTickets
     .filter((t) => t.wheelchairAccess)
     .map((t) => `${t.rowNumber - 1}-${t.seatNumber}`);

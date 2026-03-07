@@ -6,6 +6,7 @@ import Image from 'next/image';
 import Autoplay from 'embla-carousel-autoplay';
 import { ShowWithTagsAndPerformances } from '@ons-mierloos-theater/shared/db';
 import { getShowImageUrl } from '@/lib/utils/performanceImages';
+import { getFocalPointStyle } from '@ons-mierloos-theater/shared/utils/focalPoints';
 import { Button } from '@/components/ui/button';
 import {
   Carousel,
@@ -77,6 +78,7 @@ export default function HeroCarousel({ shows, autoplayDelay = 5000 }: HeroCarous
                   sizes="100vw"
                   priority={index === 0}
                   className="object-cover"
+                  style={getFocalPointStyle(show.image?.focalPoints, 'carousel')}
                 />
 
                 {/* Gradient Overlay */}
