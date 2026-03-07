@@ -5,15 +5,12 @@ import { createPage } from '@ons-mierloos-theater/shared/commands/pages';
 import { syncImageUsages } from '@ons-mierloos-theater/shared/commands/imageUsages';
 import { uploadImagesFromBlocks } from '@/lib/utils/uploadImagesFromBlocks';
 import { PageForm } from '../page-form';
-import { getAllImages } from '@ons-mierloos-theater/shared/queries/images';
 import { blocksArraySchema } from '@ons-mierloos-theater/shared/schemas/blocks';
 import type { BlocksArray } from '@ons-mierloos-theater/shared/schemas/blocks';
 import type { FormActionResult, InitialFormValues } from '../page-form';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 
 export default async function AddPage() {
-  const images = await getAllImages(0, 1000);
-
   async function handleSubmit(
     prevState: FormActionResult,
     formData: FormData,
@@ -65,7 +62,7 @@ export default async function AddPage() {
         title="Nieuwe pagina toevoegen"
         breadcrumbs={[{ label: "Pagina's", href: '/admin/pages' }, { label: 'Toevoegen' }]}
       />
-      <PageForm initialValues={null} action={handleSubmit} availableImages={images} />
+      <PageForm initialValues={null} action={handleSubmit} />
     </>
   );
 }

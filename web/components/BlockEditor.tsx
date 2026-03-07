@@ -60,11 +60,9 @@ import { GalleryBlockComponent } from '@/components/blocks/GalleryBlock';
 import { ColumnBlockComponent } from '@/components/blocks/ColumnBlock';
 import { RowBlockComponent } from '@/components/blocks/RowBlock';
 import type { Block, BlocksArray } from '@ons-mierloos-theater/shared/schemas/blocks';
-import type { Image } from '@ons-mierloos-theater/shared/db';
 
 interface BlockEditorProps {
   initialBlocks?: BlocksArray;
-  availableImages?: Image[];
   name?: string;
   onChange?: (blocks: BlocksArray) => void;
   allowedBlockTypes?: Block['type'][];
@@ -72,21 +70,13 @@ interface BlockEditorProps {
 
 interface SortableBlockProps {
   block: Block;
-  availableImages: Image[];
   onUpdate: (id: string, data: Partial<Block>) => void;
   onDelete: (id: string) => void;
   onMoveUp?: () => void;
   onMoveDown?: () => void;
 }
 
-function SortableBlock({
-  block,
-  availableImages,
-  onUpdate,
-  onDelete,
-  onMoveUp,
-  onMoveDown,
-}: SortableBlockProps) {
+function SortableBlock({ block, onUpdate, onDelete, onMoveUp, onMoveDown }: SortableBlockProps) {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: block.id,
@@ -118,7 +108,6 @@ function SortableBlock({
           <ImageBlockComponent
             block={block}
             mode="edit"
-            availableImages={availableImages}
             onChange={(data) => onUpdate(block.id, data)}
           />
         );
@@ -135,7 +124,6 @@ function SortableBlock({
           <GalleryBlockComponent
             block={block}
             mode="edit"
-            availableImages={availableImages}
             onChange={(data) => onUpdate(block.id, data)}
           />
         );
@@ -144,7 +132,6 @@ function SortableBlock({
           <ColumnBlockComponent
             block={block}
             mode="edit"
-            availableImages={availableImages}
             onChange={(data) => onUpdate(block.id, data)}
           />
         );
@@ -153,7 +140,6 @@ function SortableBlock({
           <RowBlockComponent
             block={block}
             mode="edit"
-            availableImages={availableImages}
             onChange={(data) => onUpdate(block.id, data)}
           />
         );
@@ -251,7 +237,6 @@ function SortableBlock({
 
 export function BlockEditor({
   initialBlocks = [],
-  availableImages = [],
   name = 'blocks',
   onChange,
   allowedBlockTypes,
@@ -380,7 +365,6 @@ export function BlockEditor({
                   <SortableBlock
                     key={block.id}
                     block={block}
-                    availableImages={availableImages}
                     onUpdate={updateBlock}
                     onDelete={deleteBlock}
                     onMoveUp={() => moveBlock(block.id, 'up')}

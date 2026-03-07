@@ -3,7 +3,7 @@
 import { useActionState } from 'react';
 import { SimpleFormField, Button, Input } from '@/components/ui';
 import { BlockEditor } from '@/components/BlockEditor';
-import { Page, Image } from '@ons-mierloos-theater/shared/db';
+import { Page } from '@ons-mierloos-theater/shared/db';
 import type { BlocksArray } from '@ons-mierloos-theater/shared/schemas/blocks';
 
 export type InitialFormValues = Partial<Page> & { blocks?: BlocksArray };
@@ -14,9 +14,8 @@ type FormAction = (prevState: FormActionResult, formData: FormData) => Promise<I
 type PageFormProps = {
   initialValues?: InitialFormValues;
   action: FormAction;
-  availableImages?: Image[];
 };
-export function PageForm({ initialValues, action, availableImages = [] }: PageFormProps) {
+export function PageForm({ initialValues, action }: PageFormProps) {
   const [, formAction] = useActionState(action, initialValues);
 
   return (
@@ -28,11 +27,7 @@ export function PageForm({ initialValues, action, availableImages = [] }: PageFo
         <Input id="slug" name="slug" defaultValue={initialValues?.slug} required />
       </SimpleFormField>
       <SimpleFormField label="Inhoud" htmlFor="blocks">
-        <BlockEditor
-          initialBlocks={initialValues?.blocks || []}
-          availableImages={availableImages}
-          name="blocks"
-        />
+        <BlockEditor initialBlocks={initialValues?.blocks || []} name="blocks" />
       </SimpleFormField>
       <div className="pt-4">
         <Button type="submit">Opslaan</Button>

@@ -33,14 +33,12 @@ export default function ShowForm({
   action,
   initial,
   availableTags = [],
-  availableImages = [],
   cancelHref = '/admin/shows',
   performancesHref,
 }: {
   action: (prevState: FormState, formData: FormData) => Promise<FormState>;
   initial?: ShowFormState;
   availableTags?: Tag[];
-  availableImages?: Array<ImageMetadata>;
   cancelHref?: string;
   performancesHref?: string;
 }) {
@@ -174,7 +172,6 @@ export default function ShowForm({
               <ImageSelector
                 label="Afbeelding"
                 selectedImageId={selectedImageId}
-                availableImages={availableImages}
                 onSelect={(imageId) => {
                   setSelectedImageId(imageId);
                   if (imageId) {
@@ -221,11 +218,7 @@ export default function ShowForm({
           <div className="sticky top-6">
             <div className="bg-white rounded-lg shadow p-6">
               <h2 className="text-lg font-semibold mb-4">Inhoud</h2>
-              <BlockEditor
-                name="blocks"
-                initialBlocks={initial?.blocks}
-                availableImages={availableImages}
-              />
+              <BlockEditor name="blocks" initialBlocks={initial?.blocks} />
             </div>
           </div>
         </div>

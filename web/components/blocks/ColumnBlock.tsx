@@ -3,7 +3,6 @@
 import { BlockEditor } from '@/components/BlockEditor';
 import { BlockRenderer } from '@/components/BlockRenderer';
 import type { ColumnBlock } from '@ons-mierloos-theater/shared/schemas/blocks';
-import type { ImageMetadata } from '@ons-mierloos-theater/shared/db';
 
 export function ColumnBlockDisplay({ block }: { block: ColumnBlock }) {
   return (
@@ -16,11 +15,10 @@ export function ColumnBlockDisplay({ block }: { block: ColumnBlock }) {
 // Edit-only component
 interface ColumnBlockEditProps {
   block: ColumnBlock;
-  availableImages: ImageMetadata[];
   onChange: (data: Partial<ColumnBlock>) => void;
 }
 
-export function ColumnBlockEdit({ block, availableImages, onChange }: ColumnBlockEditProps) {
+export function ColumnBlockEdit({ block, onChange }: ColumnBlockEditProps) {
   return (
     <div className="space-y-3">
       <div className="bg-blue-50 border border-blue-200 rounded p-4">
@@ -28,7 +26,6 @@ export function ColumnBlockEdit({ block, availableImages, onChange }: ColumnBloc
         <div className="space-y-3">
           <BlockEditor
             initialBlocks={block.children}
-            availableImages={availableImages}
             name={`${block.id}-children`}
             onChange={(children) => onChange({ children })}
             allowedBlockTypes={['text', 'image', 'youtube', 'gallery', 'row']}
@@ -41,18 +38,12 @@ export function ColumnBlockEdit({ block, availableImages, onChange }: ColumnBloc
 interface ColumnBlockComponentProps {
   block: ColumnBlock;
   mode: 'edit' | 'display';
-  availableImages?: ImageMetadata[];
   onChange?: (data: Partial<ColumnBlock>) => void;
 }
 
-export function ColumnBlockComponent({
-  block,
-  mode,
-  availableImages = [],
-  onChange,
-}: ColumnBlockComponentProps) {
+export function ColumnBlockComponent({ block, mode, onChange }: ColumnBlockComponentProps) {
   if (mode === 'display') {
     return <ColumnBlockDisplay block={block} />;
   }
-  return <ColumnBlockEdit block={block} availableImages={availableImages} onChange={onChange!} />;
+  return <ColumnBlockEdit block={block} onChange={onChange!} />;
 }

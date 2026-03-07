@@ -6,7 +6,6 @@ import { updatePage } from '@ons-mierloos-theater/shared/commands/pages';
 import { syncImageUsages } from '@ons-mierloos-theater/shared/commands/imageUsages';
 import { uploadImagesFromBlocks } from '@/lib/utils/uploadImagesFromBlocks';
 import { PageForm } from '../../page-form';
-import { getAllImages } from '@ons-mierloos-theater/shared/queries/images';
 import { blocksArraySchema } from '@ons-mierloos-theater/shared/schemas/blocks';
 import type { Page } from '@ons-mierloos-theater/shared/db';
 import type { BlocksArray } from '@ons-mierloos-theater/shared/schemas/blocks';
@@ -15,7 +14,6 @@ import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 export default async function EditPage({ params }) {
   const { id } = await params;
   const page = await getPageById(id);
-  const images = await getAllImages(0, 1000);
 
   if (!page) notFound();
 
@@ -65,7 +63,7 @@ export default async function EditPage({ params }) {
         title="Bewerk pagina"
         breadcrumbs={[{ label: "Pagina's", href: '/admin/pages' }, { label: page.title }]}
       />
-      <PageForm initialValues={page} action={handleSubmit} availableImages={images} />
+      <PageForm initialValues={page} action={handleSubmit} />
     </>
   );
 }

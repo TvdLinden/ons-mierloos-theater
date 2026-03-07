@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import * as React from 'react';
 import Image from 'next/image';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -8,7 +9,6 @@ import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ImageSelector } from '@/components/ImageSelector';
 import type { ImageBlock } from '@ons-mierloos-theater/shared/schemas/blocks';
-import type { ImageMetadata } from '@ons-mierloos-theater/shared/db';
 import { getImageUrl } from '@ons-mierloos-theater/shared/utils/image-url';
 import { ChevronDown } from 'lucide-react';
 
@@ -35,11 +35,10 @@ export function ImageBlockDisplay({ block }: { block: ImageBlock }) {
 // Edit-only component
 interface ImageBlockEditProps {
   block: ImageBlock;
-  availableImages: ImageMetadata[];
   onChange: (data: Partial<ImageBlock>) => void;
 }
 
-export function ImageBlockEdit({ block, availableImages, onChange }: ImageBlockEditProps) {
+export function ImageBlockEdit({ block, onChange }: ImageBlockEditProps) {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   return (
@@ -47,7 +46,6 @@ export function ImageBlockEdit({ block, availableImages, onChange }: ImageBlockE
       <ImageSelector
         label="Selecteer afbeelding"
         selectedImageId={block.imageId || null}
-        availableImages={availableImages}
         onSelect={(imageId) => onChange({ imageId: imageId || undefined })}
       />
 
@@ -89,18 +87,12 @@ export function ImageBlockEdit({ block, availableImages, onChange }: ImageBlockE
 interface ImageBlockComponentProps {
   block: ImageBlock;
   mode: 'edit' | 'display';
-  availableImages?: ImageMetadata[];
   onChange?: (data: Partial<ImageBlock>) => void;
 }
 
-export function ImageBlockComponent({
-  block,
-  mode,
-  availableImages = [],
-  onChange,
-}: ImageBlockComponentProps) {
+export function ImageBlockComponent({ block, mode, onChange }: ImageBlockComponentProps) {
   if (mode === 'display') {
     return <ImageBlockDisplay block={block} />;
   }
-  return <ImageBlockEdit block={block} availableImages={availableImages} onChange={onChange!} />;
+  return <ImageBlockEdit block={block} onChange={onChange!} />;
 }
