@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { OrderStatusBadge } from '@/components/ui/order-status-badge';
 import { ChevronRight, User, ShoppingBag, KeyRound } from 'lucide-react';
+import { PaymentLink } from './PaymentLink';
 
 export const metadata: Metadata = {
   title: 'Mijn Account - Ons Mierloos Theater',
@@ -117,13 +118,7 @@ export default async function AccountPage() {
                         </p>
 
                         {order.status === 'pending' && order.payments?.[0]?.providerPaymentUrl && (
-                          <a
-                            href={order.payments[0].providerPaymentUrl}
-                            onClick={(e) => e.stopPropagation()}
-                            className="inline-block mt-2 text-xs font-medium text-amber-700 underline underline-offset-2"
-                          >
-                            Betaling voltooien →
-                          </a>
+                          <PaymentLink href={order.payments[0].providerPaymentUrl} />
                         )}
                       </div>
                       <div className="flex items-center gap-4 shrink-0">
