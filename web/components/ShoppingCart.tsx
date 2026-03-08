@@ -120,7 +120,7 @@ export default function ShoppingCart({
           Totaal: €{total.toFixed(2)}
         </div>
       )}
-      {showCheckoutButton && (
+      {showCheckoutButton && items.length > 0 && (
         <Link
           href="/checkout"
           className={`block w-full px-6 py-3 rounded font-bold text-center transition-colors ${

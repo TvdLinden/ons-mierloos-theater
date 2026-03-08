@@ -1,70 +1,81 @@
 'use client';
 import Link from 'next/link';
 import { useSession, signOut } from 'next-auth/react';
-import { useState, useEffect, useRef } from 'react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { LayoutDashboard, LogOut, LogIn } from 'lucide-react';
+
+function getInitials(name?: string | null, email?: string | null): string {
+  if (name) {
+    const parts = name.trim().split(/\s+/);
+    return parts.length >= 2
+      ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+      : parts[0].substring(0, 2).toUpperCase();
+  }
+  return email ? email[0].toUpperCase() : '?';
+}
 
 export default function AccountMenu() {
   const { data: session } = useSession();
-  const [open, setOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  // Close menu when clicking outside
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setOpen(false);
-      }
-    }
-
-    if (open) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
-    }
-  }, [open]);
 
   if (!session) {
     return (
-      <Link href="/auth/signin" className="text-secondary hover:text-secondary px-3 font-medium">
-        Sign In
+      <Link
+        href="/auth/signin"
+        className="flex items-center gap-1.5 text-sm font-medium text-gray-700 hover:text-primary transition-colors"
+      >
+        <LogIn className="size-4" />
+        Inloggen
       </Link>
     );
   }
+
+  const initials = getInitials(session.user?.name, session.user?.email);
+
   return (
-    <div className="relative" ref={menuRef}>
-      <button
-        className="text-secondary hover:text-secondary px-3 font-medium"
-        onClick={() => setOpen(!open)}
-        aria-label="Open account menu"
-      >
-        Account
-      </button>
-      {open && (
-        <div className="absolute right-0 mt-2 w-48 bg-surface dark:bg-accent rounded shadow z-50">
-          <div className="p-4 border-b border-zinc-200 dark:border-zinc-700">
-            <div className="font-bold">{session.user?.name || session.user?.email}</div>
-            <div className="text-xs text-accent">{session.user?.email}</div>
-          </div>
-          <ul className="py-2">
-            <li>
-              <Link
-                href="/account"
-                className="block px-4 py-2 hover:bg-surface dark:hover:bg-accent"
-                onClick={() => setOpen(false)}
-              >
-                Account Dashboard
-              </Link>
-            </li>
-            <li>
-              <button
-                onClick={() => signOut()}
-                className="block w-full text-left px-4 py-2 hover:bg-surface dark:hover:bg-accent text-primary"
-              >
-                Sign Out
-              </button>
-            </li>
-          </ul>
-        </div>
-      )}
-    </div>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          className="flex items-center gap-2 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          aria-label="Open account menu"
+        >
+          <Avatar className="size-8">
+            <AvatarFallback className="text-xs font-semibold bg-primary/10 text-primary">
+              {initials}
+            </AvatarFallback>
+          </Avatar>
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-52">
+        <DropdownMenuLabel className="font-normal">
+          <p className="font-semibold text-sm truncate">{session.user?.name || session.user?.email}</p>
+          {session.user?.name && (
+            <p className="text-xs text-muted-foreground truncate">{session.user?.email}</p>
+          )}
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+          <Link href="/account" className="flex items-center gap-2 cursor-pointer">
+            <LayoutDashboard className="size-4" />
+            Mijn account
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          className="flex items-center gap-2 text-destructive focus:text-destructive cursor-pointer"
+          onClick={() => signOut()}
+        >
+          <LogOut className="size-4" />
+          Uitloggen
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

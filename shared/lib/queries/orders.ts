@@ -1,5 +1,5 @@
 import { db } from '../db';
-import { orders, lineItems, performances, shows } from '../db/schema';
+import { orders, lineItems, performances, shows, tickets } from '../db/schema';
 import { desc, eq, sql } from 'drizzle-orm';
 
 /**
@@ -44,6 +44,7 @@ export async function getOrderById(orderId: string) {
               show: true,
             },
           },
+          tickets: true,
         },
       },
       payments: true,
@@ -119,6 +120,27 @@ export async function getUserOrders(userId: string) {
         },
       },
       payments: true,
+    },
+  });
+}
+
+/**
+ * Get a single ticket by ID with order and performance data
+ */
+export async function getTicketById(ticketId: string) {
+  return db.query.tickets.findFirst({
+    where: eq(tickets.id, ticketId),
+    with: {
+      order: true,
+      performance: {
+        with: {
+          show: {
+            with: {
+              image: true,
+            },
+          },
+        },
+      },
     },
   });
 }

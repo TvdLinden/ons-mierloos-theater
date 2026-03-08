@@ -7,6 +7,7 @@ import { getOrderById } from '@ons-mierloos-theater/shared/queries/orders';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { DataTable, EmptyRow } from '@/components/admin/DataTable';
 import { StatCard } from '@/components/admin/StatCard';
+import { OrderStatusBadge, PaymentStatusBadge } from '@/components/ui/order-status-badge';
 
 interface OrderDetailPageProps {
   params: Promise<{ id: string }>;
@@ -23,17 +24,6 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
     notFound();
   }
 
-  const statusLabel = {
-    paid: { label: 'Betaald', color: 'bg-green-100 text-green-800' },
-    pending: { label: 'In Behandeling', color: 'bg-yellow-100 text-yellow-800' },
-    failed: { label: 'Mislukt', color: 'bg-red-100 text-red-800' },
-    cancelled: { label: 'Geannuleerd', color: 'bg-zinc-100 text-zinc-800' },
-  };
-
-  const status = statusLabel[order.status as keyof typeof statusLabel] || {
-    label: order.status,
-    color: 'bg-zinc-100 text-zinc-800',
-  };
 
   return (
     <>
@@ -43,13 +33,7 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
           { label: 'Verkopen', href: '/admin/sales' },
           { label: `Bestelling ${order.id.substring(0, 8)}...` },
         ]}
-        action={
-          <span
-            className={`inline-flex px-3 py-1 text-sm font-semibold rounded-full ${status.color}`}
-          >
-            {status.label}
-          </span>
-        }
+        action={<OrderStatusBadge status={order.status} />}
       />
 
       {/* Order Stats */}
@@ -57,7 +41,7 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
         <StatCard label="Bestelnummer" value={order.id.substring(0, 8) + '...'} />
         <StatCard label="Totaal" value={`€${order.totalAmount}`} />
         <StatCard label="Aantal Items" value={order.lineItems.length} />
-        <StatCard label="Status" value={status.label} />
+        <StatCard label="Status" value={order.status} />
       </div>
 
       {/* Customer Information & Order Details */}
@@ -194,21 +178,7 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
                   <span className="capitalize font-medium">{payment.paymentMethod}</span>
                 </td>
                 <td className="px-6 py-4">
-                  <span
-                    className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                      payment.status === 'succeeded'
-                        ? 'bg-green-100 text-green-800'
-                        : payment.status === 'pending'
-                          ? 'bg-yellow-100 text-yellow-800'
-                          : 'bg-red-100 text-red-800'
-                    }`}
-                  >
-                    {payment.status === 'succeeded'
-                      ? 'Geslaagd'
-                      : payment.status === 'pending'
-                        ? 'In Behandeling'
-                        : 'Mislukt'}
-                  </span>
+                  <PaymentStatusBadge status={payment.status} />
                 </td>
                 <td className="px-6 py-4 font-bold text-primary">€{payment.amount}</td>
                 <td className="px-6 py-4 text-sm text-zinc-600">

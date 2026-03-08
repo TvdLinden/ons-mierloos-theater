@@ -3,7 +3,9 @@ import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Button, Input, SimpleFormField as FormField, Alert } from '@/components/ui';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Link from 'next/link';
+import { ChevronLeft, User } from 'lucide-react';
 
 export default function EditProfilePage() {
   const { data: session, update } = useSession();
@@ -46,7 +48,6 @@ export default function EditProfilePage() {
         setSuccess('Profiel succesvol bijgewerkt!');
       }
 
-      // Update session data
       await update({
         ...session,
         user: {
@@ -67,51 +68,68 @@ export default function EditProfilePage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-12 max-w-2xl">
-      <div className="mb-6">
-        <Link href="/account" className="text-primary hover:underline">
-          ← Terug naar account
+    <div className="min-h-screen bg-muted/30">
+      <div className="container mx-auto px-4 py-12 max-w-2xl">
+
+        <Link href="/account">
+          <Button variant="ghost" size="sm" className="mb-6 -ml-2 text-muted-foreground hover:text-foreground">
+            <ChevronLeft className="mr-1 h-4 w-4" />
+            Terug naar account
+          </Button>
         </Link>
-      </div>
 
-      <div className="bg-surface rounded-lg shadow-md p-8">
-        <h1 className="text-3xl font-bold mb-6 text-text-primary font-display">Profiel bewerken</h1>
+        <div className="mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Profiel bewerken</h1>
+          <p className="text-muted-foreground mt-1">Pas je naam en e-mailadres aan</p>
+        </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <FormField label="Naam" htmlFor="name" required>
-            <Input
-              id="name"
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
-          </FormField>
+        <Card className="border-0 shadow-sm bg-white">
+          <CardHeader className="pb-3 border-b">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <span className="inline-flex items-center justify-center size-7 rounded-lg bg-muted">
+                <User className="size-4 text-muted-foreground" />
+              </span>
+              Gegevens
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <FormField label="Naam" htmlFor="name" required>
+                <Input
+                  id="name"
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                />
+              </FormField>
 
-          <FormField label="E-mailadres" htmlFor="email" required>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </FormField>
+              <FormField label="E-mailadres" htmlFor="email" required>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </FormField>
 
-          {error && <Alert variant="destructive">{error}</Alert>}
-          {success && <Alert variant="success">{success}</Alert>}
+              {error && <Alert variant="destructive">{error}</Alert>}
+              {success && <Alert variant="success">{success}</Alert>}
 
-          <div className="flex gap-4">
-            <Button type="submit" disabled={loading}>
-              {loading ? 'Opslaan...' : 'Profiel opslaan'}
-            </Button>
-            <Link href="/account">
-              <Button type="button" variant="secondary">
-                Annuleren
-              </Button>
-            </Link>
-          </div>
-        </form>
+              <div className="flex gap-3 pt-2">
+                <Button type="submit" disabled={loading}>
+                  {loading ? 'Opslaan...' : 'Opslaan'}
+                </Button>
+                <Link href="/account">
+                  <Button type="button" variant="outline">
+                    Annuleren
+                  </Button>
+                </Link>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

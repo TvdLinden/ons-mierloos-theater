@@ -25,11 +25,11 @@ export default function FeaturedShowCard({ show }: FeaturedShowCardProps) {
   return (
     <Link
       href={`/voorstellingen/${slug}`}
-      className="group block"
+      className="group block h-full"
       data-component="featured-show-card"
     >
       <div
-        className="bg-surface border border-border rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2"
+        className="bg-surface border border-border rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 h-full flex flex-col"
         data-element="card"
       >
         {/* Thumbnail */}
@@ -45,7 +45,7 @@ export default function FeaturedShowCard({ show }: FeaturedShowCardProps) {
         </div>
 
         {/* Content */}
-        <div className="p-4">
+        <div className="p-4 flex flex-col flex-1">
           <h3 className="text-lg font-semibold text-primary line-clamp-1 group-hover:text-primary/80 transition-colors">
             {title}
           </h3>
@@ -69,7 +69,7 @@ export default function FeaturedShowCard({ show }: FeaturedShowCardProps) {
 
           {/* Price */}
           {price && (
-            <p className="text-primary font-semibold mt-2">
+            <p className="text-primary font-semibold mt-auto pt-2">
               <span className="text-xs text-textSecondary">vanaf </span>
               <span className="text-lg">€{price}</span>
             </p>

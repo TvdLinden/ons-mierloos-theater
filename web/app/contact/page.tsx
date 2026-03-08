@@ -1,5 +1,7 @@
 import { Button, Input, Label, Textarea } from '@/components/ui';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Metadata } from 'next';
+import { MapPin, Mail, Globe, Facebook, Instagram } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'Contact - Ons Mierloos Theater',
@@ -8,148 +10,137 @@ export const metadata: Metadata = {
 
 export default function ContactPage() {
   return (
-    <div className="container mx-auto px-4 py-12 max-w-4xl">
-      <h1 className="text-4xl font-bold mb-8 text-text-primary">Contact</h1>
+    <div className="min-h-screen bg-muted/30">
+      <div className="container mx-auto px-4 py-12 max-w-5xl">
 
-      <div className="grid md:grid-cols-2 gap-8">
-        {/* Contact Information */}
-        <div className="space-y-6">
-          <div>
-            <h2 className="text-2xl font-semibold mb-4 text-text-primary">Informatie</h2>
-            <div className="space-y-3 text-text-secondary">
-              <div>
-                <h3 className="font-medium text-text-primary">Adres</h3>
-                <p>Ons Mierloos Theater</p>
-                <p>Heer van Scherpenzeelweg 14</p>
-                <p>5731 EW Mierlo</p>
+        <div className="mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Contact</h1>
+          <p className="text-muted-foreground mt-1">Neem contact op met Ons Mierloos Theater</p>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-6 mb-6">
+          {/* Contact info */}
+          <Card className="border-0 shadow-sm bg-white">
+            <CardHeader className="pb-3 border-b">
+              <CardTitle className="text-base">Informatie</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-5 space-y-5">
+              <div className="flex gap-3">
+                <MapPin className="size-4 text-muted-foreground shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium mb-0.5">Adres</p>
+                  <p className="text-sm text-muted-foreground">Heer van Scherpenzeelweg 14</p>
+                  <p className="text-sm text-muted-foreground">5731 EW Mierlo</p>
+                </div>
               </div>
 
-              <div>
-                <h3 className="font-medium text-text-primary">Email</h3>
-                <p>
+              <div className="flex gap-3">
+                <Mail className="size-4 text-muted-foreground shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium mb-0.5">E-mail</p>
                   <a
                     href="mailto:info@onsmierloostheater.nl"
-                    className="text-primary hover:underline"
+                    className="text-sm text-primary hover:underline"
                   >
                     info@onsmierloostheater.nl
                   </a>
-                </p>
+                </div>
               </div>
 
-              <div>
-                <h3 className="font-medium text-text-primary">Website</h3>
-                <p>
+              <div className="flex gap-3">
+                <Globe className="size-4 text-muted-foreground shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium mb-0.5">Website</p>
                   <a
                     href="https://onsmierloostheater.nl"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-primary hover:underline"
+                    className="text-sm text-primary hover:underline"
                   >
                     www.onsmierloostheater.nl
                   </a>
-                </p>
+                </div>
               </div>
 
-              <div>
-                <h3 className="font-medium text-text-primary">Social Media</h3>
-                <div className="flex gap-4 mt-2">
+              <div className="pt-1 border-t">
+                <p className="text-sm font-medium mb-3">Social media</p>
+                <div className="flex gap-3">
                   <a
                     href="https://www.facebook.com/onsmierloostheater"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-primary hover:underline"
+                    className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors"
                   >
+                    <Facebook className="size-4" />
                     Facebook
                   </a>
                   <a
                     href="https://instagram.com/onsmierloostheater"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-primary hover:underline"
+                    className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors"
                   >
+                    <Instagram className="size-4" />
                     Instagram
                   </a>
                 </div>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
+
+          {/* Contact form */}
+          <Card className="border-0 shadow-sm bg-white">
+            <CardHeader className="pb-3 border-b">
+              <CardTitle className="text-base">Stuur ons een bericht</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-5">
+              <form className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="name" className="text-sm font-medium">Naam *</Label>
+                    <Input id="name" name="name" type="text" required />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="email" className="text-sm font-medium">E-mail *</Label>
+                    <Input id="email" name="email" type="email" required />
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="subject" className="text-sm font-medium">Onderwerp *</Label>
+                  <Input id="subject" name="subject" type="text" required />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="message" className="text-sm font-medium">Bericht *</Label>
+                  <Textarea id="message" name="message" rows={5} required />
+                </div>
+                <Button type="submit" className="w-full">
+                  Verstuur bericht
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Contact Form */}
-        <div>
-          <h2 className="text-2xl font-semibold mb-4 text-text-primary">Stuur ons een bericht</h2>
-          <form className="space-y-4">
-            <div>
-              <Label htmlFor="name" className="block text-sm font-medium text-text-primary mb-1">
-                Naam *
-              </Label>
-              <Input
-                type="text"
-                id="name"
-                name="name"
-                required
-                className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-              />
-            </div>
+        {/* Map */}
+        <Card className="border-0 shadow-sm bg-white overflow-hidden">
+          <CardHeader className="pb-3 border-b">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <MapPin className="size-4 text-muted-foreground" />
+              Locatie
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <iframe
+              src="https://www.openstreetmap.org/export/embed.html?bbox=5.6117%2C51.4297%2C5.6417%2C51.4497&layer=mapnik&marker=51.4397%2C5.6267"
+              width="100%"
+              height="400"
+              style={{ border: 0, display: 'block' }}
+              loading="lazy"
+              title="Locatie Ons Mierloos Theater"
+            />
+          </CardContent>
+        </Card>
 
-            <div>
-              <Label htmlFor="email" className="block text-sm font-medium text-text-primary mb-1">
-                Email *
-              </Label>
-              <Input
-                type="email"
-                id="email"
-                name="email"
-                required
-                className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="subject" className="block text-sm font-medium text-text-primary mb-1">
-                Onderwerp *
-              </Label>
-              <Input
-                type="text"
-                id="subject"
-                name="subject"
-                required
-                className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="message" className="block text-sm font-medium text-text-primary mb-1">
-                Bericht *
-              </Label>
-              <Textarea
-                id="message"
-                name="message"
-                rows={5}
-                required
-                // className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
-              />
-            </div>
-
-            <Button
-              type="submit"
-              variant="default"
-              className="w-full"
-              // className="w-full bg-primary text-white py-3 px-6 rounded-lg hover:bg-opacity-90 transition-colors font-medium"
-            >
-              Verstuur bericht
-            </Button>
-          </form>
-        </div>
-      </div>
-
-      {/* Map Section */}
-      <div className="mt-12">
-        <h2 className="text-2xl font-semibold mb-4 text-text-primary">Locatie</h2>
-        <div className="bg-muted rounded-lg h-96 flex items-center justify-center text-text-secondary">
-          {/* Placeholder for map - you can integrate Google Maps or similar */}
-          <p>Google Maps integratie</p>
-        </div>
       </div>
     </div>
   );
