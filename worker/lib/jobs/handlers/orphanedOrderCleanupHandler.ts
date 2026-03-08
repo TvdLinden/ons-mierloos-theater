@@ -7,7 +7,7 @@ import {
   coupons,
   couponUsages,
 } from '@ons-mierloos-theater/shared/db/schema';
-import { eq, and, lt, sql, isNull } from 'drizzle-orm';
+import { eq, and, lt, sql, inArray } from 'drizzle-orm';
 
 export interface OrphanedOrderCleanupJobData {
   olderThanHours?: number; // Default: 24 hours
@@ -28,22 +28,45 @@ export async function handleOrphanedOrderCleanup(
 ): Promise<{ ordersProcessed: number; seatsReleased: number; couponsReleased: number }> {
   const olderThanHours = data.olderThanHours || 24;
 
-  console.log(`[ORPHANED_CLEANUP] Starting cleanup for orders older than ${olderThanHours}h`);
+  console.log(
+    `[ORPHANED_CLEANUP] Starting cleanup for orders older than ${olderThanHours}h or with expired performances`,
+  );
 
-  const cutoffDate = new Date();
+  const now = new Date();
+  const cutoffDate = new Date(now);
   cutoffDate.setHours(cutoffDate.getHours() - olderThanHours);
 
-  // Find orders that are:
-  // 1. Status = 'pending'
-  // 2. Created > X hours ago
-  // 3. Either have no payment, or payment is pending/failed
-  const orphanedOrders = await db.query.orders.findMany({
+  // Find pending order IDs where at least one line item's performance date is in the past
+  const expiredPerfRows = await db
+    .selectDistinct({ orderId: lineItems.orderId })
+    .from(lineItems)
+    .innerJoin(performances, eq(lineItems.performanceId, performances.id))
+    .innerJoin(orders, and(eq(lineItems.orderId, orders.id), eq(orders.status, 'pending')))
+    .where(lt(performances.date, now));
+  const expiredPerfOrderIds = expiredPerfRows.map((r) => r.orderId).filter(Boolean) as string[];
+
+  // Find pending orders that are either:
+  // 1. Created > X hours ago (time-based orphan)
+  // 2. Have a line item for a performance that has already passed
+  const timeBasedOrders = await db.query.orders.findMany({
     where: and(eq(orders.status, 'pending'), lt(orders.createdAt, cutoffDate)),
-    with: {
-      payments: true,
-      lineItems: true,
-      couponUsages: true,
-    },
+    with: { payments: true, lineItems: true, couponUsages: true },
+  });
+
+  const expiredPerfOrders =
+    expiredPerfOrderIds.length > 0
+      ? await db.query.orders.findMany({
+          where: and(eq(orders.status, 'pending'), inArray(orders.id, expiredPerfOrderIds)),
+          with: { payments: true, lineItems: true, couponUsages: true },
+        })
+      : [];
+
+  // Deduplicate by order ID
+  const seen = new Set<string>();
+  const orphanedOrders = [...timeBasedOrders, ...expiredPerfOrders].filter((o) => {
+    if (seen.has(o.id)) return false;
+    seen.add(o.id);
+    return true;
   });
 
   if (orphanedOrders.length === 0) {
@@ -53,6 +76,7 @@ export async function handleOrphanedOrderCleanup(
 
   console.log(`[ORPHANED_CLEANUP] Found ${orphanedOrders.length} orphaned orders`);
 
+  let ordersProcessed = 0;
   let totalSeatsReleased = 0;
   let totalCouponsReleased = 0;
 
@@ -83,6 +107,8 @@ export async function handleOrphanedOrderCleanup(
           }
 
           for (const [perfId, quantity] of performanceGroups.entries()) {
+            // For past performances this has no practical effect on sales,
+            // but keeps availableSeats consistent with reality.
             await tx.execute(
               sql`
                 UPDATE ${performances}
@@ -138,6 +164,7 @@ export async function handleOrphanedOrderCleanup(
           }
         }
 
+        ordersProcessed++;
         console.log(`✅ Cleaned up orphaned order ${order.id}`);
       });
     } catch (error) {
@@ -147,11 +174,11 @@ export async function handleOrphanedOrderCleanup(
   }
 
   console.log(
-    `✅ [ORPHANED_CLEANUP] Complete: ${orphanedOrders.length} orders, ${totalSeatsReleased} seats, ${totalCouponsReleased} coupons`,
+    `✅ [ORPHANED_CLEANUP] Complete: ${ordersProcessed}/${orphanedOrders.length} orders, ${totalSeatsReleased} seats, ${totalCouponsReleased} coupons`,
   );
 
   return {
-    ordersProcessed: orphanedOrders.length,
+    ordersProcessed,
     seatsReleased: totalSeatsReleased,
     couponsReleased: totalCouponsReleased,
   };
