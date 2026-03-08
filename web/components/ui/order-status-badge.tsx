@@ -1,4 +1,4 @@
-import { cva, type VariantProps } from 'class-variance-authority';
+import { cva } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
 const orderStatusVariants = cva(
@@ -44,7 +44,7 @@ const STATUS_LABELS: Record<string, string> = {
 
 type OrderStatus = 'paid' | 'pending' | 'failed' | 'cancelled' | 'refunded';
 
-interface OrderStatusBadgeProps extends VariantProps<typeof orderStatusVariants> {
+interface OrderStatusBadgeProps {
   status: string;
   showDot?: boolean;
   className?: string;
