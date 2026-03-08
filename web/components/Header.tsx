@@ -7,6 +7,18 @@ import { useState, useEffect, useRef } from 'react';
 import AccountMenu from '@/components/AccountMenu';
 import { useSession, signOut } from 'next-auth/react';
 import type { NavigationLink } from '@ons-mierloos-theater/shared/db';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { LayoutDashboard, LogOut, LogIn } from 'lucide-react';
+
+function getInitials(name?: string | null, email?: string | null): string {
+  if (name) {
+    const parts = name.trim().split(/\s+/);
+    return parts.length >= 2
+      ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+      : parts[0].substring(0, 2).toUpperCase();
+  }
+  return email ? email[0].toUpperCase() : '?';
+}
 
 type HeaderProps = {
   navigationLinks?: NavigationLink[];
@@ -200,34 +212,49 @@ export default function Header({ navigationLinks = [] }: HeaderProps) {
                 )}
               </Link>
             </div>
-            {session ? (
-              <>
+            <div className="border-t border-gray-200 mt-2 pt-2">
+              {session ? (
+                <>
+                  <div className="flex items-center gap-3 px-6 py-3">
+                    <Avatar className="size-8 shrink-0">
+                      <AvatarFallback className="text-xs font-semibold bg-primary/10 text-primary">
+                        {getInitials(session.user?.name, session.user?.email)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold truncate">{session.user?.name || session.user?.email}</p>
+                      {session.user?.name && (
+                        <p className="text-xs text-gray-500 truncate">{session.user?.email}</p>
+                      )}
+                    </div>
+                  </div>
+                  <Link
+                    href="/account"
+                    className="flex items-center gap-2 text-gray-800 hover:text-primary px-6 py-3 font-medium"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <LayoutDashboard className="size-4" />
+                    Mijn account
+                  </Link>
+                  <button
+                    onClick={() => { setMobileMenuOpen(false); signOut(); }}
+                    className="flex items-center gap-2 w-full text-left text-red-600 hover:text-red-700 px-6 py-3 font-medium"
+                  >
+                    <LogOut className="size-4" />
+                    Uitloggen
+                  </button>
+                </>
+              ) : (
                 <Link
-                  href="/account"
-                  className="text-gray-800 hover:text-primary px-6 py-3 font-medium"
+                  href="/auth/signin"
+                  className="flex items-center gap-2 text-gray-800 hover:text-primary px-6 py-3 font-medium"
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  Mijn Account
+                  <LogIn className="size-4" />
+                  Inloggen
                 </Link>
-                <button
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    signOut();
-                  }}
-                  className="text-gray-800 hover:text-primary px-6 py-3 font-medium text-left"
-                >
-                  Uitloggen
-                </button>
-              </>
-            ) : (
-              <Link
-                href="/auth/signin"
-                className="text-gray-800 hover:text-primary px-6 py-3 font-medium"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Inloggen
-              </Link>
-            )}
+              )}
+            </div>
           </nav>
         </div>
       )}
