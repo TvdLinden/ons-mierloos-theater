@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { ImageIcon, X } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui';
 import { getFocalPointStyle } from '@ons-mierloos-theater/shared/utils/focalPoints';
-import type { Image as ImageType } from '@ons-mierloos-theater/shared/db';
+import type { Image as ImageType, FocalPointContext } from '@ons-mierloos-theater/shared/db';
 import {
   Pagination,
   PaginationContent,
@@ -24,7 +24,7 @@ interface ImageSelectorProps {
   onSelect: (imageId: string | null) => void;
   imageSize?: 'small' | 'medium' | 'large';
   imagesPerPage?: number;
-  focalPointContext?: 'hero' | 'card' | 'carousel' | 'thumbnail' | 'gallery';
+  focalPointContext?: FocalPointContext;
 }
 
 export function ImageSelector({
@@ -33,7 +33,7 @@ export function ImageSelector({
   onSelect,
   imageSize = 'medium',
   imagesPerPage = 12,
-  focalPointContext = 'thumbnail',
+  focalPointContext = '4:3' as FocalPointContext,
 }: ImageSelectorProps) {
   const [showPicker, setShowPicker] = useState(false);
   const [availableImages, setAvailableImages] = useState<Partial<ImageType>[]>([]);

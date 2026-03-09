@@ -167,7 +167,7 @@ async function NewsArticlePage({ params }: Props) {
             priority
             className="object-cover"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 1200px"
-            style={getFocalPointStyle(article.image?.focalPoints, 'hero')}
+            style={getFocalPointStyle(article.image?.focalPoints, '16:7')}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
         </div>

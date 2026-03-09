@@ -95,7 +95,7 @@ export function GalleryBlockDisplay({ block, images = [] }: GalleryBlockDisplayP
                     width={width}
                     height={height}
                     className="object-cover rounded"
-                    style={getFocalPointStyle(imageData?.focalPoints as any, 'gallery')}
+                    style={getFocalPointStyle(imageData?.focalPoints as any, '16:9')}
                   />
                 </div>
               </CarouselItem>
@@ -189,7 +189,7 @@ export function GalleryBlockEdit({ block, onChange }: GalleryBlockEditProps) {
                   alt="Selected image preview"
                   fill
                   className="object-cover rounded"
-                  style={getFocalPointStyle(image.focalPoints as any, 'gallery')}
+                  style={getFocalPointStyle(image.focalPoints as any, '16:9')}
                 />
               </div>
               <button
@@ -295,7 +295,7 @@ export function GalleryBlockEdit({ block, onChange }: GalleryBlockEditProps) {
                     alt="Beschikbare afbeelding"
                     fill
                     className="object-cover rounded"
-                    style={getFocalPointStyle(image.focalPoints as any, 'gallery')}
+                    style={getFocalPointStyle(image.focalPoints as any, '16:9')}
                   />
                   {isSelected && (
                     <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">

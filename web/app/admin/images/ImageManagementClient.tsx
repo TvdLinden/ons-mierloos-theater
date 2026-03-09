@@ -296,7 +296,7 @@ export default function ImageManagementClient({
                         className="object-cover"
                         sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                         loading="lazy"
-                        style={getFocalPointStyle(image.focalPoints as any, 'thumbnail')}
+                        style={getFocalPointStyle(image.focalPoints as any, '4:3')}
                       />
                       <div className="absolute top-2 right-2 bg-background/80 backdrop-blur-sm rounded-md p-1.5">
                         <Checkbox

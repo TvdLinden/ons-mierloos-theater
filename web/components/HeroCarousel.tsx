@@ -78,7 +78,7 @@ export default function HeroCarousel({ shows, autoplayDelay = 5000 }: HeroCarous
                   sizes="100vw"
                   priority={index === 0}
                   className="object-cover"
-                  style={getFocalPointStyle(show.image?.focalPoints, 'carousel')}
+                  style={getFocalPointStyle(show.image?.focalPoints, '21:9')}
                 />
 
                 {/* Gradient Overlay */}

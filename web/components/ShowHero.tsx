@@ -26,7 +26,7 @@ export default function ShowHero({ show }: ShowHeroProps) {
             fill
             priority
             className="object-cover"
-            style={getFocalPointStyle(show.image?.focalPoints, 'hero')}
+            style={getFocalPointStyle(show.image?.focalPoints, '16:7')}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
         </>

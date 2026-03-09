@@ -108,7 +108,7 @@ export type ImageMetadata = Image;
 
 // Focal point types
 export type FocalPoint = { x: number; y: number };
-export type FocalPointContext = 'hero' | 'card' | 'carousel' | 'thumbnail' | 'gallery';
+export type FocalPointContext = '16:7' | '4:3' | '21:9' | '16:9';
 export type FocalPoints = Partial<Record<FocalPointContext, FocalPoint>>;
 
 export type CustomCodeSnippet = typeof customCodeSnippets.$inferSelect;

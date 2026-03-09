@@ -15,11 +15,10 @@ export type FocalPointEditorHandle = {
 };
 
 const FOCAL_POINT_CONTEXTS = [
-  { key: 'hero' as const, label: 'Hero', ratio: 16 / 7 },
-  { key: 'card' as const, label: 'Kaart', ratio: 4 / 3 },
-  { key: 'carousel' as const, label: 'Carousel', ratio: 21 / 9 },
-  { key: 'thumbnail' as const, label: 'Miniatuur', ratio: 4 / 3 },
-  { key: 'gallery' as const, label: 'Galerij', ratio: 16 / 9 },
+  { key: '16:7' as const, label: '16:7', ratio: 16 / 7 },
+  { key: '4:3' as const, label: '4:3', ratio: 4 / 3 },
+  { key: '21:9' as const, label: '21:9', ratio: 21 / 9 },
+  { key: '16:9' as const, label: '16:9', ratio: 16 / 9 },
 ];
 
 type Props = {
@@ -31,7 +30,7 @@ type Props = {
 
 const FocalPointEditor = forwardRef<FocalPointEditorHandle, Props>(
   ({ image, onClose, onSave, isSaving = false }, ref) => {
-    const [activeTab, setActiveTab] = useState<FocalPointContext>('hero');
+    const [activeTab, setActiveTab] = useState<FocalPointContext>('16:7');
     const [localPoints, setLocalPoints] = useState<FocalPoints>(
       (image.focalPoints as FocalPoints) ?? {},
     );
@@ -70,7 +69,7 @@ const FocalPointEditor = forwardRef<FocalPointEditorHandle, Props>(
     return (
       <div className="space-y-4">
         <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as FocalPointContext)}>
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-4">
             {FOCAL_POINT_CONTEXTS.map((ctx) => (
               <TabsTrigger key={ctx.key} value={ctx.key} className="text-xs">
                 {ctx.label}
@@ -131,7 +130,7 @@ const FocalPointEditor = forwardRef<FocalPointEditorHandle, Props>(
 
               {/* Live preview (1/3 width) */}
               <div className="flex flex-col gap-2">
-                <p className="text-sm font-medium">{ctx.label} voorvertoning</p>
+                <p className="text-sm font-medium">Voorvertoning {ctx.label}</p>
                 <div
                   className="border-2 border-primary/50 rounded bg-muted overflow-hidden"
                   style={{
@@ -145,17 +144,13 @@ const FocalPointEditor = forwardRef<FocalPointEditorHandle, Props>(
                     backgroundRepeat: 'no-repeat',
                   }}
                 />
-                <p className="text-xs text-muted-foreground text-center">
-                  {ctx.ratio.toFixed(2)}:1
-                  {currentFocalPoint && (
-                    <>
-                      <br />
-                      <span className="text-primary/70">
-                        ({currentFocalPoint.x.toFixed(0)}%, {currentFocalPoint.y.toFixed(0)}%)
-                      </span>
-                    </>
-                  )}
-                </p>
+                {currentFocalPoint && (
+                  <p className="text-xs text-muted-foreground text-center">
+                    <span className="text-primary/70">
+                      ({currentFocalPoint.x.toFixed(0)}%, {currentFocalPoint.y.toFixed(0)}%)
+                    </span>
+                  </p>
+                )}
               </div>
             </TabsContent>
           ))}

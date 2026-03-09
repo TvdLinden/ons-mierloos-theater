@@ -40,7 +40,7 @@ export default function FeaturedShowCard({ show }: FeaturedShowCardProps) {
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
             className="object-cover transition-transform duration-300 group-hover:scale-105"
-            style={getFocalPointStyle(show.image?.focalPoints, 'card')}
+            style={getFocalPointStyle(show.image?.focalPoints, '4:3')}
           />
         </div>
 

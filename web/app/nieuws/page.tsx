@@ -85,7 +85,7 @@ export default async function NewsPage() {
                       fill
                       className="object-cover transition-transform duration-500 group-hover:scale-110"
                       sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                      style={getFocalPointStyle(article.image?.focalPoints, 'card')}
+                      style={getFocalPointStyle(article.image?.focalPoints, '4:3')}
                     />
                     {/* Overlay on Hover */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
