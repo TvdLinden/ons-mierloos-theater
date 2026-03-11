@@ -1,16 +1,16 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { ShowWithTagsAndPerformances } from '@ons-mierloos-theater/shared/db';
-import { getShowImageUrl } from '@/lib/utils/performanceImages';
+import { getShowImageUrl, ShowWithBlurData } from '@/lib/utils/performanceImages';
 import { getFocalPointStyle } from '@ons-mierloos-theater/shared/utils/focalPoints';
 import TagsContainer from './TagsContainer';
 import DateDisplay from './DateDisplay';
 
 type FeaturedShowCardProps = {
-  show: ShowWithTagsAndPerformances;
+  show: ShowWithBlurData;
 };
 
 export default function FeaturedShowCard({ show }: FeaturedShowCardProps) {
+  const { blurDataUrl } = show;
   const { title, slug, tags, performances, basePrice } = show;
   const imageUrl = getShowImageUrl(show, 'md');
 
@@ -41,6 +41,8 @@ export default function FeaturedShowCard({ show }: FeaturedShowCardProps) {
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
             className="object-cover transition-transform duration-300 group-hover:scale-105"
             style={getFocalPointStyle(show.image?.focalPoints, '4:3')}
+            placeholder={blurDataUrl ? 'blur' : 'empty'}
+            blurDataURL={blurDataUrl ?? undefined}
           />
         </div>
 

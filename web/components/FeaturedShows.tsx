@@ -1,10 +1,10 @@
 import FeaturedShowCard from '@/components/FeaturedShowCard';
 import { Button } from '@/components/ui';
 import Link from 'next/link';
-import { ShowWithTagsAndPerformances } from '@ons-mierloos-theater/shared/db';
+import { ShowWithBlurData } from '@/lib/utils/performanceImages';
 
 type FeaturedShowsProps = {
-  shows: ShowWithTagsAndPerformances[];
+  shows: ShowWithBlurData[];
   label?: string;
 };
 

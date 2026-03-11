@@ -15,6 +15,7 @@ import type { NewsArticle, Image as ImageType } from '@ons-mierloos-theater/shar
 
 type NewsArticleWithImage = NewsArticle & {
   image?: ImageType | null;
+  blurDataUrl?: string | null;
 };
 
 type HomeNewsProps = {
@@ -85,6 +86,8 @@ export default function HomeNews({ articles }: HomeNewsProps) {
                             className="object-cover transition-transform duration-600 ease-out group-hover:scale-108"
                             sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
                             style={getFocalPointStyle(article.image?.focalPoints, '4:3')}
+                            placeholder={article.blurDataUrl ? 'blur' : 'empty'}
+                            blurDataURL={article.blurDataUrl ?? undefined}
                           />
                           {/* Gradient Overlay */}
                           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent transition-opacity duration-400 group-hover:opacity-75" />

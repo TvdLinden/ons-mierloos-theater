@@ -1,4 +1,6 @@
-import { Show } from '@ons-mierloos-theater/shared/db';
+import { Show, ShowWithTagsAndPerformances } from '@ons-mierloos-theater/shared/db';
+
+export type ShowWithBlurData = ShowWithTagsAndPerformances & { blurDataUrl?: string | null };
 
 /**
  * Get the image URL for a performance's main image

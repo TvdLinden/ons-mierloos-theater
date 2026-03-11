@@ -4,7 +4,6 @@ import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import Autoplay from 'embla-carousel-autoplay';
-import { ShowWithTagsAndPerformances } from '@ons-mierloos-theater/shared/db';
 import { getShowImageUrl } from '@/lib/utils/performanceImages';
 import { getFocalPointStyle } from '@ons-mierloos-theater/shared/utils/focalPoints';
 import { Button } from '@/components/ui/button';
@@ -16,9 +15,10 @@ import {
   CarouselNext,
   type CarouselApi,
 } from '@/components/ui/carousel';
+import { ShowWithBlurData } from '@/lib/utils/performanceImages';
 
 type HeroCarouselProps = {
-  shows: ShowWithTagsAndPerformances[];
+  shows: ShowWithBlurData[];
   autoplayDelay?: number;
 };
 
@@ -79,6 +79,8 @@ export default function HeroCarousel({ shows, autoplayDelay = 5000 }: HeroCarous
                   priority={index === 0}
                   className="object-cover"
                   style={getFocalPointStyle(show.image?.focalPoints, '21:9')}
+                  placeholder={show.blurDataUrl ? 'blur' : 'empty'}
+                  blurDataURL={show.blurDataUrl ?? undefined}
                 />
 
                 {/* Gradient Overlay */}

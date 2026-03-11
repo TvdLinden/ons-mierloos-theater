@@ -6,6 +6,8 @@ import HeroIntro from '@/components/HeroIntro';
 import FeaturedShows from '@/components/FeaturedShows';
 import NewsletterSection from '@/components/NewsletterSection';
 import HomeNews from '@/components/HomeNews';
+import { cacheLife, cacheTag } from 'next/cache';
+import { getImageFromR2 } from '@ons-mierloos-theater/shared/utils/r2ImageStorage';
 
 export const metadata: Metadata = {
   title: 'Home | Ons Mierloos Theater',
@@ -22,6 +24,29 @@ export const metadata: Metadata = {
     description: 'Cultuur en theater in Mierlo',
   },
 };
+
+async function getImageBlurDataUrl(id: string, r2Url: string): Promise<string | null> {
+  'use cache';
+  cacheLife('max');
+  cacheTag(`blur-${id}`);
+
+  try {
+    const { default: sharp } = await import('sharp');
+    const { stream } = await getImageFromR2(r2Url);
+    const chunks: Buffer[] = [];
+    for await (const chunk of stream) {
+      chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+    }
+    const blurBuffer = await sharp(Buffer.concat(chunks))
+      .resize(8)
+      .jpeg({ quality: 10 })
+      .toBuffer();
+    return `data:image/jpeg;base64,${blurBuffer.toString('base64')}`;
+  } catch (e) {
+    console.error(`[blur] ${id} failed:`, e);
+    return null;
+  }
+}
 
 export default async function HomePage() {
   const results = await Promise.all([
@@ -47,13 +72,37 @@ export default async function HomePage() {
   // Determine the label based on whether we're showing upcoming or recently passed shows
   const sectionLabel = isShowingRecentlyPassed ? 'Pas gespeeld' : 'Uitgelicht';
 
+  // Enrich shows and news articles with blur data URLs in parallel
+  const [featuredShowsWithBlur, newsArticlesWithBlur] = await Promise.all([
+    Promise.all(
+      featuredShows.map(async (show) => ({
+        ...show,
+        blurDataUrl:
+          show.imageId && show.image?.r2Url
+            ? await getImageBlurDataUrl(show.imageId, show.image.r2Url)
+            : null,
+      })),
+    ),
+    Promise.all(
+      newsArticles.map(async (article) => ({
+        ...article,
+        blurDataUrl:
+          article.imageId && article.image?.r2Url
+            ? await getImageBlurDataUrl(article.imageId, article.image.r2Url)
+            : null,
+      })),
+    ),
+  ]);
+
+  const heroShowsWithBlur = featuredShowsWithBlur.filter((s) => s.imageId).slice(0, 4);
+
   return (
     <div
       className="flex min-h-screen flex-col bg-linear-to-bb from-background via-primary/5 to-background"
       data-section="homepage"
     >
       {/* Hero Carousel - Full width */}
-      <HeroCarousel shows={heroShows} />
+      <HeroCarousel shows={heroShowsWithBlur} />
 
       {/* Hero Intro - Floating overlay on carousel */}
       {/* <HeroIntro introText={homepageContent?.introText} /> */}
@@ -61,7 +110,7 @@ export default async function HomePage() {
       <main className="grow w-full max-w-7xl flex-col items-center justify-between py-8 px-8 mx-auto sm:items-start">
         {/* Featured Shows or Empty State */}
         {shows.length > 0 ? (
-          <FeaturedShows shows={featuredShows} label={sectionLabel} />
+          <FeaturedShows shows={featuredShowsWithBlur} label={sectionLabel} />
         ) : (
           <section className="w-full text-center py-16">
             <h2 className="text-4xl md:text-5xl font-bold text-primary mb-4">Uitgelicht</h2>
@@ -75,7 +124,7 @@ export default async function HomePage() {
         <NewsletterSection />
 
         {/* News Articles */}
-        {newsArticles.length > 0 && <HomeNews articles={newsArticles} />}
+        {newsArticlesWithBlur.length > 0 && <HomeNews articles={newsArticlesWithBlur} />}
       </main>
     </div>
   );
