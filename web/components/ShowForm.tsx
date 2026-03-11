@@ -182,7 +182,6 @@ export default function ShowForm({
                     }
                   }
                 }}
-                imageSize="medium"
               />
               <input type="hidden" name="imageId" value={selectedImageId || ''} />
               {availableTags.length > 0 && (

@@ -130,7 +130,6 @@ export function SiteSettingsForm({ initialData }: SiteSettingsFormProps) {
           label="Logo"
           selectedImageId={formData.logoImageId}
           onSelect={(id) => setFormData({ ...formData, logoImageId: id })}
-          imageSize="medium"
         />
       </div>
 
