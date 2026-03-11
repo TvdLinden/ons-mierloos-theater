@@ -1,15 +1,16 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import * as React from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { NumberInput } from '@/components/ui/number-input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ImageIcon, X, ChevronDown } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
+import { ImageSelector } from '@/components/ImageSelector';
 import {
   Carousel,
   CarouselContent,
@@ -122,88 +123,18 @@ interface GalleryBlockEditProps {
 }
 
 export function GalleryBlockEdit({ block, onChange }: GalleryBlockEditProps) {
-  const [showPicker, setShowPicker] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [availableImages, setAvailableImages] = useState<ImageMetadata[]>([]);
-  const [isLoadingImages, setIsLoadingImages] = useState(false);
-
-  // Fetch images on mount
-  React.useEffect(() => {
-    const fetchImages = async () => {
-      setIsLoadingImages(true);
-      try {
-        const response = await fetch('/api/images');
-        if (response.ok) {
-          const data = await response.json();
-          setAvailableImages(data.images || []);
-        }
-      } catch (error) {
-        console.error('Failed to fetch images:', error);
-      } finally {
-        setIsLoadingImages(false);
-      }
-    };
-
-    fetchImages();
-  }, []);
-
-  const selectedImages = availableImages.filter((img) => block.imageIds.includes(img.id));
-
-  const handleToggleImage = (imageId: string) => {
-    const currentIds = block.imageIds || [];
-    const newIds = currentIds.includes(imageId)
-      ? currentIds.filter((id) => id !== imageId)
-      : currentIds.length < 10
-        ? [...currentIds, imageId]
-        : currentIds;
-    onChange({ imageIds: newIds });
-  };
-
-  const handleRemoveImage = (imageId: string) => {
-    onChange({ imageIds: block.imageIds.filter((id) => id !== imageId) });
-  };
 
   return (
     <div className="space-y-3">
-      <div>
-        <Label>Galerij afbeeldingen (max 10)</Label>
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => setShowPicker(true)}
-          aria-label="Selecteer afbeeldingen voor galerij"
-          className="w-full"
-        >
-          <ImageIcon className="mr-2 h-4 w-4" />
-          Selecteer afbeeldingen ({block.imageIds.length}/10)
-        </Button>
-      </div>
-
-      {selectedImages.length > 0 && (
-        <div className="grid grid-cols-5 gap-2">
-          {selectedImages.map((image) => (
-            <div key={image.id} className="relative group">
-              <div className="relative w-full aspect-square">
-                <Image
-                  src={getImageUrl(image.id)}
-                  alt="Selected image preview"
-                  fill
-                  className="object-cover rounded"
-                  style={getFocalPointStyle(image.focalPoints as any, '16:9')}
-                />
-              </div>
-              <button
-                type="button"
-                onClick={() => handleRemoveImage(image.id)}
-                className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                aria-label="Verwijder afbeelding"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
+      <ImageSelector
+        mode="multi"
+        label="Galerij afbeeldingen (max 10)"
+        selectedImageIds={block.imageIds}
+        onSelect={(imageIds) => onChange({ imageIds })}
+        maxImages={10}
+        focalPointContext="16:9"
+      />
 
       <Collapsible open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
         <CollapsibleTrigger asChild>
@@ -261,58 +192,6 @@ export function GalleryBlockEdit({ block, onChange }: GalleryBlockEditProps) {
         </CollapsibleContent>
       </Collapsible>
 
-      <Dialog open={showPicker} onOpenChange={setShowPicker}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Selecteer afbeeldingen voor galerij</DialogTitle>
-          </DialogHeader>
-          <div className="grid grid-cols-4 gap-4 py-4">
-            {availableImages.map((image) => {
-              const isSelected = block.imageIds.includes(image.id);
-              const canSelect = block.imageIds.length < 10 || isSelected;
-
-              return (
-                <button
-                  key={image.id}
-                  type="button"
-                  onClick={() => canSelect && handleToggleImage(image.id)}
-                  disabled={!canSelect}
-                  className={`relative aspect-square rounded border-2 transition-all ${
-                    isSelected
-                      ? 'border-primary ring-2 ring-primary'
-                      : canSelect
-                        ? 'border-gray-200 hover:border-primary'
-                        : 'border-gray-200 opacity-50 cursor-not-allowed'
-                  }`}
-                  aria-label={
-                    isSelected
-                      ? `Afbeelding geselecteerd: ${image.id}`
-                      : `Selecteer afbeelding: ${image.id}`
-                  }
-                >
-                  <Image
-                    src={getImageUrl(image.id)}
-                    alt="Beschikbare afbeelding"
-                    fill
-                    className="object-cover rounded"
-                    style={getFocalPointStyle(image.focalPoints as any, '16:9')}
-                  />
-                  {isSelected && (
-                    <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
-                      <div className="bg-primary text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold">
-                        ✓
-                      </div>
-                    </div>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-          <DialogFooter>
-            <Button onClick={() => setShowPicker(false)}>Klaar</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
