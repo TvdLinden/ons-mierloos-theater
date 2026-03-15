@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@ons-mierloos-theater/shared/db';
 import { shows, performances } from '@ons-mierloos-theater/shared/db/schema';
-import { eq, and, desc, asc, like, or, gte, lte, count } from 'drizzle-orm';
+import { eq, and, desc, asc, like, or, gte, lte, count, sql } from 'drizzle-orm';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,8 +14,8 @@ export async function GET(request: NextRequest) {
   const publicationTo = searchParams.get('publicationTo') || '';
   const depublicationFrom = searchParams.get('depublicationFrom') || '';
   const depublicationTo = searchParams.get('depublicationTo') || '';
-  const sortBy = searchParams.get('sortBy') || 'title';
-  const sortDir = searchParams.get('sortDir') || 'asc';
+  const sortBy = searchParams.get('sortBy') || 'lastUpdated';
+  const sortDir = searchParams.get('sortDir') || 'desc';
   const offset = parseInt(searchParams.get('offset') || '0', 10);
   const limit = parseInt(searchParams.get('limit') || '10', 10);
 
@@ -49,16 +49,20 @@ export async function GET(request: NextRequest) {
   const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
   // Get sort order
+  const lastUpdatedExpr = sql`GREATEST(${shows.updatedAt}, (SELECT MAX(p.updated_at) FROM performances p WHERE p.show_id = ${shows.id}))`;
+
   const sortColumn =
-    sortBy === 'title'
-      ? shows.title
-      : sortBy === 'publicationDate'
-        ? shows.publicationDate
-        : sortBy === 'depublicationDate'
-          ? shows.depublicationDate
-          : sortBy === 'basePrice'
-            ? shows.basePrice
-            : shows.title;
+    sortBy === 'lastUpdated'
+      ? lastUpdatedExpr
+      : sortBy === 'title'
+        ? shows.title
+        : sortBy === 'publicationDate'
+          ? shows.publicationDate
+          : sortBy === 'depublicationDate'
+            ? shows.depublicationDate
+            : sortBy === 'basePrice'
+              ? shows.basePrice
+              : lastUpdatedExpr;
 
   const orderByClause = sortDir === 'desc' ? desc(sortColumn) : asc(sortColumn);
 

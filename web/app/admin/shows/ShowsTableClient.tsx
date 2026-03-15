@@ -14,6 +14,11 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { MoreHorizontal } from 'lucide-react';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 import type { ExportData } from '@ons-mierloos-theater/shared/utils/export';
 import type { ShowWithTagsAndPerformances } from '@ons-mierloos-theater/shared/db';
 
@@ -56,7 +61,7 @@ function getExportData(
     if (!response.ok) throw new Error('Failed to fetch export data');
     const result: FilteredShowsResponse = await response.json();
     return {
-      headers: ['Titel', 'Status', 'Prijs', 'Speeltijden', 'Verkocht', 'Beschikbaar'],
+      headers: ['Titel', 'Status', 'Prijs', 'Speeltijden', 'Verkocht', 'Beschikbaar', 'Bijgewerkt'],
       rows: result.data.map((show) => {
         const totalSeats = show.performances.reduce((sum, p) => sum + (p.totalSeats || 0), 0);
         const availableSeats = show.performances.reduce(
@@ -70,6 +75,14 @@ function getExportData(
           show.performances.length.toString(),
           (totalSeats - availableSeats).toString(),
           availableSeats.toString(),
+          (() => {
+            const dates = [
+              show.updatedAt,
+              ...show.performances.map((p) => p.updatedAt),
+            ].filter(Boolean) as Date[];
+            const latest = new Date(Math.max(...dates.map((d) => new Date(d).getTime())));
+            return latest.toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric' });
+          })(),
         ];
       }),
     };
@@ -84,15 +97,16 @@ export function ShowsTableClient({ onStatusChange }: ShowsTableClientProps) {
   const [depublicationFrom, setDepublicationFrom] = useState('');
   const [depublicationTo, setDepublicationTo] = useState('');
   const [sortBy, setSortBy] = useState<
-    'title' | 'publicationDate' | 'depublicationDate' | 'basePrice'
-  >('title');
-  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+    'title' | 'publicationDate' | 'depublicationDate' | 'basePrice' | 'lastUpdated'
+  >('lastUpdated');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   const [limit] = useState(10);
   const [shows, setShows] = useState<ShowWithTagsAndPerformances[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [expandedShows, setExpandedShows] = useState<Set<string>>(new Set());
 
   const { offset, setOffset, totalPages, reset: resetPage } = usePagination(total, limit);
 
@@ -206,6 +220,7 @@ export function ShowsTableClient({ onStatusChange }: ShowsTableClientProps) {
           { label: 'Prijs', sortable: true, sortKey: 'basePrice' },
           'Speeltijden',
           'Kaartverkoop',
+          { label: 'Bijgewerkt', sortable: true, sortKey: 'lastUpdated' },
           'Acties',
         ]}
         sortBy={sortBy}
@@ -288,19 +303,19 @@ export function ShowsTableClient({ onStatusChange }: ShowsTableClientProps) {
       >
         {loading ? (
           <tr>
-            <td colSpan={6} className="px-6 py-8 text-center text-zinc-500">
+            <td colSpan={7} className="px-6 py-8 text-center text-zinc-500">
               Bezig met laden...
             </td>
           </tr>
         ) : error ? (
           <tr>
-            <td colSpan={6} className="px-6 py-8 text-center text-red-500">
+            <td colSpan={7} className="px-6 py-8 text-center text-red-500">
               {error}
             </td>
           </tr>
         ) : shows.length === 0 ? (
           <EmptyRow
-            colSpan={6}
+            colSpan={7}
             message={
               isFiltered
                 ? 'Geen voorstellingen gevonden met geselecteerde filters'
@@ -348,27 +363,62 @@ export function ShowsTableClient({ onStatusChange }: ShowsTableClientProps) {
                   {show.performances.length === 0 ? (
                     <span className="text-zinc-400">Geen speeltijden</span>
                   ) : (
-                    <div className="space-y-1.5">
-                      {show.performances.slice(0, 3).map((p) => (
-                        <div key={p.id} className="flex items-center justify-between gap-4">
-                          <span className="text-zinc-600">
-                            {new Date(p.date).toLocaleDateString('nl-NL', {
-                              day: 'numeric',
-                              month: 'short',
-                              year: 'numeric',
-                            })}
-                          </span>
-                          <span className="text-xs text-zinc-500 shrink-0 tabular-nums">
-                            {p.availableSeats}/{p.totalSeats}
-                          </span>
-                        </div>
-                      ))}
-                      {show.performances.length > 3 && (
-                        <div className="text-xs text-zinc-400">
-                          +{show.performances.length - 3} meer
-                        </div>
-                      )}
-                    </div>
+                    <Collapsible
+                      open={expandedShows.has(show.id)}
+                      onOpenChange={(open) =>
+                        setExpandedShows((prev) => {
+                          const next = new Set(prev);
+                          if (open) next.add(show.id);
+                          else next.delete(show.id);
+                          return next;
+                        })
+                      }
+                    >
+                      <div className="space-y-1.5">
+                        {show.performances.slice(0, 3).map((p) => (
+                          <div key={p.id} className="flex items-center justify-between gap-4">
+                            <span className="text-zinc-600">
+                              {new Date(p.date).toLocaleDateString('nl-NL', {
+                                day: 'numeric',
+                                month: 'short',
+                                year: 'numeric',
+                              })}
+                            </span>
+                            <span className="text-xs text-zinc-500 shrink-0 tabular-nums">
+                              {p.availableSeats}/{p.totalSeats}
+                            </span>
+                          </div>
+                        ))}
+                        {show.performances.length > 3 && (
+                          <>
+                            <CollapsibleContent className="overflow-hidden space-y-1.5 data-[state=open]:animate-collapsible-down data-[state=closed]:animate-collapsible-up">
+                              {show.performances.slice(3).map((p) => (
+                                <div
+                                  key={p.id}
+                                  className="flex items-center justify-between gap-4"
+                                >
+                                  <span className="text-zinc-600">
+                                    {new Date(p.date).toLocaleDateString('nl-NL', {
+                                      day: 'numeric',
+                                      month: 'short',
+                                      year: 'numeric',
+                                    })}
+                                  </span>
+                                  <span className="text-xs text-zinc-500 shrink-0 tabular-nums">
+                                    {p.availableSeats}/{p.totalSeats}
+                                  </span>
+                                </div>
+                              ))}
+                            </CollapsibleContent>
+                            <CollapsibleTrigger className="text-xs text-primary hover:underline cursor-pointer">
+                              {expandedShows.has(show.id)
+                                ? 'Minder tonen'
+                                : `+${show.performances.length - 3} meer`}
+                            </CollapsibleTrigger>
+                          </>
+                        )}
+                      </div>
+                    </Collapsible>
                   )}
                 </td>
                 <td className="px-6 py-4">
@@ -379,6 +429,20 @@ export function ShowsTableClient({ onStatusChange }: ShowsTableClientProps) {
                     <div className="h-full bg-primary rounded-full" style={{ width: `${pct}%` }} />
                   </div>
                   <div className="text-xs text-zinc-400 mt-0.5">{pct}% bezet</div>
+                </td>
+                <td className="px-6 py-4 text-sm text-zinc-500 whitespace-nowrap">
+                  {(() => {
+                    const dates = [
+                      show.updatedAt,
+                      ...show.performances.map((p) => p.updatedAt),
+                    ].filter(Boolean) as Date[];
+                    const latest = new Date(Math.max(...dates.map((d) => new Date(d).getTime())));
+                    return latest.toLocaleDateString('nl-NL', {
+                      day: 'numeric',
+                      month: 'short',
+                      year: 'numeric',
+                    });
+                  })()}
                 </td>
                 <td className="px-6 py-4">
                   <DropdownMenu>
