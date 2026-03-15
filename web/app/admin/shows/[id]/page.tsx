@@ -5,6 +5,7 @@ import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { StatCard } from '@/components/admin/StatCard';
 import { Button } from '@/components/ui';
 import { ButtonGroup } from '@/components/ui/button-group';
+import { ShowPerformancesList } from './ShowPerformancesList';
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -174,74 +175,7 @@ export default async function ShowDetailPage({ params }: Props) {
         {show.performances.length === 0 ? (
           <p className="text-zinc-500 text-sm">Nog geen speeltijden toegevoegd.</p>
         ) : (
-          <div className="divide-y divide-zinc-100">
-            {show.performances.slice(0, 5).map((performance) => {
-              const sold = (performance.totalSeats || 0) - (performance.availableSeats || 0);
-              const pct = performance.totalSeats
-                ? Math.round((sold / performance.totalSeats) * 100)
-                : 0;
-              return (
-                <Link
-                  key={performance.id}
-                  href={`/admin/shows/${id}/performances/${performance.id}`}
-                  className="flex items-center gap-4 py-3 hover:bg-zinc-50 -mx-2 px-2 rounded"
-                >
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-primary">
-                      {new Date(performance.date).toLocaleString('nl-NL', {
-                        dateStyle: 'long',
-                        timeStyle: 'short',
-                      })}
-                    </p>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      <span
-                        className={`inline-block px-2 py-0.5 rounded text-xs font-semibold ${
-                          performance.status === 'published'
-                            ? 'bg-green-100 text-green-800'
-                            : performance.status === 'sold_out'
-                              ? 'bg-red-100 text-red-800'
-                              : performance.status === 'cancelled'
-                                ? 'bg-zinc-100 text-zinc-800'
-                                : 'bg-yellow-100 text-yellow-800'
-                        }`}
-                      >
-                        {performance.status === 'draft' && 'Concept'}
-                        {performance.status === 'published' && 'Gepubliceerd'}
-                        {performance.status === 'sold_out' && 'Uitverkocht'}
-                        {performance.status === 'cancelled' && 'Geannuleerd'}
-                        {performance.status === 'archived' && 'Gearchiveerd'}
-                      </span>
-                      <span className="text-xs text-zinc-400">€{performance.price}</span>
-                    </div>
-                  </div>
-
-                  <div className="shrink-0 text-right">
-                    <p className="text-sm font-medium">
-                      {sold}{' '}
-                      <span className="text-zinc-400 font-normal">
-                        / {performance.totalSeats} verkocht
-                      </span>
-                    </p>
-                    <div className="mt-1 h-1.5 w-28 bg-zinc-200 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-primary rounded-full"
-                        style={{ width: `${pct}%` }}
-                      />
-                    </div>
-                    <p className="text-xs text-zinc-400 mt-0.5">{pct}% bezet</p>
-                  </div>
-                </Link>
-              );
-            })}
-            {show.performances.length > 5 && (
-              <Link
-                href={`/admin/shows/${id}/performances`}
-                className="text-primary hover:underline text-sm"
-              >
-                En nog {show.performances.length - 5} meer...
-              </Link>
-            )}
-          </div>
+          <ShowPerformancesList performances={show.performances} showId={id} />
         )}
       </div>
     </>
