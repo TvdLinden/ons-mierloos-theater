@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { requireRole } from '@/lib/utils/auth';
 import {
   getAllOrders,
@@ -7,7 +6,7 @@ import {
 } from '@ons-mierloos-theater/shared/queries/orders';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { StatCard } from '@/components/admin/StatCard';
-import { DataTable, EmptyRow } from '@/components/admin/DataTable';
+import { PerformanceSalesTable } from './PerformanceSalesTable';
 import { OrderSearchClient } from './OrderSearchClient';
 
 export default async function SalesPage() {
@@ -33,39 +32,7 @@ export default async function SalesPage() {
 
       {/* Performance Sales */}
       <div className="mb-8">
-        <DataTable
-          title="Verkopen per Voorstelling"
-          headers={['Voorstelling', 'Datum', 'Tickets Verkocht', 'Omzet']}
-        >
-          {performanceSales.length === 0 ? (
-            <EmptyRow colSpan={4} message="Nog geen verkopen" />
-          ) : (
-            performanceSales.map((sale) => (
-              <tr key={sale.performanceId} className="hover:bg-zinc-50">
-                <td className="px-6 py-4">
-                  <Link
-                    href={`/admin/sales/shows/${sale.showId}/performances/${sale.performanceId}`}
-                  >
-                    <div className="font-medium text-primary hover:underline cursor-pointer">
-                      {sale.showTitle}
-                    </div>
-                  </Link>
-                </td>
-                <td className="px-6 py-4 text-zinc-600">
-                  {sale.performanceDate
-                    ? new Date(sale.performanceDate).toLocaleDateString('nl-NL', {
-                        dateStyle: 'long',
-                      })
-                    : '-'}
-                </td>
-                <td className="px-6 py-4 text-right font-medium">{sale.totalTickets}</td>
-                <td className="px-6 py-4 text-right font-bold text-primary">
-                  €{sale.totalRevenue}
-                </td>
-              </tr>
-            ))
-          )}
-        </DataTable>
+        <PerformanceSalesTable sales={performanceSales} />
       </div>
 
       {/* Orders List */}

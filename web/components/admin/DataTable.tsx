@@ -79,6 +79,7 @@ type DataTableProps = {
         label: string;
         sortable?: boolean;
         sortKey?: string;
+        align?: 'left' | 'right' | 'center';
       }
   >;
   sortBy?: string;
@@ -227,10 +228,11 @@ export function DataTable({
                     ? 'ascending'
                     : 'descending'
                   : undefined;
+                const alignClass = header.align === 'right' ? 'text-right' : header.align === 'center' ? 'text-center' : 'text-left';
                 return (
                   <th
                     key={idx}
-                    className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider select-none ${header.sortable ? 'cursor-pointer hover:text-primary' : 'text-zinc-500'}`}
+                    className={`px-6 py-3 text-xs font-medium uppercase tracking-wider select-none ${alignClass} ${header.sortable ? 'cursor-pointer hover:text-primary' : 'text-zinc-500'}`}
                     onClick={
                       header.sortable && header.sortKey && onSortAction
                         ? () => onSortAction(header.sortKey!)

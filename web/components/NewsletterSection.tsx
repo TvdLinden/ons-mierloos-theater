@@ -1,4 +1,4 @@
-import MailingListSignup from './MailingListSignup';
+import NewsletterSignup from './NewsletterSignup';
 
 export default function NewsletterSection() {
   return (
@@ -31,7 +31,7 @@ export default function NewsletterSection() {
           voorstellingen en speciale acties.
         </p>
         <div className="max-w-md mx-auto">
-          <MailingListSignup />
+          <NewsletterSignup />
         </div>
       </div>
     </section>

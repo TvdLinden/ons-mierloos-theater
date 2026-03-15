@@ -90,15 +90,21 @@ export async function getTicketSalesByPerformance() {
       showId: shows.id,
       showTitle: shows.title,
       performanceDate: performances.date,
+      totalSeats: performances.totalSeats,
       totalTickets: sql<number>`coalesce(sum(${lineItems.quantity}), 0)`,
       totalRevenue: sql<string>`coalesce(sum(${lineItems.quantity} * ${lineItems.pricePerTicket}), 0)`,
+      minRow: sql<number>`min(${tickets.rowNumber})`,
+      maxRow: sql<number>`max(${tickets.rowNumber})`,
+      minSeat: sql<number>`min(${tickets.seatNumber})`,
+      maxSeat: sql<number>`max(${tickets.seatNumber})`,
     })
     .from(lineItems)
     .innerJoin(performances, eq(lineItems.performanceId, performances.id))
     .innerJoin(shows, eq(performances.showId, shows.id))
     .innerJoin(orders, eq(lineItems.orderId, orders.id))
+    .innerJoin(tickets, eq(tickets.lineItemId, lineItems.id))
     .where(eq(orders.status, 'paid'))
-    .groupBy(performances.id, shows.id, shows.title, performances.date)
+    .groupBy(performances.id, shows.id, shows.title, performances.date, performances.totalSeats)
     .orderBy(desc(performances.date));
 }
 
