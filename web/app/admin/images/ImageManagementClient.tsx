@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import {
   deleteImageAction,
+  deleteImagesAction,
   pruneImagesAction,
   updateImageFocalPointsAction,
 } from './actions';
@@ -60,10 +61,12 @@ export default function ImageManagementClient({
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pruning, setPruning] = useState(false);
   const [pruneMessage, setPruneMessage] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
   const [pruneDialogOpen, setPruneDialogOpen] = useState(false);
   const [imageToDelete, setImageToDelete] = useState<string | null>(null);
   const [editingImage, setEditingImage] = useState<(typeof images)[number] | null>(null);
@@ -156,6 +159,30 @@ export default function ImageManagementClient({
     });
   };
 
+  const handleBulkDelete = () => {
+    setBulkDeleteDialogOpen(true);
+  };
+
+  const confirmBulkDelete = async () => {
+    setBulkDeleting(true);
+    setError(null);
+    setBulkDeleteDialogOpen(false);
+
+    const result = await deleteImagesAction(Array.from(selectedImages));
+
+    if (result.skippedCount > 0) {
+      setError(
+        `${result.deletedCount} verwijderd, ${result.skippedCount} overgeslagen (in gebruik): ${result.skipped.map((s) => s.reason).join('; ')}`,
+      );
+    }
+
+    setSelectedImages(new Set());
+    setBulkDeleting(false);
+    startTransition(() => {
+      router.refresh();
+    });
+  };
+
   const handlePageChange = (newPage: number) => {
     router.push(`/admin/images?page=${newPage}`);
   };
@@ -245,7 +272,18 @@ export default function ImageManagementClient({
                 </label>
               </div>
               {selectedImages.size > 0 && (
-                <p className="text-sm text-muted-foreground">{selectedImages.size} geselecteerd</p>
+                <div className="flex items-center gap-3">
+                  <p className="text-sm text-muted-foreground">{selectedImages.size} geselecteerd</p>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={handleBulkDelete}
+                    disabled={bulkDeleting || isPending}
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    {bulkDeleting ? 'Verwijderen...' : `Verwijder ${selectedImages.size}`}
+                  </Button>
+                </div>
               )}
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -495,6 +533,24 @@ export default function ImageManagementClient({
           <AlertDialogFooter>
             <AlertDialogCancel>Annuleren</AlertDialogCancel>
             <AlertDialogAction onClick={confirmDelete}>Verwijderen</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Bulk Delete Confirmation Dialog */}
+      <AlertDialog open={bulkDeleteDialogOpen} onOpenChange={setBulkDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{selectedImages.size} afbeeldingen verwijderen</AlertDialogTitle>
+            <AlertDialogDescription>
+              Weet je zeker dat je {selectedImages.size} afbeelding
+              {selectedImages.size !== 1 ? 'en' : ''} wilt verwijderen? Afbeeldingen die in gebruik
+              zijn worden overgeslagen. Deze actie kan niet ongedaan worden gemaakt.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuleren</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmBulkDelete}>Verwijderen</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

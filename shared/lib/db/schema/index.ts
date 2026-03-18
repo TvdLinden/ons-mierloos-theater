@@ -18,7 +18,7 @@ import { shows, performances } from './shows';
 import { images } from './images';
 import { tags, showTags } from './tags';
 import { users } from './users';
-import { orders, lineItems, tickets } from './orders';
+import { orders, lineItems, tickets, blockedSeats } from './orders';
 import { payments } from './payments';
 import { coupons, couponPerformances, couponUsages } from './coupons';
 import { sponsors } from './sponsors';
@@ -156,6 +156,14 @@ export const grantedPermissionsRelations = relations(grantedPermissions, ({ one 
 }));
 
 export const jobsRelations = relations(jobs, () => ({}));
+
+export const blockedSeatsRelations = relations(blockedSeats, ({ one }) => ({
+  performance: one(performances, {
+    fields: [blockedSeats.performanceId],
+    references: [performances.id],
+  }),
+  createdBy: one(users, { fields: [blockedSeats.createdBy], references: [users.id] }),
+}));
 
 export const imagesRelations = relations(images, ({ many }) => ({
   shows: many(shows),

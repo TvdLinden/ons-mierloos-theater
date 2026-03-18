@@ -1,5 +1,5 @@
-import { db } from '../db';
-import { performances } from '../db/schema';
+import { db, BlockedSeat } from '../db';
+import { performances, blockedSeats } from '../db/schema';
 import { eq, sql } from 'drizzle-orm';
 
 /**
@@ -98,4 +98,14 @@ export async function getSeatsAvailable(performanceIds: string[]): Promise<Map<s
     seatMap.set(perf.id, perf.availableSeats);
   }
   return seatMap;
+}
+
+/**
+ * Get all admin-blocked seats for a performance
+ */
+export async function getBlockedSeats(performanceId: string): Promise<BlockedSeat[]> {
+  return db
+    .select()
+    .from(blockedSeats)
+    .where(eq(blockedSeats.performanceId, performanceId));
 }

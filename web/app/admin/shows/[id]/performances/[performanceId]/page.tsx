@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { db } from '@ons-mierloos-theater/shared/db';
-import { performances, orders, tickets } from '@ons-mierloos-theater/shared/db/schema';
+import { performances, orders, tickets, blockedSeats } from '@ons-mierloos-theater/shared/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { Button } from '@/components/ui';
@@ -24,19 +24,30 @@ export default async function PerformanceDetailPage({ params }: Props) {
     notFound();
   }
 
-  // Fetch assigned seats for this performance (all orders with tickets)
-  const assignedTickets = await db
-    .select({
-      rowNumber: tickets.rowNumber,
-      seatNumber: tickets.seatNumber,
-      wheelchairAccess: tickets.wheelchairAccess,
-      customerName: orders.customerName,
-      orderId: orders.id,
-      orderStatus: orders.status,
-    })
-    .from(tickets)
-    .innerJoin(orders, eq(tickets.orderId, orders.id))
-    .where(eq(tickets.performanceId, performanceId));
+  // Fetch assigned seats and blocked seats in parallel
+  const [assignedTickets, blockedSeatRows] = await Promise.all([
+    db
+      .select({
+        rowNumber: tickets.rowNumber,
+        seatNumber: tickets.seatNumber,
+        wheelchairAccess: tickets.wheelchairAccess,
+        customerName: orders.customerName,
+        orderId: orders.id,
+        orderStatus: orders.status,
+      })
+      .from(tickets)
+      .innerJoin(orders, eq(tickets.orderId, orders.id))
+      .where(eq(tickets.performanceId, performanceId)),
+    db
+      .select({
+        rowNumber: blockedSeats.rowNumber,
+        seatNumber: blockedSeats.seatNumber,
+        type: blockedSeats.type,
+        reason: blockedSeats.reason,
+      })
+      .from(blockedSeats)
+      .where(eq(blockedSeats.performanceId, performanceId)),
+  ]);
 
   // Convert to arrays/maps for JSON serialization
   const reservedSeats = assignedTickets.map((t) => `${t.rowNumber - 1}-${t.seatNumber}`);
@@ -156,6 +167,9 @@ export default async function PerformanceDetailPage({ params }: Props) {
           reservedSeats={reservedSeats}
           wheelchairSeats={wheelchairSeats}
           seatInfo={seatInfo}
+          performanceId={performanceId}
+          showId={showId}
+          initialBlockedSeats={blockedSeatRows}
         />
       </div>
     </>

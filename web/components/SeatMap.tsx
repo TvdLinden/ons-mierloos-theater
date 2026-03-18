@@ -9,6 +9,11 @@ export interface SeatInfo {
   orderStatus?: string;
 }
 
+export interface BlockedSeatInfo {
+  type: 'reserved' | 'unavailable';
+  reason?: string | null;
+}
+
 interface SeatMapProps {
   rows: number;
   seatsPerRow: number;
@@ -19,6 +24,8 @@ interface SeatMapProps {
   onToggleWheelchair: (rowIndex: number, seatNumber: number) => void;
   readonly?: boolean;
   seatInfo?: Record<string, SeatInfo>;
+  blockedSeats?: Map<string, BlockedSeatInfo>;
+  onBlockSeat?: (rowIndex: number, seatNumber: number) => void;
 }
 
 export function SeatMap({
@@ -31,6 +38,8 @@ export function SeatMap({
   onToggleWheelchair,
   readonly = false,
   seatInfo,
+  blockedSeats,
+  onBlockSeat,
 }: SeatMapProps) {
   const lastAssignmentSet = lastAssignment
     ? new Set(lastAssignment.map((s) => `${s.rowIndex}-${s.seatNumber}`))
@@ -57,29 +66,41 @@ export function SeatMap({
               const isReserved = reservedSeats.has(seatId);
               const isWheelchair = wheelchairReservations.has(seatId);
               const isLastAssignment = lastAssignmentSet?.has(seatId);
+              const blockedInfo = blockedSeats?.get(seatId);
+              const isBlocked = !!blockedInfo;
 
               const isPaid = seatInfo?.[seatId]?.orderStatus === 'paid';
               const isUnpaid = isReserved && !isPaid && seatInfo?.[seatId];
 
+              // Color priority: last-assignment > sold (paid/unpaid) > admin-blocked > available
               let seatColor = 'var(--chart-2)';
               if (isLastAssignment) seatColor = 'var(--chart-4)';
               else if (isUnpaid) seatColor = 'var(--chart-5)';
               else if (isReserved) seatColor = 'var(--chart-3)';
+              else if (blockedInfo?.type === 'reserved') seatColor = 'hsl(43 96% 50%)';
+              else if (blockedInfo?.type === 'unavailable') seatColor = 'hsl(0 0% 45%)';
+
+              const isBlockMode = !!onBlockSeat;
+              const isClickable = isBlockMode ? !isReserved : !readonly;
 
               return (
                 <HoverCard key={seatId} openDelay={100} closeDelay={50}>
                   <HoverCardTrigger asChild>
                     <button
                       onClick={() => {
-                        if (!readonly) onToggleSeat(rowIndex, seatNumber);
+                        if (isBlockMode && !isReserved) {
+                          onBlockSeat(rowIndex, seatNumber);
+                        } else if (!readonly) {
+                          onToggleSeat(rowIndex, seatNumber);
+                        }
                       }}
                       onContextMenu={(e) => {
-                        if (!readonly) {
+                        if (!readonly && !isBlockMode) {
                           e.preventDefault();
                           if (isReserved) onToggleWheelchair(rowIndex, seatNumber);
                         }
                       }}
-                      disabled={readonly}
+                      disabled={!isClickable}
                       style={{
                         backgroundColor: seatColor,
                         ...(isWheelchair && isReserved
@@ -89,7 +110,7 @@ export function SeatMap({
                       className={`
                         w-10 h-10 rounded font-semibold text-xs transition-colors text-white
                         hover:opacity-80
-                        ${readonly ? 'cursor-default' : 'cursor-pointer active:scale-95'}
+                        ${!isClickable ? 'cursor-default' : 'cursor-pointer active:scale-95'}
                       `}
                     >
                       {seatNumber}
@@ -101,7 +122,15 @@ export function SeatMap({
                       Rij {rowIndex + 1}, Zitplaats {seatNumber}
                     </p>
                     <p className="text-muted-foreground">
-                      {isUnpaid ? 'Niet betaald' : isReserved ? 'Gereserveerd' : 'Beschikbaar'}
+                      {isUnpaid
+                        ? 'Niet betaald'
+                        : isReserved
+                          ? 'Gereserveerd'
+                          : blockedInfo?.type === 'reserved'
+                            ? 'Geblokkeerd (gereserveerd)'
+                            : blockedInfo?.type === 'unavailable'
+                              ? 'Geblokkeerd (niet beschikbaar)'
+                              : 'Beschikbaar'}
                     </p>
                     {isReserved && seatInfo?.[seatId] && (
                       <div className="mt-1 pt-1 border-t border-border">
@@ -111,8 +140,15 @@ export function SeatMap({
                         </p>
                       </div>
                     )}
-                    {!readonly && isReserved && (
-                      <p className="mt-1 text-muted-foreground italic">Klik om te schakelen</p>
+                    {isBlocked && blockedInfo.reason && (
+                      <div className="mt-1 pt-1 border-t border-border">
+                        <p className="text-muted-foreground">{blockedInfo.reason}</p>
+                      </div>
+                    )}
+                    {isBlockMode && !isReserved && (
+                      <p className="mt-1 text-muted-foreground italic">
+                        {isBlocked ? 'Klik om te bewerken' : 'Klik om te blokkeren'}
+                      </p>
                     )}
                   </HoverCardContent>
                 </HoverCard>
@@ -145,6 +181,14 @@ export function SeatMap({
             }}
           />
           <span>Rolstoel</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div className="w-4 h-4 rounded" style={{ backgroundColor: 'hsl(43 96% 50%)' }} />
+          <span>Geblokkeerd (gereserveerd)</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div className="w-4 h-4 rounded" style={{ backgroundColor: 'hsl(0 0% 45%)' }} />
+          <span>Geblokkeerd (niet beschikbaar)</span>
         </div>
         {!readonly && (
           <div className="flex items-center gap-1.5">

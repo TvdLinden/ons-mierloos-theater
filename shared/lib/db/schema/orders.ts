@@ -1,4 +1,4 @@
-import { pgTable, pgEnum, varchar, text, decimal, timestamp, index, uuid, integer, serial, boolean, primaryKey } from 'drizzle-orm/pg-core';
+import { pgTable, pgEnum, varchar, text, decimal, timestamp, index, uuid, integer, serial, boolean, primaryKey, unique } from 'drizzle-orm/pg-core';
 import { users } from './users';
 import { performances } from './shows';
 
@@ -80,5 +80,32 @@ export const tickets = pgTable(
     index('tickets_order_id_idx').on(table.orderId),
     index('tickets_qr_token_idx').on(table.qrToken),
     index('tickets_ticket_number_idx').on(table.ticketNumber),
+  ],
+);
+
+export const blockedSeatType = pgEnum('blocked_seat_type', ['reserved', 'unavailable']);
+
+// Admin-managed seat blocks — seats held for VIP/staff/structural reasons
+export const blockedSeats = pgTable(
+  'blocked_seats',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    performanceId: uuid('performance_id')
+      .references(() => performances.id, { onDelete: 'cascade' })
+      .notNull(),
+    rowNumber: integer('row_number').notNull(),
+    seatNumber: integer('seat_number').notNull(),
+    type: blockedSeatType('type').notNull(),
+    reason: text('reason'),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+    createdBy: uuid('created_by').references(() => users.id),
+  },
+  (table) => [
+    index('blocked_seats_performance_id_idx').on(table.performanceId),
+    unique('blocked_seats_performance_seat_unique').on(
+      table.performanceId,
+      table.rowNumber,
+      table.seatNumber,
+    ),
   ],
 );

@@ -39,6 +39,41 @@ export async function deleteImageAction(imageId: string): Promise<{
   }
 }
 
+export async function deleteImagesAction(imageIds: string[]): Promise<{
+  success: boolean;
+  deletedCount: number;
+  skippedCount: number;
+  skipped: { id: string; reason: string }[];
+  error?: string;
+}> {
+  const results = await Promise.allSettled(
+    imageIds.map(async (imageId) => {
+      const usage = await getImageUsage(imageId);
+      if (usage.isUsed) {
+        const usageList = usage.usedBy.map((u) => `${u.type}: ${u.name}`).join(', ');
+        throw new Error(usageList);
+      }
+      await deleteImage(imageId);
+      return imageId;
+    }),
+  );
+
+  const skipped: { id: string; reason: string }[] = [];
+  let deletedCount = 0;
+
+  results.forEach((result, i) => {
+    if (result.status === 'fulfilled') {
+      deletedCount++;
+    } else {
+      skipped.push({ id: imageIds[i], reason: result.reason?.message ?? 'Onbekende fout' });
+    }
+  });
+
+  revalidatePath('/admin/images');
+
+  return { success: true, deletedCount, skippedCount: skipped.length, skipped };
+}
+
 export async function uploadImageAction(
   prevState: { error?: string; success?: boolean } | undefined,
   formData: FormData,

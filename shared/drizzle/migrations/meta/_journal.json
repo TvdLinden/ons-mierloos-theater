@@ -267,6 +267,13 @@
       "when": 1741478400000,
       "tag": "0037_rename_focal_point_contexts",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1773829062348,
+      "tag": "0038_smiling_sandman",
+      "breakpoints": true
     }
   ]
 }

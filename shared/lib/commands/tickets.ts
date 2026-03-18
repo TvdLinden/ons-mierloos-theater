@@ -1,5 +1,5 @@
 import { db, Ticket, Performance } from '../db';
-import { tickets } from '../db/schema';
+import { tickets, blockedSeats } from '../db/schema';
 import { eq } from 'drizzle-orm';
 
 export type CreateTicket = Omit<Ticket, 'id' | 'qrToken' | 'createdAt' | 'scannedAt'> & {
@@ -23,15 +23,24 @@ export async function createTicketsForLineItem(
   const seatsPerRow = performance.seatsPerRow || 20;
   const rows = performance.rows || 5;
 
-  // Query actually occupied seats for this performance
-  const existingTickets = await db
-    .select({ rowNumber: tickets.rowNumber, seatNumber: tickets.seatNumber })
-    .from(tickets)
-    .where(eq(tickets.performanceId, performanceId));
+  // Query actually occupied seats for this performance (sold tickets + admin blocks)
+  const [existingTickets, existingBlocks] = await Promise.all([
+    db
+      .select({ rowNumber: tickets.rowNumber, seatNumber: tickets.seatNumber })
+      .from(tickets)
+      .where(eq(tickets.performanceId, performanceId)),
+    db
+      .select({ rowNumber: blockedSeats.rowNumber, seatNumber: blockedSeats.seatNumber })
+      .from(blockedSeats)
+      .where(eq(blockedSeats.performanceId, performanceId)),
+  ]);
 
   const occupiedSeats = new Set<string>();
   for (const t of existingTickets) {
     occupiedSeats.add(`${t.rowNumber - 1}-${t.seatNumber}`);
+  }
+  for (const b of existingBlocks) {
+    occupiedSeats.add(`${b.rowNumber - 1}-${b.seatNumber}`);
   }
 
   // Assign seats using the smart algorithm

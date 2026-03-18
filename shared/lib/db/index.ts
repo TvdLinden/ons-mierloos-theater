@@ -17,6 +17,7 @@ import {
   couponPerformances,
   couponUsages,
   tickets,
+  blockedSeats,
   showsRelations,
   performancesRelations,
   usersRelations,
@@ -30,6 +31,7 @@ import {
   couponPerformancesRelations,
   couponUsagesRelations,
   ticketsRelations,
+  blockedSeatsRelations,
   imagesRelations,
   pages,
   navigationLinks,
@@ -71,6 +73,8 @@ export type CouponDiscountType = Coupon['discountType'];
 export type CouponPerformance = typeof couponPerformances.$inferSelect;
 export type CouponUsage = typeof couponUsages.$inferSelect;
 export type Ticket = typeof tickets.$inferSelect;
+export type BlockedSeat = typeof blockedSeats.$inferSelect;
+export type BlockedSeatType = BlockedSeat['type'];
 
 // Show with tags and performances
 export type ShowWithTags = Show & {
@@ -144,6 +148,7 @@ const db = drizzle(pool, {
     couponPerformances,
     couponUsages,
     tickets,
+    blockedSeats,
     showsRelations,
     performancesRelations,
     usersRelations,
@@ -157,6 +162,7 @@ const db = drizzle(pool, {
     couponPerformancesRelations,
     couponUsagesRelations,
     ticketsRelations,
+    blockedSeatsRelations,
     imagesRelations,
     pages,
     navigationLinks,
