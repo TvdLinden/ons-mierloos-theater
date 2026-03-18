@@ -82,17 +82,6 @@ export async function handleOrphanedOrderCleanup(
 
   for (const order of orphanedOrders) {
     try {
-      // Check if payment exists and is not in pending state
-      const hasActivePayment = order.payments?.some(
-        (p) => p.status === 'pending' || p.status === 'processing',
-      );
-
-      // Skip if payment is actively being processed
-      if (hasActivePayment) {
-        console.log(`[ORPHANED_CLEANUP] Skipping order ${order.id} - payment still active`);
-        continue;
-      }
-
       console.log(`[ORPHANED_CLEANUP] Processing order ${order.id}`);
 
       await db.transaction(async (tx) => {

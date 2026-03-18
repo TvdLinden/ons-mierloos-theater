@@ -3,18 +3,16 @@
 import { useState, useTransition, useRef } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { useActionState } from 'react';
 import {
   deleteImageAction,
-  uploadImageAction,
   pruneImagesAction,
   updateImageFocalPointsAction,
 } from './actions';
+import { ImageUploadZone } from './ImageUploadZone';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Trash2, Upload, AlertCircle, Eraser, Settings2 } from 'lucide-react';
+import { Trash2, AlertCircle, Eraser, Settings2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -72,8 +70,6 @@ export default function ImageManagementClient({
   const [savingFocalPoints, setSavingFocalPoints] = useState(false);
   const [selectedImages, setSelectedImages] = useState<Set<string>>(new Set());
   const focalPointEditorRef = useRef<FocalPointEditorHandle>(null);
-
-  const [uploadState, uploadAction, uploadPending] = useActionState(uploadImageAction, undefined);
 
   const toggleImageSelection = (imageId: string) => {
     const newSelected = new Set(selectedImages);
@@ -190,34 +186,7 @@ export default function ImageManagementClient({
 
   return (
     <div className="space-y-6">
-      {/* Upload Form */}
-      <Card>
-        <CardContent className="pt-6">
-          <form action={uploadAction} className="flex gap-4 items-end">
-            <div className="flex-1">
-              <label htmlFor="image" className="block text-sm font-medium mb-2">
-                Nieuwe afbeelding uploaden
-              </label>
-              <Input id="image" name="image" type="file" accept="image/*" required />
-            </div>
-            <Button type="submit" disabled={uploadPending}>
-              <Upload className="mr-2 h-4 w-4" />
-              {uploadPending ? 'Uploaden...' : 'Upload'}
-            </Button>
-          </form>
-          {uploadState?.error && (
-            <Alert variant="destructive" className="mt-4">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{uploadState.error}</AlertDescription>
-            </Alert>
-          )}
-          {uploadState?.success && (
-            <Alert className="mt-4" variant="success">
-              <AlertDescription>Afbeelding succesvol geüpload!</AlertDescription>
-            </Alert>
-          )}
-        </CardContent>
-      </Card>
+      <ImageUploadZone onUploadComplete={() => startTransition(() => router.refresh())} />
 
       {/* Error Display */}
       {error && (

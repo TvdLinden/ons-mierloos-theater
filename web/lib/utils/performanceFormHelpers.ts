@@ -84,9 +84,9 @@ export function validateImageFile(file: File): { valid: boolean; error?: string 
     return { valid: false, error: 'Alleen JPEG, PNG en WebP afbeeldingen zijn toegestaan.' };
   }
 
-  const maxSizeInBytes = 5 * 1024 * 1024; // 5MB
+  const maxSizeInBytes = 10 * 1024 * 1024; // 10MB
   if (file.size > maxSizeInBytes) {
-    return { valid: false, error: 'De afbeelding mag niet groter zijn dan 5MB.' };
+    return { valid: false, error: 'De afbeelding mag niet groter zijn dan 10MB.' };
   }
 
   return { valid: true };
