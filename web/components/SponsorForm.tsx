@@ -1,9 +1,19 @@
 'use client';
 
-import { useActionState } from 'react';
-import { useState } from 'react';
-import FormError from './FormError';
-import Image from 'next/image';
+import { useActionState, useState } from 'react';
+import {
+  Alert,
+  Button,
+  Input,
+  Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  SimpleFormField,
+} from '@/components/ui';
+import { ImageSelector } from './ImageSelector';
 import { NumberInput } from './ui/number-input';
 
 interface SponsorFormProps {
@@ -23,131 +33,91 @@ interface SponsorFormProps {
 }
 
 export default function SponsorForm({ initialData, action, submitLabel }: SponsorFormProps) {
-  const [state, formAction] = useActionState(action, null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-
-  const handleImageChange = (file: File | null) => {
-    if (file) {
-      setPreviewUrl(URL.createObjectURL(file));
-    } else {
-      setPreviewUrl(null);
-    }
-  };
+  const [state, formAction, isPending] = useActionState(action, null);
+  const [selectedLogoId, setSelectedLogoId] = useState<string | null>(initialData?.logoId ?? null);
+  const [tier, setTier] = useState<string>(initialData?.tier ?? 'bronze');
 
   return (
-    <form action={formAction} className="space-y-6 max-w-2xl">
-      <div className="bg-white rounded-lg border border-border p-6 space-y-6">
-        <div>
-          <label htmlFor="name" className="block text-sm font-medium text-text-primary mb-2">
-            Sponsor naam *
-          </label>
-          <input
-            type="text"
-            id="name"
-            name="name"
-            defaultValue={initialData?.name}
-            required
-            className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-          />
-        </div>
+    <form action={formAction} className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {state?.error && <Alert variant="destructive" className="lg:col-span-2">{state.error}</Alert>}
 
-        <div>
-          <label className="block text-sm font-medium text-text-primary mb-2">Logo</label>
-          <input
-            type="file"
-            name="logoFile"
-            accept="image/*"
-            onChange={(e) => handleImageChange(e.target.files?.[0] || null)}
-            className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-          />
-          {(previewUrl || initialData?.logoId) && (
-            <div className="mt-4 relative w-full max-w-md">
-              <Image
-                src={previewUrl || `/api/images/${initialData?.logoId}`}
-                alt="Logo preview"
-                width={400}
-                height={225}
-                className="rounded-lg border border-border object-contain bg-white"
-              />
-            </div>
-          )}
-          <p className="text-sm text-text-secondary mt-1">
-            Aanbevolen: PNG met transparante achtergrond
-          </p>
-          {initialData?.logoId && (
-            <input type="hidden" name="existingLogoId" value={initialData.logoId} />
-          )}
-        </div>
+      {/* Left column */}
+      <div className="space-y-6">
+        <div className="bg-white rounded-lg shadow p-6 space-y-4">
+          <h2 className="text-lg font-semibold">Sponsor details</h2>
 
-        <div>
-          <label htmlFor="website" className="block text-sm font-medium text-text-primary mb-2">
-            Website URL
-          </label>
-          <input
-            type="url"
-            id="website"
-            name="website"
-            defaultValue={initialData?.website}
-            placeholder="https://example.com"
-            className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-          />
-        </div>
+          <SimpleFormField label="Naam" htmlFor="name" required>
+            <Input id="name" name="name" defaultValue={initialData?.name} required />
+          </SimpleFormField>
 
-        <div>
-          <label htmlFor="tier" className="block text-sm font-medium text-text-primary mb-2">
-            Sponsor tier *
-          </label>
-          <select
-            id="tier"
-            name="tier"
-            defaultValue={initialData?.tier || 'bronze'}
-            required
-            className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-          >
-            <option value="gold">Goud</option>
-            <option value="silver">Zilver</option>
-            <option value="bronze">Brons</option>
-          </select>
-        </div>
-
-        <div>
-          <label
-            htmlFor="displayOrder"
-            className="block text-sm font-medium text-text-primary mb-2"
-          >
-            Volgorde
-          </label>
-          <NumberInput
-            id="displayOrder"
-            name="displayOrder"
-            defaultValue={initialData?.displayOrder ?? 0}
-            min={0}
-            className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-          />
-          <p className="text-sm text-text-secondary mt-1">Lagere nummers worden eerst getoond</p>
-        </div>
-
-        <div>
-          <label className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              name="active"
-              defaultChecked={initialData?.active === 1}
-              className="w-4 h-4 text-primary border-border rounded focus:ring-2 focus:ring-primary"
+          <SimpleFormField label="Website URL" htmlFor="website">
+            <Input
+              id="website"
+              name="website"
+              type="url"
+              defaultValue={initialData?.website}
+              placeholder="https://example.com"
             />
-            <span className="text-sm font-medium text-text-primary">Actief tonen op website</span>
-          </label>
+          </SimpleFormField>
+
+          <div className="space-y-2">
+            <Label htmlFor="tier">Sponsor tier *</Label>
+            <Select name="tier" value={tier} onValueChange={setTier} required>
+              <SelectTrigger id="tier" className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="gold">Goud</SelectItem>
+                <SelectItem value="silver">Zilver</SelectItem>
+                <SelectItem value="bronze">Brons</SelectItem>
+              </SelectContent>
+            </Select>
+            <input type="hidden" name="tier" value={tier} />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="displayOrder">Volgorde</Label>
+            <NumberInput
+              id="displayOrder"
+              name="displayOrder"
+              defaultValue={initialData?.displayOrder ?? 0}
+              min={0}
+              className="w-full"
+            />
+            <p className="text-sm text-muted-foreground">Lagere nummers worden eerst getoond</p>
+          </div>
+
+          <div>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                name="active"
+                defaultChecked={initialData?.active === 1}
+                className="w-4 h-4 rounded border-border text-primary focus:ring-2 focus:ring-primary"
+              />
+              <span className="text-sm font-medium">Actief tonen op website</span>
+            </label>
+          </div>
         </div>
+
+        <Button type="submit" disabled={isPending} className="w-full">
+          {isPending ? 'Bezig...' : submitLabel}
+        </Button>
       </div>
 
-      {state?.error && <FormError error={state.error} />}
-
-      <button
-        type="submit"
-        className="w-full bg-primary text-white py-3 px-6 rounded-lg hover:bg-opacity-90 transition-colors font-medium"
-      >
-        {submitLabel}
-      </button>
+      {/* Right column */}
+      <div className="space-y-6">
+        <div className="bg-white rounded-lg shadow p-6 space-y-2">
+          <ImageSelector
+            label="Logo"
+            focalPointContext="4:3"
+            selectedImageId={selectedLogoId}
+            onSelect={setSelectedLogoId}
+          />
+          <p className="text-sm text-muted-foreground">Aanbevolen: PNG met transparante achtergrond</p>
+          <input type="hidden" name="logoId" value={selectedLogoId ?? ''} />
+        </div>
+      </div>
     </form>
   );
 }
