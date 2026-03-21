@@ -5,15 +5,7 @@ import { Button, DatePicker, Input } from '../ui';
 import { ExportData } from '@ons-mierloos-theater/shared/utils/export';
 import { ExportDropdown } from './ExportDropdown';
 import { Popover, PopoverTrigger, PopoverContent } from '../ui/popover';
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationPrevious,
-  PaginationNext,
-  PaginationEllipsis,
-} from '../ui/pagination';
+import PaginationBar from '@/components/PaginationBar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { ChevronDown, ChevronsUpDown, ChevronUp, Filter } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -30,46 +22,6 @@ export type FilterDefinition = {
   placeholder?: string;
 };
 
-/**
- * Returns an array of page numbers and 'ellipsis' markers for pagination display.
- * Shows first page, last page, and a window around the current page.
- */
-function getPaginationRange(currentPage: number, totalPages: number): (number | 'ellipsis')[] {
-  const delta = 1; // Pages to show on each side of current
-  const range: (number | 'ellipsis')[] = [];
-
-  // For small page counts, show all pages
-  if (totalPages <= 7) {
-    return Array.from({ length: totalPages }, (_, i) => i);
-  }
-
-  // Always include first page
-  range.push(0);
-
-  // Calculate start and end of the window around current page
-  const windowStart = Math.max(1, currentPage - delta);
-  const windowEnd = Math.min(totalPages - 2, currentPage + delta);
-
-  // Add ellipsis after first page if needed
-  if (windowStart > 1) {
-    range.push('ellipsis');
-  }
-
-  // Add pages in the window
-  for (let i = windowStart; i <= windowEnd; i++) {
-    range.push(i);
-  }
-
-  // Add ellipsis before last page if needed
-  if (windowEnd < totalPages - 2) {
-    range.push('ellipsis');
-  }
-
-  // Always include last page
-  range.push(totalPages - 1);
-
-  return range;
-}
 
 type DataTableProps = {
   title?: string;
@@ -262,54 +214,14 @@ export function DataTable({
           <tbody className="divide-y divide-zinc-200">{children}</tbody>
         </table>
       </div>
-      {totalPages > 1 && onPageChangeAction && (
-        <div className="flex justify-center border-t border-zinc-200 px-6 py-4">
-          <Pagination>
-            <PaginationContent>
-              {currentPage > 0 && (
-                <PaginationItem>
-                  <PaginationPrevious
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      onPageChangeAction(currentPage - 1);
-                    }}
-                  />
-                </PaginationItem>
-              )}
-              {getPaginationRange(currentPage, totalPages).map((page, idx) =>
-                page === 'ellipsis' ? (
-                  <PaginationItem key={`ellipsis-${idx}`}>
-                    <PaginationEllipsis />
-                  </PaginationItem>
-                ) : (
-                  <PaginationItem key={page}>
-                    <PaginationLink
-                      href="#"
-                      isActive={page === currentPage}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        onPageChangeAction(page);
-                      }}
-                    >
-                      {page + 1}
-                    </PaginationLink>
-                  </PaginationItem>
-                ),
-              )}
-              {currentPage < totalPages - 1 && (
-                <PaginationItem>
-                  <PaginationNext
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      onPageChangeAction(currentPage + 1);
-                    }}
-                  />
-                </PaginationItem>
-              )}
-            </PaginationContent>
-          </Pagination>
+      {onPageChangeAction && (
+        <div className="border-t border-zinc-200 px-6 py-4">
+          {/* DataTable uses 0-indexed pages externally; PaginationBar is 1-indexed */}
+          <PaginationBar
+            page={currentPage + 1}
+            totalPages={totalPages}
+            onPageChange={(page) => onPageChangeAction(page - 1)}
+          />
         </div>
       )}
     </div>

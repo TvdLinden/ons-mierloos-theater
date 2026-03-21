@@ -24,15 +24,8 @@ import {
 import FocalPointEditor, { type FocalPointEditorHandle } from '@/components/FocalPointEditor';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { getFocalPointStyle } from '@ons-mierloos-theater/shared/utils/focalPoints';
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-  PaginationEllipsis,
-} from '@/components/ui/pagination';
+import PaginationBar from '@/components/PaginationBar';
+import { buildHref } from '@/lib/utils/pagination';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -181,10 +174,6 @@ export default function ImageManagementClient({
     startTransition(() => {
       router.refresh();
     });
-  };
-
-  const handlePageChange = (newPage: number) => {
-    router.push(`/admin/images?page=${newPage}`);
   };
 
   const handlePrune = async () => {
@@ -358,128 +347,12 @@ export default function ImageManagementClient({
       </div>
 
       {/* Pagination */}
-      {totalPages > 1 && (
-        <Pagination>
-          <PaginationContent>
-            <PaginationItem>
-              <PaginationPrevious
-                href={`/admin/images?page=${currentPage - 1}`}
-                onClick={(e) => {
-                  if (currentPage <= 1 || isPending) {
-                    e.preventDefault();
-                    return;
-                  }
-                  e.preventDefault();
-                  handlePageChange(currentPage - 1);
-                }}
-                className={currentPage <= 1 || isPending ? 'pointer-events-none opacity-50' : ''}
-              />
-            </PaginationItem>
-
-            {/* First page */}
-            {currentPage > 2 && (
-              <PaginationItem>
-                <PaginationLink
-                  href={`/admin/images?page=1`}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    handlePageChange(1);
-                  }}
-                >
-                  1
-                </PaginationLink>
-              </PaginationItem>
-            )}
-
-            {/* Ellipsis before */}
-            {currentPage > 3 && (
-              <PaginationItem>
-                <PaginationEllipsis />
-              </PaginationItem>
-            )}
-
-            {/* Previous page */}
-            {currentPage > 1 && (
-              <PaginationItem>
-                <PaginationLink
-                  href={`/admin/images?page=${currentPage - 1}`}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    handlePageChange(currentPage - 1);
-                  }}
-                >
-                  {currentPage - 1}
-                </PaginationLink>
-              </PaginationItem>
-            )}
-
-            {/* Current page */}
-            <PaginationItem>
-              <PaginationLink
-                href={`/admin/images?page=${currentPage}`}
-                isActive
-                onClick={(e) => e.preventDefault()}
-              >
-                {currentPage}
-              </PaginationLink>
-            </PaginationItem>
-
-            {/* Next page */}
-            {currentPage < totalPages && (
-              <PaginationItem>
-                <PaginationLink
-                  href={`/admin/images?page=${currentPage + 1}`}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    handlePageChange(currentPage + 1);
-                  }}
-                >
-                  {currentPage + 1}
-                </PaginationLink>
-              </PaginationItem>
-            )}
-
-            {/* Ellipsis after */}
-            {currentPage < totalPages - 2 && (
-              <PaginationItem>
-                <PaginationEllipsis />
-              </PaginationItem>
-            )}
-
-            {/* Last page */}
-            {currentPage < totalPages - 1 && (
-              <PaginationItem>
-                <PaginationLink
-                  href={`/admin/images?page=${totalPages}`}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    handlePageChange(totalPages);
-                  }}
-                >
-                  {totalPages}
-                </PaginationLink>
-              </PaginationItem>
-            )}
-
-            <PaginationItem>
-              <PaginationNext
-                href={`/admin/images?page=${currentPage + 1}`}
-                onClick={(e) => {
-                  if (currentPage >= totalPages || isPending) {
-                    e.preventDefault();
-                    return;
-                  }
-                  e.preventDefault();
-                  handlePageChange(currentPage + 1);
-                }}
-                className={
-                  currentPage >= totalPages || isPending ? 'pointer-events-none opacity-50' : ''
-                }
-              />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
-      )}
+      <PaginationBar
+        page={currentPage}
+        totalPages={totalPages}
+        disabled={isPending}
+        buildHref={(page) => buildHref('/admin/images', page)}
+      />
 
       {/* Focal Point Editor Dialog */}
       <Dialog open={!!editingImage} onOpenChange={(open) => !open && setEditingImage(null)}>
