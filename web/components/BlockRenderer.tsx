@@ -10,12 +10,13 @@ import type { Block, BlocksArray } from '@ons-mierloos-theater/shared/schemas/bl
 
 interface BlockRendererProps {
   blocks: BlocksArray;
+  fullWidth?: boolean;
 }
 
-function RenderBlock({ block }: { block: Block }) {
+function RenderBlock({ block, fullWidth }: { block: Block; fullWidth?: boolean }) {
   switch (block.type) {
     case 'text':
-      return <TextBlockDisplayMode block={block} />;
+      return <TextBlockDisplayMode block={block} fullWidth={fullWidth} />;
 
     case 'image':
       return <ImageBlockDisplay block={block} />;
@@ -37,16 +38,15 @@ function RenderBlock({ block }: { block: Block }) {
   }
 }
 
-export function BlockRenderer({ blocks }: BlockRendererProps) {
+export function BlockRenderer({ blocks, fullWidth }: BlockRendererProps) {
   if (!blocks || blocks.length === 0) return null;
 
-  // Sort blocks by order
   const sortedBlocks = [...blocks].sort((a, b) => a.order - b.order);
 
   return (
     <>
       {sortedBlocks.map((block) => (
-        <RenderBlock key={block.id} block={block} />
+        <RenderBlock key={block.id} block={block} fullWidth={fullWidth} />
       ))}
     </>
   );

@@ -2,8 +2,6 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { getShowImageUrl, ShowWithBlurData } from '@/lib/utils/performanceImages';
 import { getFocalPointStyle } from '@ons-mierloos-theater/shared/utils/focalPoints';
-import TagsContainer from './TagsContainer';
-import DateDisplay from './DateDisplay';
 
 type FeaturedShowCardProps = {
   show: ShowWithBlurData;
@@ -11,7 +9,7 @@ type FeaturedShowCardProps = {
 
 export default function FeaturedShowCard({ show }: FeaturedShowCardProps) {
   const { blurDataUrl } = show;
-  const { title, slug, tags, performances, basePrice } = show;
+  const { title, slug, performances } = show;
   const imageUrl = getShowImageUrl(show, 'md');
 
   // Get next upcoming performance
@@ -19,63 +17,64 @@ export default function FeaturedShowCard({ show }: FeaturedShowCardProps) {
     ?.filter((p) => p.status === 'published' && new Date(p.date) > new Date())
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())[0];
 
-  // Get the price (performance price overrides base price)
-  const price = nextPerformance?.price || basePrice;
+  // Format date as "ZA 28 SEP" (Dutch, uppercase)
+  const formattedDate = nextPerformance
+    ? new Intl.DateTimeFormat('nl-NL', {
+        weekday: 'short',
+        day: 'numeric',
+        month: 'short',
+      })
+        .format(new Date(nextPerformance.date))
+        .toUpperCase()
+    : null;
 
   return (
     <Link
       href={`/voorstellingen/${slug}`}
-      className="group block h-full"
+      className="group block"
       data-component="featured-show-card"
     >
-      <div
-        className="bg-surface border border-border rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 h-full flex flex-col"
-        data-element="card"
-      >
-        {/* Thumbnail */}
-        <div className="relative aspect-4/3 overflow-hidden">
-          <Image
-            src={imageUrl}
-            alt={title}
-            fill
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
-            style={getFocalPointStyle(show.image?.focalPoints, '4:3')}
-            placeholder={blurDataUrl ? 'blur' : 'empty'}
-            blurDataURL={blurDataUrl ?? undefined}
-          />
-        </div>
+      <div>
+        {/* Image with date badge — padding-top 75% enforces 4:3 ratio reliably */}
+        <div className="relative overflow-visible" style={{ paddingTop: '75%' }}>
+          {/* Separate inner div clips the image */}
+          <div className="absolute inset-0 overflow-hidden">
+            <Image
+              src={imageUrl}
+              alt={title}
+              fill
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              className="object-cover transition-transform duration-500 group-hover:scale-105"
+              style={getFocalPointStyle(show.image?.focalPoints, '4:3')}
+              placeholder={blurDataUrl ? 'blur' : 'empty'}
+              blurDataURL={blurDataUrl ?? undefined}
+            />
+          </div>
 
-        {/* Content */}
-        <div className="p-4 flex flex-col flex-1">
-          <h3 className="text-lg font-semibold text-primary line-clamp-1 group-hover:text-primary/80 transition-colors">
-            {title}
-          </h3>
-
-          {/* Tags */}
-          {tags && tags.length > 0 && (
-            <div className="mt-2 flex flex-wrap gap-1 justify-start">
-              <TagsContainer tags={tags.slice(0, 3)} size="sm" />
+          {/* Date badge — flush bottom-left, barely extends below image */}
+          {formattedDate && (
+            <div
+              className="absolute z-10 px-3 py-2"
+              style={{ backgroundColor: '#5a1e2c', bottom: '-12px', left: '0px' }}
+            >
+              <span
+                className="text-white font-bold text-lg tracking-widest uppercase"
+                style={{ fontFamily: 'var(--font-display)' }}
+              >
+                {formattedDate}
+              </span>
             </div>
           )}
+        </div>
 
-          {/* Date */}
-          {nextPerformance && (
-            <p className="text-sm text-textSecondary mt-2">
-              <DateDisplay
-                value={nextPerformance.date}
-                options={{ weekday: 'short', day: 'numeric', month: 'short' }}
-              />
-            </p>
-          )}
-
-          {/* Price */}
-          {price && (
-            <p className="text-primary font-semibold mt-auto pt-2">
-              <span className="text-xs text-textSecondary">vanaf </span>
-              <span className="text-lg">€{price}</span>
-            </p>
-          )}
+        {/* Title below image */}
+        <div className="pt-4 pb-1 text-center">
+          <h3
+            className="text-xl uppercase leading-tight line-clamp-2 text-foreground"
+            style={{ fontFamily: 'var(--font-display)' }}
+          >
+            {title}
+          </h3>
         </div>
       </div>
     </Link>

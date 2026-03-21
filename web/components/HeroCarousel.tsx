@@ -53,7 +53,7 @@ export default function HeroCarousel({ shows, autoplayDelay = 5000 }: HeroCarous
   }
 
   return (
-    <section className="w-screen relative left-[calc(-50vw+50%)] mb-12">
+    <section className="w-screen relative left-[calc(-50vw+50%)] mb-8">
       <Carousel
         setApi={setApi}
         opts={{ loop: true }}

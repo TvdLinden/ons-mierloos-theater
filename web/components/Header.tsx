@@ -76,18 +76,26 @@ export default function Header({ navigationLinks = [] }: HeaderProps) {
   }, [mobileMenuOpen]);
 
   return (
-    <header className="w-full bg-white relative z-40">
-      <div className="max-w-6xl mx-auto flex items-center justify-between px-4 md:px-8 py-4">
-        <Link href="/" className="flex items-center gap-3">
-          <div className="relative h-12 w-32 md:h-14 md:w-40">
+    <header className="w-full bg-white relative z-40 h-20 md:h-24">
+      <div className="max-w-6xl mx-auto flex items-stretch justify-between px-4 md:px-8 h-full">
+        <Link href="/" className="flex items-center gap-3 h-full">
+          <div className="relative h-full w-16 md:w-20 shrink-0">
             <Image
-              src="/logo.png"
+              src="/logov3.png"
               alt="Ons Mierloos Theater"
               fill
-              className="object-contain"
+              className="object-contain object-left"
               priority
             />
           </div>
+          <span
+            className="text-sm md:text-base font-bold uppercase tracking-wider leading-tight"
+            style={{ color: 'var(--color-omt-maroon)', fontFamily: 'var(--font-display)' }}
+          >
+            Ons Mierloos
+            <br />
+            Theater
+          </span>
         </Link>
 
         {/* Desktop Navigation */}
@@ -96,7 +104,7 @@ export default function Header({ navigationLinks = [] }: HeaderProps) {
             <Link
               key={link.id}
               href={link.href}
-              className="text-gray-800 hover:text-primary font-medium transition-colors"
+              className="text-gray-800 hover:text-primary font-semibold uppercase tracking-wider text-sm transition-colors"
             >
               {link.label}
             </Link>
@@ -104,7 +112,7 @@ export default function Header({ navigationLinks = [] }: HeaderProps) {
           {isAdmin && (
             <Link
               href="/admin"
-              className="text-gray-800 hover:text-primary font-medium transition-colors"
+              className="text-gray-800 hover:text-primary font-semibold uppercase tracking-wider text-sm transition-colors"
             >
               Beheer
             </Link>
@@ -112,17 +120,18 @@ export default function Header({ navigationLinks = [] }: HeaderProps) {
           <div className="flex items-center gap-6 ml-4 pl-4 border-l border-gray-200">
             <Link
               href="/winkelwagen"
-              className="relative text-gray-800 hover:text-primary transition-colors"
+              className="relative flex items-center justify-center bg-primary hover:bg-primary/90 transition-colors text-white"
+              style={{ width: 48, height: 48 }}
               aria-label="Winkelwagen"
             >
-              <svg width={24} height={24} fill="none" viewBox="0 0 24 24">
+              <svg width={22} height={22} fill="none" viewBox="0 0 24 24">
                 <path d="M6 6h15l-1.5 9h-13z" stroke="currentColor" strokeWidth={2} />
                 <circle cx={9} cy={21} r={1.5} fill="currentColor" />
                 <circle cx={18} cy={21} r={1.5} fill="currentColor" />
               </svg>
               {items.length > 0 && (
                 <span
-                  className="absolute -top-2 -right-2 bg-primary text-white rounded-full px-1.5 text-xs font-bold"
+                  className="absolute -top-1.5 -right-1.5 bg-[#5a1e2c] text-white rounded-full px-1.5 text-xs font-bold"
                   suppressHydrationWarning
                 >
                   {items.length}
@@ -222,7 +231,9 @@ export default function Header({ navigationLinks = [] }: HeaderProps) {
                       </AvatarFallback>
                     </Avatar>
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold truncate">{session.user?.name || session.user?.email}</p>
+                      <p className="text-sm font-semibold truncate">
+                        {session.user?.name || session.user?.email}
+                      </p>
                       {session.user?.name && (
                         <p className="text-xs text-gray-500 truncate">{session.user?.email}</p>
                       )}
@@ -237,7 +248,10 @@ export default function Header({ navigationLinks = [] }: HeaderProps) {
                     Mijn account
                   </Link>
                   <button
-                    onClick={() => { setMobileMenuOpen(false); signOut(); }}
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      signOut();
+                    }}
                     className="flex items-center gap-2 w-full text-left text-red-600 hover:text-red-700 px-6 py-3 font-medium"
                   >
                     <LogOut className="size-4" />

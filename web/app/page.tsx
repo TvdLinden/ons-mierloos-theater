@@ -107,7 +107,7 @@ export default async function HomePage() {
       {/* Hero Intro - Floating overlay on carousel */}
       {/* <HeroIntro introText={homepageContent?.introText} /> */}
 
-      <main className="grow w-full max-w-7xl flex-col items-center justify-between py-8 px-8 mx-auto sm:items-start">
+      <main className="grow w-full max-w-7xl flex-col items-center justify-between px-8 mx-auto sm:items-start">
         {/* Featured Shows or Empty State */}
         {shows.length > 0 ? (
           <FeaturedShows shows={featuredShowsWithBlur} label={sectionLabel} />

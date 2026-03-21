@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Performance } from '@ons-mierloos-theater/shared/db';
-import { Button } from '@/components/ui';
 import DateDisplay from '@/components/DateDisplay';
 import CurrencyDisplay from '@/components/CurrencyDisplay';
 import { useCart } from '@/components/CartContext';
@@ -23,15 +22,12 @@ export default function TimeslotPicker({
   const router = useRouter();
   const { addToCart } = useCart();
 
-  // Filter performances: must be published, have available seats, and be in the future
-  // (This is a safety net - the server should already filter past dates)
   const now = new Date();
   const availablePerformances = performances.filter((p) => {
     const perfDate = new Date(p.date);
     return p.status === 'published' && p.availableSeats > 0 && perfDate > now;
   });
 
-  // Auto-select the first (and only) performance if there's only one available
   const defaultPerformanceId =
     availablePerformances.length === 1 ? availablePerformances[0].id : null;
 
@@ -68,8 +64,8 @@ export default function TimeslotPicker({
 
   if (availablePerformances.length === 0) {
     return (
-      <div id="tickets" className="w-full bg-card rounded-xl border border-border shadow-sm p-6">
-        <p className="text-center text-accent dark:text-surface">
+      <div id="tickets" className="w-full">
+        <p className="text-sm text-muted-foreground">
           Helaas zijn er geen beschikbare voorstellingen.
         </p>
       </div>
@@ -77,80 +73,68 @@ export default function TimeslotPicker({
   }
 
   return (
-    <div id="tickets" className="w-full bg-card rounded-xl border border-border shadow-sm p-6">
-      <h2 className="text-xl font-bold text-primary dark:text-secondary mb-4 font-display">
-        Selecteer een Voorstelling
-      </h2>
+    <div id="tickets" className="w-full flex flex-col gap-4">
 
-      <div className="space-y-2 mb-6 max-h-64 overflow-y-auto">
+      {/* Performance selector — always shown */}
+      <div className="space-y-1">
         {availablePerformances.map((performance) => (
           <button
             key={performance.id}
             onClick={() => setSelectedPerformanceId(performance.id)}
-            className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
+            className={`w-full text-left py-2 border-b border-black/10 text-sm transition-colors flex items-center justify-between ${
               selectedPerformanceId === performance.id
-                ? 'border-secondary bg-secondary/10'
-                : 'border-border bg-muted hover:border-secondary'
+                ? 'font-bold text-foreground'
+                : 'text-muted-foreground hover:text-foreground'
             }`}
           >
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <p className="font-semibold text-primary dark:text-secondary">
-                  <DateDisplay
-                    value={new Date(performance.date)}
-                    options={{ dateStyle: 'medium', timeStyle: 'short' }}
-                  />
-                </p>
-                <p className="text-sm text-text-secondary dark:text-gray-400 mt-1">
-                  Beschikbaar: {performance.availableSeats} / {performance.totalSeats} plaatsen
-                </p>
-                {performance.notes && (
-                  <p className="text-xs text-text-secondary dark:text-gray-500 mt-1 italic">
-                    {performance.notes}
-                  </p>
-                )}
-              </div>
-              <div className="text-right ml-4">
-                <p className="font-bold text-primary dark:text-secondary">
-                  <CurrencyDisplay value={performance.price} />
-                </p>
-              </div>
-            </div>
+            <DateDisplay
+              value={new Date(performance.date)}
+              options={{ weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }}
+            />
+            <CurrencyDisplay value={performance.price} />
           </button>
         ))}
       </div>
 
-      {selectedPerformance && (
-        <div className="bg-muted dark:bg-accent/50 p-4 rounded-lg mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <p className="text-sm text-text-secondary dark:text-gray-400">
-                Geselecteerde voorstelling:
-              </p>
-              <p className="font-semibold text-primary dark:text-secondary">
-                <DateDisplay
-                  value={new Date(selectedPerformance.date)}
-                  options={{ dateStyle: 'medium', timeStyle: 'short' }}
-                />
-              </p>
-            </div>
-            <p className="text-lg font-bold text-primary dark:text-secondary">
-              <CurrencyDisplay value={parseFloat(selectedPerformance.price) * quantity} />
-            </p>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <label htmlFor="quantity" className="text-primary font-medium">
-              Aantal kaartjes:
-            </label>
-            <NumberInput
-              value={quantity}
-              onChange={(value) => setQuantity(Math.max(1, value || 1))}
-              max={selectedPerformance.availableSeats}
-              min={1}
-              className="w-20"
+      {/* Selected performance details */}
+      {selectedPerformance ? (
+        <div className="space-y-1.5 text-sm">
+          <p className="font-bold text-base">
+            <DateDisplay
+              value={new Date(selectedPerformance.date)}
+              options={{ weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }}
             />
-            <span className="text-sm text-text-secondary dark:text-gray-400">
+          </p>
+          <p>
+            Tijd:{' '}
+            {new Date(selectedPerformance.date).toLocaleTimeString('nl-NL', {
+              hour: '2-digit',
+              minute: '2-digit',
+            })}{' '}
+            uur
+          </p>
+          {selectedPerformance.notes && <p>Inclusief: {selectedPerformance.notes}</p>}
+          <p>
+            Prijs: <CurrencyDisplay value={selectedPerformance.price} />
+          </p>
+        </div>
+      ) : (
+        <p className="text-sm text-muted-foreground">Selecteer een voorstelling hierboven.</p>
+      )}
+
+      {/* Quantity row */}
+      {selectedPerformance && (
+        <div className="flex items-center gap-3 text-sm">
+          <span>Aantal:</span>
+          <NumberInput
+            value={quantity}
+            onChange={(value) => setQuantity(Math.max(1, value || 1))}
+            max={selectedPerformance.availableSeats}
+            min={1}
+            className="w-20"
+          />
+          {quantity > 1 && (
+            <span className="text-muted-foreground">
               Totaal:{' '}
               <CurrencyDisplay
                 value={
@@ -160,28 +144,32 @@ export default function TimeslotPicker({
                 }
               />
             </span>
-          </div>
+          )}
         </div>
       )}
 
+      {/* Success feedback */}
       {showSuccess && (
-        <div className="w-full px-4 py-2 bg-green-100 text-green-800 rounded-lg text-center font-medium mb-4">
-          ✓ Toegevoegd aan winkelwagen
-        </div>
+        <p className="text-sm text-green-700 font-medium">✓ Toegevoegd aan winkelwagen</p>
       )}
 
-      <Button
+      {/* BESTELLEN button */}
+      <button
         onClick={async () => {
           await handleAddToCart();
           router.push('/checkout');
         }}
         disabled={!selectedPerformance}
-        variant="outline"
-        size="lg"
-        className="w-full"
+        className="w-full flex items-center justify-between px-5 py-4 text-white uppercase font-bold tracking-wider text-sm disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
+        style={{ backgroundColor: '#2d4059', fontFamily: 'var(--font-display)' }}
       >
-        {selectedPerformance ? 'Naar Kassa' : 'Selecteer eerst een voorstelling'}
-      </Button>
+        <span>Bestellen</span>
+        <svg width={22} height={22} fill="none" viewBox="0 0 24 24">
+          <path d="M6 6h15l-1.5 9h-13z" stroke="currentColor" strokeWidth={2} />
+          <circle cx={9} cy={21} r={1.5} fill="currentColor" />
+          <circle cx={18} cy={21} r={1.5} fill="currentColor" />
+        </svg>
+      </button>
     </div>
   );
 }

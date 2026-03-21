@@ -18,6 +18,7 @@ import {
   Source_Serif_4,
   Lato,
   Inter,
+  Anton,
 } from 'next/font/google';
 
 // ---------------------------------------------------------------------------
@@ -93,6 +94,14 @@ const _inter = Inter({
   display: 'swap',
 });
 
+const _anton = Anton({
+  variable: '--font-anton',
+  weight: ['400'],
+  subsets: ['latin'],
+  display: 'swap',
+});
+
+
 // ---------------------------------------------------------------------------
 // Type
 // ---------------------------------------------------------------------------
@@ -117,6 +126,14 @@ export interface FontDefinition {
 // ---------------------------------------------------------------------------
 
 export const DISPLAY_FONTS: FontDefinition[] = [
+  {
+    key: 'anton',
+    label: 'Anton',
+    cssVar: '--font-anton',
+    variableClass: _anton.variable,
+    category: 'display',
+    sample: 'PROGRAMMA',
+  },
   {
     key: 'playfair_display',
     label: 'Playfair Display',

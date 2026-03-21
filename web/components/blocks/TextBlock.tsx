@@ -26,14 +26,21 @@ interface TextBlockComponentProps {
   onChange?: (content: Partial<TextBlock>) => void;
 }
 
-export function TextBlockDisplayMode({ block }: { block: TextBlock }) {
+export function TextBlockDisplayMode({
+  block,
+  fullWidth,
+}: {
+  block: TextBlock;
+  fullWidth?: boolean;
+}) {
   // Sanitize HTML to prevent XSS attacks
   const sanitizedContent = DOMPurify.sanitize(block.content);
 
   return (
     <div
       className={cn(
-        'w-full max-w-[65ch]',
+        'w-full',
+        fullWidth ? 'max-w-none' : 'max-w-[65ch]',
         block.proseVariant || 'prose',
         block.textAlignment || 'text-left',
         block.className,
