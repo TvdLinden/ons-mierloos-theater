@@ -1,14 +1,13 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  transpilePackages: ['@ons-mierloos-theater/shared'],
+import type { NextConfig } from 'next';
 
+const nextConfig: NextConfig = {
+  transpilePackages: ['@ons-mierloos-theater/shared'],
   experimental: {
     serverActions: {
       bodySizeLimit: '10mb',
     },
     useCache: true,
   },
-
   images: {
     formats: ['image/webp', 'image/avif'],
     localPatterns: [

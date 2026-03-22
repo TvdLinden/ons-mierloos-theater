@@ -7,6 +7,7 @@ import DateDisplay from '@/components/DateDisplay';
 import CurrencyDisplay from '@/components/CurrencyDisplay';
 import { useCart } from '@/components/CartContext';
 import { NumberInput } from './ui/number-input';
+import { ShoppingCart } from 'lucide-react';
 
 export type TimeslotPickerProps = {
   performances: Performance[];
@@ -74,7 +75,6 @@ export default function TimeslotPicker({
 
   return (
     <div id="tickets" className="w-full flex flex-col gap-4">
-
       {/* Performance selector — always shown */}
       <div className="space-y-1">
         {availablePerformances.map((performance) => (
@@ -164,11 +164,8 @@ export default function TimeslotPicker({
         style={{ backgroundColor: '#2d4059', fontFamily: 'var(--font-display)' }}
       >
         <span>Bestellen</span>
-        <svg width={22} height={22} fill="none" viewBox="0 0 24 24">
-          <path d="M6 6h15l-1.5 9h-13z" stroke="currentColor" strokeWidth={2} />
-          <circle cx={9} cy={21} r={1.5} fill="currentColor" />
-          <circle cx={18} cy={21} r={1.5} fill="currentColor" />
-        </svg>
+
+        <ShoppingCart className="h-5 w-5" />
       </button>
     </div>
   );

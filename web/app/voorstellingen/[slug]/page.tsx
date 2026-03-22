@@ -142,9 +142,9 @@ export default async function PerformancePage({ params }: Props) {
         <ShowDetail show={show} fullWidth />
 
         {/* Share strip */}
-        <div className="mt-12 border-t border-border pt-6">
+        {/* <div className="mt-12 border-t border-border pt-6">
           <ShareButtons url={shareUrl} title={show.title || 'Voorstelling'} />
-        </div>
+        </div> */}
       </div>
 
       {/* Mobile booking bar */}

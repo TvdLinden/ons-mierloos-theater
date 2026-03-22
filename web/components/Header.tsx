@@ -8,7 +8,7 @@ import AccountMenu from '@/components/AccountMenu';
 import { useSession, signOut } from 'next-auth/react';
 import type { NavigationLink } from '@ons-mierloos-theater/shared/db';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { LayoutDashboard, LogOut, LogIn } from 'lucide-react';
+import { LayoutDashboard, LogOut, LogIn, ShoppingCart } from 'lucide-react';
 
 function getInitials(name?: string | null, email?: string | null): string {
   if (name) {
@@ -124,14 +124,10 @@ export default function Header({ navigationLinks = [] }: HeaderProps) {
               style={{ width: 48, height: 48 }}
               aria-label="Winkelwagen"
             >
-              <svg width={22} height={22} fill="none" viewBox="0 0 24 24">
-                <path d="M6 6h15l-1.5 9h-13z" stroke="currentColor" strokeWidth={2} />
-                <circle cx={9} cy={21} r={1.5} fill="currentColor" />
-                <circle cx={18} cy={21} r={1.5} fill="currentColor" />
-              </svg>
+              <ShoppingCart className="h-5 w-5" />
               {items.length > 0 && (
                 <span
-                  className="absolute -top-1.5 -right-1.5 bg-[#5a1e2c] text-white rounded-full px-1.5 text-xs font-bold"
+                  className="absolute -top-1.5 -right-1.5 bg-maroon text-white rounded-full px-1.5 text-xs font-bold"
                   suppressHydrationWarning
                 >
                   {items.length}
@@ -142,8 +138,24 @@ export default function Header({ navigationLinks = [] }: HeaderProps) {
           </div>
         </div>
 
-        {/* Mobile Menu Button - only show hamburger */}
-        <div className="flex md:hidden items-center gap-2">
+        {/* Mobile Menu Button */}
+        <div className="flex md:hidden items-center gap-3">
+          <Link
+            href="/winkelwagen"
+            className="relative flex items-center justify-center bg-primary hover:bg-primary/90 transition-colors text-white"
+            style={{ width: 40, height: 40 }}
+            aria-label="Winkelwagen"
+          >
+            <ShoppingCart className="h-4 w-4" />
+            {items.length > 0 && (
+              <span
+                className="absolute -top-1.5 -right-1.5 bg-maroon text-white rounded-full px-1.5 text-xs font-bold"
+                suppressHydrationWarning
+              >
+                {items.length}
+              </span>
+            )}
+          </Link>
           <button
             className="p-2 text-gray-800 hover:text-primary transition-colors"
             onClick={toggleMobileMenu}
