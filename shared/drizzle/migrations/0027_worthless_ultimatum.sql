@@ -1,1 +1,0 @@
-ALTER TABLE "line_items" ADD COLUMN "wheelchair_access" boolean DEFAULT false NOT NULL;

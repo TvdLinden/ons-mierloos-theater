@@ -1,1 +1,0 @@
-ALTER TABLE "images" ADD COLUMN "focal_points" jsonb;
