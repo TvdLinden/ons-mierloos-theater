@@ -21,9 +21,14 @@ const createR2Client = () => {
     );
   }
 
+  const jurisdiction = process.env.R2_JURISDICTION;
+  const endpoint = jurisdiction
+    ? `https://${accountId}.${jurisdiction}.r2.cloudflarestorage.com`
+    : `https://${accountId}.r2.cloudflarestorage.com`;
+
   return new S3Client({
     region: 'auto',
-    endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
+    endpoint,
     credentials: {
       accessKeyId,
       secretAccessKey,
@@ -99,7 +104,7 @@ export async function deleteImageFromR2(r2Url: string): Promise<void> {
   }
 
   // Extract key from URL
-  // URL format: https://[bucket-name].[account-id].r2.cloudflarestorage.com/[key]
+  // URL format: https://[bucket-name].[account-id].[jurisdiction.]r2.cloudflarestorage.com/[key]
   const urlPattern = new RegExp(`https://${bucketName}\\..*\\.r2\\.cloudflarestorage\\.com/(.+)$`);
   const match = r2Url.match(urlPattern);
 
@@ -153,18 +158,24 @@ export async function getImageFromR2(r2Url: string): Promise<R2FileStream> {
 }
 
 function createR2Url(accountId: string, bucketName: string, key: string) {
-  // URL format: https://[bucket-name].[account-id].r2.cloudflarestorage.com/[key]
-  return `https://${bucketName}.${accountId}.r2.cloudflarestorage.com/${key}`;
+  const jurisdiction = process.env.R2_JURISDICTION;
+  // URL format: https://[bucket-name].[account-id].[jurisdiction.]r2.cloudflarestorage.com/[key]
+  const host = jurisdiction
+    ? `${bucketName}.${accountId}.${jurisdiction}.r2.cloudflarestorage.com`
+    : `${bucketName}.${accountId}.r2.cloudflarestorage.com`;
+  return `https://${host}/${key}`;
 }
 
 function extractKeyFromR2Url(bucketName: string, r2Url: string): string {
-  const urlPattern = new RegExp(`https://${bucketName}\\..*\\.r2\\.cloudflarestorage\\.com/(.+)$`);
+  // Matches both jurisdiction and non-jurisdiction URL formats
+  const urlPattern = new RegExp(
+    `https://${bucketName}\\..*\\.r2\\.cloudflarestorage\\.com/(.+)$`,
+  );
   const match = r2Url.match(urlPattern);
 
   if (!match || !match[1]) {
     throw new Error(`Invalid R2 URL format: ${r2Url}`);
   }
 
-  const key = match[1];
-  return key;
+  return match[1];
 }

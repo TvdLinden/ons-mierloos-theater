@@ -1,7 +1,10 @@
 import type { NextConfig } from 'next';
+import path from 'path';
 
 const nextConfig: NextConfig = {
   output: 'standalone',
+  // Required for standalone to correctly trace shared workspace files
+  outputFileTracingRoot: path.join(__dirname, '../'),
   transpilePackages: ['@ons-mierloos-theater/shared'],
   experimental: {
     serverActions: {

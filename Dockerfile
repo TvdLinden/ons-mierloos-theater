@@ -14,28 +14,29 @@ RUN npm ci
 COPY shared shared
 COPY web web
 
-# Build Next.js
+# Build Next.js (standalone output)
 RUN npm run build --workspace=web
 
 # Stage 2: Production
+# With outputFileTracingRoot set to the monorepo root, Next.js standalone traces
+# all dependencies (including shared/) and outputs them under web/.next/standalone/.
+# The server entry point lands at web/.next/standalone/web/server.js.
 FROM node:20-alpine AS production
 WORKDIR /app
 
-# Install production deps
-COPY package.json package-lock.json ./
-COPY shared/package.json shared/
-COPY web/package.json web/
-COPY worker/package.json worker/
-RUN npm ci --omit=dev
+# curl for healthchecks
+RUN apk add --no-cache curl
 
-# Shared source (resolved via symlink in node_modules)
-COPY shared/lib shared/lib
+# Copy the self-contained standalone server (includes its own node_modules)
+COPY --from=builder /app/web/.next/standalone ./
 
-# Next.js build output + static assets
-COPY --from=builder /app/web/.next web/.next
+# Static assets and public folder must be copied alongside the standalone server
+COPY --from=builder /app/web/.next/static web/.next/static
 COPY --from=builder /app/web/public web/public
-COPY web/next.config.ts web/
 
-WORKDIR /app/web
+ENV NODE_ENV=production
+ENV HOSTNAME=0.0.0.0
+ENV PORT=3000
+
 EXPOSE 3000
-CMD ["npm", "run", "start"]
+CMD ["node", "web/server.js"]
