@@ -10,6 +10,7 @@ import {
   PaginationPrevious,
 } from '@/components/ui/pagination';
 import { getPageNumbers } from '@/lib/utils/pagination';
+import { useSearchParams } from 'next/navigation';
 
 type HrefMode = {
   /** Called with the target page number; should return the href string. */
@@ -36,9 +37,17 @@ export default function PaginationBar({
   buildHref,
   onPageChange,
 }: PaginationBarProps) {
+  const searchParams = useSearchParams();
+
   if (totalPages <= 1) return null;
 
-  const hrefFor = buildHref ?? ((p: number) => `?page=${p}`);
+  const defaultHref = (p: number) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('page', String(p));
+    return `?${params.toString()}`;
+  };
+
+  const hrefFor = buildHref ?? defaultHref;
 
   const linkProps = (targetPage: number) =>
     onPageChange

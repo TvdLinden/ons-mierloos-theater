@@ -4,7 +4,6 @@ import {
 } from '@ons-mierloos-theater/shared/queries/shows';
 import FeaturedShowCard from '@/components/FeaturedShowCard';
 import PaginationBar from '@/components/PaginationBar';
-import { buildHref } from '@/lib/utils/pagination';
 
 const ITEMS_PER_PAGE = 9;
 
@@ -27,12 +26,6 @@ export default async function ShowsPage({ searchParams }) {
 
   const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
 
-  const hrefFor = (newPage) =>
-    buildHref('/voorstellingen', newPage, {
-      tags: selectedTags.length > 0 ? selectedTags.join(',') : null,
-      month: selectedMonth,
-    });
-
   return (
     <div className="flex min-h-screen flex-col bg-surface">
       <main className="grow w-full max-w-7xl flex-col items-center justify-between py-16 px-8 mx-auto sm:items-start">
@@ -50,7 +43,7 @@ export default async function ShowsPage({ searchParams }) {
           </div>
 
           <div className="mt-12">
-            <PaginationBar page={page} totalPages={totalPages} buildHref={hrefFor} />
+            <PaginationBar page={page} totalPages={totalPages} />
           </div>
         </section>
       </main>
