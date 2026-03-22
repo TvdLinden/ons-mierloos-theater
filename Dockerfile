@@ -14,6 +14,17 @@ RUN npm ci
 COPY shared shared
 COPY web web
 
+# Build-time public env vars (baked into the Next.js bundle)
+ARG NEXT_PUBLIC_APP_URL
+ARG NEXT_PUBLIC_BASE_URL
+ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
+ENV NEXT_PUBLIC_BASE_URL=$NEXT_PUBLIC_BASE_URL
+
+# Dummy DATABASE_URL so Next.js static page collection doesn't fail at build time.
+# The real value is injected at runtime via env_file and overrides this.
+ARG DATABASE_URL=postgresql://placeholder:placeholder@localhost:5432/placeholder
+ENV DATABASE_URL=$DATABASE_URL
+
 # Build Next.js (standalone output)
 RUN npm run build --workspace=web
 
