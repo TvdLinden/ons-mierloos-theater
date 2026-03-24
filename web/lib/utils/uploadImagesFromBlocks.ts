@@ -1,4 +1,5 @@
 import type { BlocksArray, Block } from '@ons-mierloos-theater/shared/schemas/blocks';
+import sanitizeHtml from 'sanitize-html';
 
 /**
  * Uploads all base64 images in blocks and replaces them with R2 URLs and data-image-id attributes.
@@ -18,7 +19,15 @@ async function processBlock(block: Block): Promise<Block> {
   // Process text blocks with potential base64 images
   if (block.type === 'text' && block.content) {
     const cleanedContent = await uploadImagesInHTML(block.content);
-    return { ...block, content: cleanedContent };
+    const sanitizedContent = sanitizeHtml(cleanedContent, {
+      allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img', 'figure', 'figcaption']),
+      allowedAttributes: {
+        ...sanitizeHtml.defaults.allowedAttributes,
+        img: ['src', 'alt', 'data-image-id', 'width', 'height'],
+        '*': ['class', 'style'],
+      },
+    });
+    return { ...block, content: sanitizedContent };
   }
 
   // Recursively process children in column/row blocks
