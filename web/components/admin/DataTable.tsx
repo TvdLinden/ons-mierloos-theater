@@ -22,7 +22,6 @@ export type FilterDefinition = {
   placeholder?: string;
 };
 
-
 type DataTableProps = {
   title?: string;
   headers: Array<
@@ -180,7 +179,12 @@ export function DataTable({
                     ? 'ascending'
                     : 'descending'
                   : undefined;
-                const alignClass = header.align === 'right' ? 'text-right' : header.align === 'center' ? 'text-center' : 'text-left';
+                const alignClass =
+                  header.align === 'right'
+                    ? 'text-right'
+                    : header.align === 'center'
+                      ? 'text-center'
+                      : 'text-left';
                 return (
                   <th
                     key={idx}

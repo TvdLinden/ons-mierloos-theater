@@ -6,21 +6,21 @@ Theater ticket sales and management system for "Ons Mierloos Theater". Handles s
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Frontend | Next.js 14 (App Router) |
-| Styling | Tailwind CSS + shadcn/ui (Radix UI primitives) |
-| Auth | NextAuth (credentials provider, bcryptjs) |
-| Database | PostgreSQL 16 |
-| ORM | Drizzle ORM |
-| Payments | Mollie |
-| Image storage | Cloudflare R2 (S3-compatible) |
-| Background jobs | Custom job queue backed by PostgreSQL LISTEN/NOTIFY |
-| PDF generation | PDFKit (tickets) |
-| Email | Nodemailer (SMTP) |
-| Rich text | TipTap |
-| Forms | react-hook-form + Zod |
-| Containerization | Docker + Kubernetes |
+| Layer            | Technology                                          |
+| ---------------- | --------------------------------------------------- |
+| Frontend         | Next.js 14 (App Router)                             |
+| Styling          | Tailwind CSS + shadcn/ui (Radix UI primitives)      |
+| Auth             | NextAuth (credentials provider, bcryptjs)           |
+| Database         | PostgreSQL 16                                       |
+| ORM              | Drizzle ORM                                         |
+| Payments         | Mollie                                              |
+| Image storage    | Cloudflare R2 (S3-compatible)                       |
+| Background jobs  | Custom job queue backed by PostgreSQL LISTEN/NOTIFY |
+| PDF generation   | PDFKit (tickets)                                    |
+| Email            | Nodemailer (SMTP)                                   |
+| Rich text        | TipTap                                              |
+| Forms            | react-hook-form + Zod                               |
+| Containerization | Docker + Kubernetes                                 |
 
 ---
 
@@ -106,6 +106,7 @@ shared/lib/
 ```
 
 Data access pattern:
+
 - `queries/` — read-only, e.g. `getShowBySlug()`, `getUpcomingShows()`
 - `commands/` — writes, e.g. `createOrder()`, `updatePayment()`
 
@@ -197,6 +198,7 @@ The cart is managed entirely client-side (React state / localStorage). No server
 ### User Dashboard (`/account`)
 
 Authenticated users can view:
+
 - Past and upcoming orders with ticket download links
 - Personal details
 
@@ -225,14 +227,14 @@ Show and performance content is composed of **content blocks** (text, image, gal
 
 ## Background Jobs
 
-| Job type | Triggered by | Handler |
-|---|---|---|
-| `payment_creation` | Checkout (Mollie call failed) | `paymentCreationHandler` |
-| `payment_webhook` | Mollie webhook | `paymentWebhookHandler` |
-| `pdf_generation` | Successful payment | inline |
-| `email` | Order confirmation | inline |
-| `orphaned_order_cleanup` | Scheduler (cron) | `orphanedOrderCleanupHandler` |
-| `cleanup_old_jobs` | Scheduler (cron) | `cleanupOldJobsHandler` |
+| Job type                 | Triggered by                  | Handler                       |
+| ------------------------ | ----------------------------- | ----------------------------- |
+| `payment_creation`       | Checkout (Mollie call failed) | `paymentCreationHandler`      |
+| `payment_webhook`        | Mollie webhook                | `paymentWebhookHandler`       |
+| `pdf_generation`         | Successful payment            | inline                        |
+| `email`                  | Order confirmation            | inline                        |
+| `orphaned_order_cleanup` | Scheduler (cron)              | `orphanedOrderCleanupHandler` |
+| `cleanup_old_jobs`       | Scheduler (cron)              | `cleanupOldJobsHandler`       |
 
 Retry strategy: exponential backoff, up to 5 attempts, max ~10 minutes between retries. The worker uses PostgreSQL `LISTEN/NOTIFY` for near-real-time job pickup.
 
@@ -259,13 +261,13 @@ Routing is handled by Dokploy (Traefik). Environment variables are configured in
 
 ## Environment Variables
 
-| Variable | Purpose |
-|---|---|
-| `DATABASE_URL` | PostgreSQL connection string |
-| `NEXTAUTH_SECRET` / `NEXTAUTH_URL` | Auth configuration |
-| `MOLLIE_API_KEY` | Payment provider |
-| `USE_MOCK_PAYMENT` | Set `true` to skip Mollie in development |
-| `SMTP_HOST` / `SMTP_USER` / `SMTP_PASS` | Transactional email |
-| `R2_ACCOUNT_ID` / `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` | Image storage |
-| `R2_JURISDICTION` | Cloudflare R2 jurisdiction (e.g. `eu`) |
-| `NEXT_PUBLIC_BASE_URL` | Base URL for payment redirects (baked into build) |
+| Variable                                                      | Purpose                                           |
+| ------------------------------------------------------------- | ------------------------------------------------- |
+| `DATABASE_URL`                                                | PostgreSQL connection string                      |
+| `NEXTAUTH_SECRET` / `NEXTAUTH_URL`                            | Auth configuration                                |
+| `MOLLIE_API_KEY`                                              | Payment provider                                  |
+| `USE_MOCK_PAYMENT`                                            | Set `true` to skip Mollie in development          |
+| `SMTP_HOST` / `SMTP_USER` / `SMTP_PASS`                       | Transactional email                               |
+| `R2_ACCOUNT_ID` / `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` | Image storage                                     |
+| `R2_JURISDICTION`                                             | Cloudflare R2 jurisdiction (e.g. `eu`)            |
+| `NEXT_PUBLIC_BASE_URL`                                        | Base URL for payment redirects (baked into build) |

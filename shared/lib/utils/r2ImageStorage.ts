@@ -168,9 +168,7 @@ function createR2Url(accountId: string, bucketName: string, key: string) {
 
 function extractKeyFromR2Url(bucketName: string, r2Url: string): string {
   // Matches both jurisdiction and non-jurisdiction URL formats
-  const urlPattern = new RegExp(
-    `https://${bucketName}\\..*\\.r2\\.cloudflarestorage\\.com/(.+)$`,
-  );
+  const urlPattern = new RegExp(`https://${bucketName}\\..*\\.r2\\.cloudflarestorage\\.com/(.+)$`);
   const match = r2Url.match(urlPattern);
 
   if (!match || !match[1]) {

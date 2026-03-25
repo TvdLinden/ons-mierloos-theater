@@ -12,10 +12,13 @@ export default function FeaturedShowCard({ show }: FeaturedShowCardProps) {
   const { title, slug, performances } = show;
   const imageUrl = getShowImageUrl(show, 'md');
 
-  // Get next upcoming performance
+  // Get next upcoming performance (include sold_out so date still shows)
   const nextPerformance = performances
-    ?.filter((p) => p.status === 'published' && new Date(p.date) > new Date())
+    ?.filter((p) => ['published', 'sold_out'].includes(p.status) && new Date(p.date) > new Date())
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())[0];
+
+  const isSoldOut = nextPerformance?.status === 'sold_out' || nextPerformance?.availableSeats === 0;
+  const isPast = !nextPerformance;
 
   // Format date as "ZA 28 SEP" (Dutch, uppercase)
   const formattedDate = nextPerformance
@@ -51,8 +54,8 @@ export default function FeaturedShowCard({ show }: FeaturedShowCardProps) {
             />
           </div>
 
-          {/* Date badge — flush bottom-left, barely extends below image */}
-          {formattedDate && (
+          {/* Date / status badge — flush bottom-left, barely extends below image */}
+          {(formattedDate || isSoldOut || isPast) && (
             <div
               className="absolute z-10 px-3 py-2"
               style={{ backgroundColor: '#5a1e2c', bottom: '-12px', left: '0px' }}
@@ -61,7 +64,7 @@ export default function FeaturedShowCard({ show }: FeaturedShowCardProps) {
                 className="text-white font-bold text-lg tracking-widest uppercase"
                 style={{ fontFamily: 'var(--font-display)' }}
               >
-                {formattedDate}
+                {isSoldOut ? 'Uitverkocht' : isPast ? 'Pas gespeeld' : formattedDate}
               </span>
             </div>
           )}

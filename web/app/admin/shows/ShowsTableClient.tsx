@@ -14,11 +14,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { MoreHorizontal } from 'lucide-react';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import type { ExportData } from '@ons-mierloos-theater/shared/utils/export';
 import type { ShowWithTagsAndPerformances } from '@ons-mierloos-theater/shared/db';
 
@@ -76,12 +72,15 @@ function getExportData(
           (totalSeats - availableSeats).toString(),
           availableSeats.toString(),
           (() => {
-            const dates = [
-              show.updatedAt,
-              ...show.performances.map((p) => p.updatedAt),
-            ].filter(Boolean) as Date[];
+            const dates = [show.updatedAt, ...show.performances.map((p) => p.updatedAt)].filter(
+              Boolean,
+            ) as Date[];
             const latest = new Date(Math.max(...dates.map((d) => new Date(d).getTime())));
-            return latest.toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric' });
+            return latest.toLocaleDateString('nl-NL', {
+              day: 'numeric',
+              month: 'short',
+              year: 'numeric',
+            });
           })(),
         ];
       }),
@@ -393,10 +392,7 @@ export function ShowsTableClient({ onStatusChange }: ShowsTableClientProps) {
                           <>
                             <CollapsibleContent className="overflow-hidden space-y-1.5 data-[state=open]:animate-collapsible-down data-[state=closed]:animate-collapsible-up">
                               {show.performances.slice(3).map((p) => (
-                                <div
-                                  key={p.id}
-                                  className="flex items-center justify-between gap-4"
-                                >
+                                <div key={p.id} className="flex items-center justify-between gap-4">
                                   <span className="text-zinc-600">
                                     {new Date(p.date).toLocaleDateString('nl-NL', {
                                       day: 'numeric',

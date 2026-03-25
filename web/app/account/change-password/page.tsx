@@ -89,9 +89,12 @@ export default function ChangePasswordPage() {
   return (
     <div className="min-h-screen bg-muted/30">
       <div className="container mx-auto px-4 py-12 max-w-2xl">
-
         <Link href="/account">
-          <Button variant="ghost" size="sm" className="mb-6 -ml-2 text-muted-foreground hover:text-foreground">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="mb-6 -ml-2 text-muted-foreground hover:text-foreground"
+          >
             <ChevronLeft className="mr-1 h-4 w-4" />
             Terug naar account
           </Button>

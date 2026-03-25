@@ -262,7 +262,9 @@ export default function ImageManagementClient({
               </div>
               {selectedImages.size > 0 && (
                 <div className="flex items-center gap-3">
-                  <p className="text-sm text-muted-foreground">{selectedImages.size} geselecteerd</p>
+                  <p className="text-sm text-muted-foreground">
+                    {selectedImages.size} geselecteerd
+                  </p>
                   <Button
                     variant="destructive"
                     size="sm"

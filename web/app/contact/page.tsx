@@ -12,7 +12,6 @@ export default function ContactPage() {
   return (
     <div className="min-h-screen bg-muted/30">
       <div className="container mx-auto px-4 py-12 max-w-5xl">
-
         <div className="mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Contact</h1>
           <p className="text-muted-foreground mt-1">Neem contact op met Ons Mierloos Theater</p>
@@ -97,20 +96,28 @@ export default function ContactPage() {
               <form className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <Label htmlFor="name" className="text-sm font-medium">Naam *</Label>
+                    <Label htmlFor="name" className="text-sm font-medium">
+                      Naam *
+                    </Label>
                     <Input id="name" name="name" type="text" required />
                   </div>
                   <div className="space-y-1.5">
-                    <Label htmlFor="email" className="text-sm font-medium">E-mail *</Label>
+                    <Label htmlFor="email" className="text-sm font-medium">
+                      E-mail *
+                    </Label>
                     <Input id="email" name="email" type="email" required />
                   </div>
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="subject" className="text-sm font-medium">Onderwerp *</Label>
+                  <Label htmlFor="subject" className="text-sm font-medium">
+                    Onderwerp *
+                  </Label>
                   <Input id="subject" name="subject" type="text" required />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="message" className="text-sm font-medium">Bericht *</Label>
+                  <Label htmlFor="message" className="text-sm font-medium">
+                    Bericht *
+                  </Label>
                   <Textarea id="message" name="message" rows={5} required />
                 </div>
                 <Button type="submit" className="w-full">
@@ -140,7 +147,6 @@ export default function ContactPage() {
             />
           </CardContent>
         </Card>
-
       </div>
     </div>
   );

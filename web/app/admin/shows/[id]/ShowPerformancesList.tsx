@@ -3,11 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { Pencil } from 'lucide-react';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 type Performance = {
   id: string;
@@ -109,9 +105,7 @@ export function ShowPerformancesList({
             ))}
           </CollapsibleContent>
           <CollapsibleTrigger className="pt-3 text-xs text-primary hover:underline cursor-pointer">
-            {expanded
-              ? 'Minder tonen'
-              : `+${performances.length - INITIAL_COUNT} meer speeltijden`}
+            {expanded ? 'Minder tonen' : `+${performances.length - INITIAL_COUNT} meer speeltijden`}
           </CollapsibleTrigger>
         </Collapsible>
       )}

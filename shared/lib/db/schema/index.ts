@@ -24,7 +24,12 @@ import { coupons, couponPerformances, couponUsages } from './coupons';
 import { sponsors } from './sponsors';
 import { newsArticles } from './content';
 import { siteSettings } from './settings';
-import { clientApplications, applicationDefinedScopes, grantedPermissions, clientSecrets } from './oauth';
+import {
+  clientApplications,
+  applicationDefinedScopes,
+  grantedPermissions,
+  clientSecrets,
+} from './oauth';
 import { jobs } from './jobs';
 
 // Define all relations here to avoid circular imports

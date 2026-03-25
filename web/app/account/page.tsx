@@ -28,7 +28,6 @@ export default async function AccountPage() {
   return (
     <div className="min-h-screen bg-muted/30">
       <div className="container mx-auto px-4 py-12 max-w-4xl">
-
         {/* Page title */}
         <div className="mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Mijn Account</h1>
@@ -52,7 +51,10 @@ export default async function AccountPage() {
                 { label: 'E-mailadres', value: session.user.email },
                 { label: 'Rol', value: session.user.role },
               ].map(({ label, value }) => (
-                <div key={label} className="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-4">
+                <div
+                  key={label}
+                  className="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-4"
+                >
                   <span className="text-xs text-muted-foreground w-24 shrink-0">{label}</span>
                   <span className="font-medium text-sm capitalize">{value}</span>
                 </div>
@@ -89,9 +91,13 @@ export default async function AccountPage() {
           <CardContent className="p-0">
             {orders.length === 0 ? (
               <div className="text-center py-12 px-6">
-                <p className="text-muted-foreground mb-4">Je hebt nog geen bestellingen geplaatst.</p>
+                <p className="text-muted-foreground mb-4">
+                  Je hebt nog geen bestellingen geplaatst.
+                </p>
                 <Link href="/">
-                  <Button variant="outline" size="sm">Bekijk ons programma</Button>
+                  <Button variant="outline" size="sm">
+                    Bekijk ons programma
+                  </Button>
                 </Link>
               </div>
             ) : (
@@ -105,12 +111,17 @@ export default async function AccountPage() {
                       <div className="min-w-0">
                         <div className="flex items-center gap-3 mb-1">
                           <span className="font-medium text-sm">
-                            Bestelling <span className="font-mono text-muted-foreground">#{order.id.substring(0, 8)}</span>
+                            Bestelling{' '}
+                            <span className="font-mono text-muted-foreground">
+                              #{order.id.substring(0, 8)}
+                            </span>
                           </span>
                           <OrderStatusBadge status={order.status} />
                         </div>
                         <p className="text-xs text-muted-foreground">
-                          {new Date(order.createdAt || '').toLocaleDateString('nl-NL', { dateStyle: 'long' })}
+                          {new Date(order.createdAt || '').toLocaleDateString('nl-NL', {
+                            dateStyle: 'long',
+                          })}
                           {' · '}
                           {order.lineItems.length === 1
                             ? order.lineItems[0].performance?.show?.title

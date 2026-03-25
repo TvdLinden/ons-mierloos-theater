@@ -49,28 +49,29 @@ async function getImageBlurDataUrl(id: string, r2Url: string): Promise<string | 
 }
 
 export default async function HomePage() {
+  const GRID_MAX = 6;
+
   const results = await Promise.all([
-    getUpcomingShows(0, 10),
+    getUpcomingShows(0, GRID_MAX),
     getActiveNewsArticles(3),
     getHomepageContent(),
   ]);
 
-  let shows = results[0];
+  const upcomingShows = results[0];
   const newsArticles = results[1];
-  const homepageContent = results[2];
-  // Determine if we're showing upcoming or recently passed shows
-  let isShowingRecentlyPassed = false;
-  if (shows.length === 0) {
-    shows = await getRecentlyPassedShows(0, 6);
-    isShowingRecentlyPassed = shows.length > 0;
+
+  // Backfill with past shows to always fill the grid
+  let shows = upcomingShows;
+  if (upcomingShows.length < GRID_MAX) {
+    const pastShows = await getRecentlyPassedShows(0, GRID_MAX - upcomingShows.length);
+    shows = [...upcomingShows, ...pastShows];
   }
 
   // Split shows: first 4 with images for hero, up to 6 for featured grid
-  const heroShows = shows.filter((s) => s.imageId).slice(0, 4);
-  const featuredShows = shows.slice(0, 6);
+  const featuredShows = shows.slice(0, GRID_MAX);
 
-  // Determine the label based on whether we're showing upcoming or recently passed shows
-  const sectionLabel = isShowingRecentlyPassed ? 'Pas gespeeld' : 'Uitgelicht';
+  // "Pas gespeeld" only when there are no upcoming shows at all
+  const sectionLabel = upcomingShows.length > 0 ? 'Uitgelicht' : 'Pas gespeeld';
 
   // Enrich shows and news articles with blur data URLs in parallel
   const [featuredShowsWithBlur, newsArticlesWithBlur] = await Promise.all([

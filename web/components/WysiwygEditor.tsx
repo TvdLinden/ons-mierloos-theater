@@ -6,7 +6,6 @@ import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
 import Youtube from '@tiptap/extension-youtube';
 import { Markdown } from '@tiptap/markdown';
-import DOMPurify from 'dompurify';
 import {
   Bold,
   Italic,
@@ -194,8 +193,7 @@ export default function WysiwygEditor({ name, defaultValue, disabled, ref }: Wys
       });
 
     await Promise.all(uploadPromises);
-    // Sanitize before returning to prevent XSS
-    return DOMPurify.sanitize(doc.body.innerHTML);
+    return doc.body.innerHTML;
   };
 
   const getMarkdownWithUploadedImages = async (): Promise<string> => {
@@ -218,7 +216,7 @@ export default function WysiwygEditor({ name, defaultValue, disabled, ref }: Wys
   };
 
   useImperativeHandle(ref, () => ({
-    getHTML: () => DOMPurify.sanitize(editor.getHTML()),
+    getHTML: () => editor.getHTML(),
     getText: () => editor.getText(),
     getMarkdown: () => editor.getMarkdown(),
     getHTMLWithUploadedImages,

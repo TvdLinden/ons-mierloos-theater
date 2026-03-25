@@ -24,7 +24,6 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
     notFound();
   }
 
-
   return (
     <>
       <AdminPageHeader

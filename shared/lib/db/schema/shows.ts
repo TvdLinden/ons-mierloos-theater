@@ -1,4 +1,15 @@
-import { pgTable, pgEnum, varchar, text, decimal, timestamp, jsonb, index, uuid, integer } from 'drizzle-orm/pg-core';
+import {
+  pgTable,
+  pgEnum,
+  varchar,
+  text,
+  decimal,
+  timestamp,
+  jsonb,
+  index,
+  uuid,
+  integer,
+} from 'drizzle-orm/pg-core';
 import { images } from './images';
 
 const showStatusValues = ['draft', 'published', 'archived'] as const;

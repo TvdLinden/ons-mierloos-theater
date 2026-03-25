@@ -5,6 +5,7 @@ export default defineConfig({
   test: {
     name: 'web',
     include: ['**/*.test.ts', '**/*.test.tsx'],
+    exclude: ['**/*.integration.test.ts', 'node_modules', '.next'],
     globals: true,
     environment: 'happy-dom',
     setupFiles: ['../vitest.setup.ts'],

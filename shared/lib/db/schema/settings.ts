@@ -1,4 +1,13 @@
-import { pgTable, varchar, text, timestamp, index, uuid, integer, boolean } from 'drizzle-orm/pg-core';
+import {
+  pgTable,
+  varchar,
+  text,
+  timestamp,
+  index,
+  uuid,
+  integer,
+  boolean,
+} from 'drizzle-orm/pg-core';
 import { images } from './images';
 
 // Site Settings - general configuration

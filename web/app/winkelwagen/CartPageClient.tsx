@@ -63,9 +63,12 @@ export function CartPageClient({ recommendedShows }: CartPageClientProps) {
   return (
     <div className="min-h-screen bg-muted/30 py-12">
       <div className="max-w-5xl mx-auto px-4">
-
         <Link href="/">
-          <Button variant="ghost" size="sm" className="mb-6 -ml-2 text-muted-foreground hover:text-foreground">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="mb-6 -ml-2 text-muted-foreground hover:text-foreground"
+          >
             <ChevronLeft className="mr-1 h-4 w-4" />
             Terug naar voorstellingen
           </Button>

@@ -191,7 +191,6 @@ export function GalleryBlockEdit({ block, onChange }: GalleryBlockEditProps) {
           </div>
         </CollapsibleContent>
       </Collapsible>
-
     </div>
   );
 }

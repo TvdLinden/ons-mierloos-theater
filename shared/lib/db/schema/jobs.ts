@@ -1,4 +1,14 @@
-import { pgTable, pgEnum, varchar, text, timestamp, index, uuid, integer, jsonb } from 'drizzle-orm/pg-core';
+import {
+  pgTable,
+  pgEnum,
+  varchar,
+  text,
+  timestamp,
+  index,
+  uuid,
+  integer,
+  jsonb,
+} from 'drizzle-orm/pg-core';
 
 // Job status enum
 const jobStatusValues = ['pending', 'processing', 'completed', 'failed'] as const;

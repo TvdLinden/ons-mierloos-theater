@@ -6,7 +6,6 @@ import Image from 'next/image';
 import Autoplay from 'embla-carousel-autoplay';
 import { getShowImageUrl } from '@/lib/utils/performanceImages';
 import { getFocalPointStyle } from '@ons-mierloos-theater/shared/utils/focalPoints';
-import { Button } from '@/components/ui/button';
 import {
   Carousel,
   CarouselContent,
@@ -27,7 +26,6 @@ export default function HeroCarousel({ shows, autoplayDelay = 5000 }: HeroCarous
   const [current, setCurrent] = useState(0);
   const [count, setCount] = useState(0);
 
-  // Filter to shows that have images
   const showsWithImages = shows.filter((show) => show.imageId);
 
   useEffect(() => {
@@ -48,9 +46,38 @@ export default function HeroCarousel({ shows, autoplayDelay = 5000 }: HeroCarous
     [api],
   );
 
-  if (showsWithImages.length === 0) {
-    return null;
-  }
+  if (showsWithImages.length === 0) return null;
+
+  const currentShow = showsWithImages[current];
+
+  const now = new Date();
+
+  const nextPerformance = currentShow?.performances
+    ?.filter((p) => p.status === 'published' && new Date(p.date) > now)
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())[0];
+
+  const nextSoldOut = !nextPerformance
+    ? currentShow?.performances
+        ?.filter((p) => p.status === 'sold_out' && new Date(p.date) > now)
+        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())[0]
+    : null;
+
+  const datePerformance = nextPerformance ?? nextSoldOut;
+
+  const isPast =
+    !nextPerformance &&
+    !nextSoldOut &&
+    (currentShow?.performances?.every((p) => new Date(p.date) <= now) ?? true);
+
+  const formattedDate = datePerformance
+    ? new Intl.DateTimeFormat('nl-NL', {
+        weekday: 'short',
+        day: 'numeric',
+        month: 'short',
+      })
+        .format(new Date(datePerformance.date))
+        .toUpperCase()
+    : null;
 
   return (
     <section className="w-screen relative left-[calc(-50vw+50%)] mb-8">
@@ -70,7 +97,6 @@ export default function HeroCarousel({ shows, autoplayDelay = 5000 }: HeroCarous
           {showsWithImages.map((show, index) => (
             <CarouselItem key={show.id}>
               <div className="relative aspect-[4/3] md:aspect-[21/9] w-full overflow-hidden">
-                {/* Hero Image */}
                 <Image
                   src={getShowImageUrl(show, 'lg')}
                   alt={show.title}
@@ -82,52 +108,65 @@ export default function HeroCarousel({ shows, autoplayDelay = 5000 }: HeroCarous
                   placeholder={show.blurDataUrl ? 'blur' : 'empty'}
                   blurDataURL={show.blurDataUrl ?? undefined}
                 />
-
-                {/* Gradient Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-
-                {/* Content */}
-                <div className="absolute inset-0 flex flex-col justify-end p-6 md:p-12 lg:p-16">
-                  <div className="max-w-3xl">
-                    <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold text-white mb-2 md:mb-4 drop-shadow-lg">
-                      {show.title}
-                    </h2>
-                    {show.subtitle && (
-                      <p className="text-lg md:text-xl lg:text-2xl text-white/90 mb-4 md:mb-6 drop-shadow-md">
-                        {show.subtitle}
-                      </p>
-                    )}
-                    <Link href={`/voorstellingen/${show.slug}`}>
-                      <Button size="lg" className="bg-primary hover:bg-primary/90 text-white">
-                        Info & bestel kaarten
-                      </Button>
-                    </Link>
-                  </div>
-                </div>
               </div>
             </CarouselItem>
           ))}
         </CarouselContent>
 
-        {/* Navigation Arrows */}
-        <CarouselPrevious className="left-4 md:left-8 bg-white/20 hover:bg-white/40 border-none text-white" />
-        <CarouselNext className="right-4 md:right-8 bg-white/20 hover:bg-white/40 border-none text-white" />
+        <CarouselPrevious className="left-4 md:left-8 bg-white/20 hover:bg-white/40 border-none text-white z-20" />
+        <CarouselNext className="right-4 md:right-8 bg-white/20 hover:bg-white/40 border-none text-white z-20" />
 
-        {/* Dots Navigation */}
+        {/* Dots — top of image so they're never behind the maroon card */}
         {count > 1 && (
-          <div className="absolute bottom-4 md:bottom-8 left-1/2 -translate-x-1/2 flex gap-2">
-            {Array.from({ length: count }).map((_, index) => (
+          <div className="absolute top-4 md:top-5 left-1/2 -translate-x-1/2 flex gap-2 z-20">
+            {Array.from({ length: count }).map((_, i) => (
               <button
-                key={index}
-                onClick={() => scrollTo(index)}
-                className={`w-2 h-2 md:w-3 md:h-3 rounded-full transition-all ${
-                  index === current ? 'bg-white scale-125' : 'bg-white/50 hover:bg-white/75'
+                key={i}
+                onClick={() => scrollTo(i)}
+                className={`w-2 h-2 rounded-full transition-all ${
+                  i === current ? 'bg-white scale-125' : 'bg-white/50 hover:bg-white/75'
                 }`}
-                aria-label={`Go to slide ${index + 1}`}
+                aria-label={`Go to slide ${i + 1}`}
               />
             ))}
           </div>
         )}
+
+        {/* Maroon card — single combined box, floats over the image bottom-left */}
+        <Link
+          href={`/voorstellingen/${currentShow?.slug}`}
+          className="absolute bottom-4 md:bottom-10 md:left-10 z-10 block group w-fit max-w-[80%] md:max-w-[60%]"
+        >
+          <div
+            className="px-6 md:px-8 py-4 md:py-6 transition-[filter] group-hover:brightness-110"
+            style={{ backgroundColor: 'var(--color-maroon)' }}
+          >
+            {formattedDate && (
+              <span
+                className="block text-white text-xs font-bold tracking-widest uppercase mb-2"
+                style={{ fontFamily: 'var(--font-display)' }}
+              >
+                {formattedDate}
+              </span>
+            )}
+            <h2
+              className="text-2xl md:text-3xl lg:text-4xl uppercase leading-tight text-white"
+              style={{ fontFamily: 'var(--font-display)' }}
+            >
+              {currentShow?.title}
+            </h2>
+            {nextSoldOut && (
+              <span className="inline-block mt-2 px-2 py-0.5 text-xs font-bold tracking-widest uppercase bg-white/20 text-white">
+                Uitverkocht
+              </span>
+            )}
+            {isPast && (
+              <span className="inline-block mt-2 px-2 py-0.5 text-xs font-bold tracking-widest uppercase bg-white/20 text-white">
+                Pas gespeeld
+              </span>
+            )}
+          </div>
+        </Link>
       </Carousel>
     </section>
   );

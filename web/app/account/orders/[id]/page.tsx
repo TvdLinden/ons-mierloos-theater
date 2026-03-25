@@ -8,9 +8,24 @@ import { getOrderById } from '@ons-mierloos-theater/shared/queries/orders';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { Metadata } from 'next';
-import { AlertCircle, ChevronLeft, Download, Ticket, Receipt, CalendarDays, User } from 'lucide-react';
+import {
+  AlertCircle,
+  ChevronLeft,
+  Download,
+  Ticket,
+  Receipt,
+  CalendarDays,
+  User,
+} from 'lucide-react';
 import { OrderStatusBadge, PaymentStatusBadge } from '@/components/ui/order-status-badge';
 
 interface OrderDetailPageProps {
@@ -24,7 +39,6 @@ export async function generateMetadata({ params }: OrderDetailPageProps): Promis
     description: 'Bekijk de details van je bestelling',
   };
 }
-
 
 export default async function UserOrderDetailPage({ params }: OrderDetailPageProps) {
   const session = await getServerSession(authOptions);
@@ -44,10 +58,13 @@ export default async function UserOrderDetailPage({ params }: OrderDetailPagePro
   return (
     <div className="min-h-screen bg-muted/30">
       <div className="container mx-auto px-4 py-12 max-w-5xl">
-
         {/* Back nav */}
         <Link href="/account">
-          <Button variant="ghost" size="sm" className="mb-6 -ml-2 text-muted-foreground hover:text-foreground">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="mb-6 -ml-2 text-muted-foreground hover:text-foreground"
+          >
             <ChevronLeft className="mr-1 h-4 w-4" />
             Terug naar account
           </Button>
@@ -60,7 +77,8 @@ export default async function UserOrderDetailPage({ params }: OrderDetailPagePro
               {new Date(order.createdAt || '').toLocaleDateString('nl-NL', { dateStyle: 'long' })}
             </p>
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
-              Bestelling <span className="font-mono text-muted-foreground">#{order.id.substring(0, 8)}</span>
+              Bestelling{' '}
+              <span className="font-mono text-muted-foreground">#{order.id.substring(0, 8)}</span>
             </h1>
           </div>
           <OrderStatusBadge status={order.status} />
@@ -72,7 +90,9 @@ export default async function UserOrderDetailPage({ params }: OrderDetailPagePro
             <AlertCircle className="h-4 w-4 text-amber-600" />
             <AlertTitle className="text-amber-800">Betaling nog niet ontvangen</AlertTitle>
             <AlertDescription className="mt-2 text-amber-700">
-              <p className="mb-4">Je betaling is nog niet verwerkt. Klik hieronder om je betaling af te ronden.</p>
+              <p className="mb-4">
+                Je betaling is nog niet verwerkt. Klik hieronder om je betaling af te ronden.
+              </p>
               <a href={order.payments[0].providerPaymentUrl}>
                 <Button className="bg-amber-600 hover:bg-amber-700 text-white">
                   Betaling voltooien →
@@ -93,7 +113,9 @@ export default async function UserOrderDetailPage({ params }: OrderDetailPagePro
           <Card className="border-0 shadow-sm bg-white">
             <CardContent className="pt-4 pb-4">
               <p className="text-xs text-muted-foreground mb-1">Tickets</p>
-              <p className="text-2xl font-bold">{order.lineItems.flatMap(li => li.tickets ?? []).length}</p>
+              <p className="text-2xl font-bold">
+                {order.lineItems.flatMap((li) => li.tickets ?? []).length}
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -112,11 +134,17 @@ export default async function UserOrderDetailPage({ params }: OrderDetailPagePro
             </CardHeader>
             <CardContent className="space-y-4">
               {[
-                { label: 'Naam',       value: order.customerName },
+                { label: 'Naam', value: order.customerName },
                 { label: 'E-mailadres', value: order.customerEmail },
-                { label: 'Besteldatum', value: order.createdAt
-                    ? new Date(order.createdAt).toLocaleString('nl-NL', { dateStyle: 'long', timeStyle: 'short' })
-                    : '-' },
+                {
+                  label: 'Besteldatum',
+                  value: order.createdAt
+                    ? new Date(order.createdAt).toLocaleString('nl-NL', {
+                        dateStyle: 'long',
+                        timeStyle: 'short',
+                      })
+                    : '-',
+                },
               ].map(({ label, value }) => (
                 <div key={label} className="flex flex-col">
                   <span className="text-xs text-muted-foreground">{label}</span>
@@ -152,13 +180,17 @@ export default async function UserOrderDetailPage({ params }: OrderDetailPagePro
 
               {order.couponUsages && order.couponUsages.length > 0 && (
                 <div className="mb-3 pb-3 border-b border-dashed">
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Kortingscodes</p>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                    Kortingscodes
+                  </p>
                   {order.couponUsages.map((usage) => (
                     <div key={usage.id} className="flex justify-between text-sm">
                       <span className="font-mono text-xs bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded">
                         {usage.coupon?.code}
                       </span>
-                      <span className="text-emerald-600 font-semibold">−€{usage.discountAmount}</span>
+                      <span className="text-emerald-600 font-semibold">
+                        −€{usage.discountAmount}
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -166,7 +198,9 @@ export default async function UserOrderDetailPage({ params }: OrderDetailPagePro
 
               <div className="flex justify-between items-center pt-1">
                 <span className="font-semibold">Totaal</span>
-                <span className="text-2xl font-bold text-[#00a098] tabular-nums">€{order.totalAmount}</span>
+                <span className="text-2xl font-bold text-[#00a098] tabular-nums">
+                  €{order.totalAmount}
+                </span>
               </div>
             </CardContent>
           </Card>
@@ -205,7 +239,10 @@ export default async function UserOrderDetailPage({ params }: OrderDetailPagePro
               <TableBody>
                 {order.lineItems.flatMap((item) => item.tickets ?? []).length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={isPaid ? 6 : 5} className="text-center text-muted-foreground py-12">
+                    <TableCell
+                      colSpan={isPaid ? 6 : 5}
+                      className="text-center text-muted-foreground py-12"
+                    >
                       {isPaid
                         ? 'Geen tickets gevonden in deze bestelling.'
                         : 'Tickets worden beschikbaar na bevestiging van je betaling.'}

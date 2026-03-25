@@ -3,10 +3,7 @@ import { authOptions } from '@/lib/utils/auth';
 import { getOrderById } from '@ons-mierloos-theater/shared/queries/orders';
 import { generateInvoicePDF } from '@ons-mierloos-theater/shared/utils/invoiceGenerator';
 
-export async function GET(
-  request: Request,
-  context: { params: Promise<{ orderId: string }> },
-) {
+export async function GET(request: Request, context: { params: Promise<{ orderId: string }> }) {
   try {
     const session = await getServerSession(authOptions);
 
@@ -43,11 +40,7 @@ export async function GET(
     }
 
     // Generate the PDF
-    const pdfBuffer = await generateInvoicePDF(
-      order,
-      order.lineItems,
-      order.couponUsages || [],
-    );
+    const pdfBuffer = await generateInvoicePDF(order, order.lineItems, order.couponUsages || []);
 
     return new Response(new Uint8Array(pdfBuffer), {
       headers: {

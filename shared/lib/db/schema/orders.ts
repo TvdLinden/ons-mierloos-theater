@@ -1,4 +1,18 @@
-import { pgTable, pgEnum, varchar, text, decimal, timestamp, index, uuid, integer, serial, boolean, primaryKey, unique } from 'drizzle-orm/pg-core';
+import {
+  pgTable,
+  pgEnum,
+  varchar,
+  text,
+  decimal,
+  timestamp,
+  index,
+  uuid,
+  integer,
+  serial,
+  boolean,
+  primaryKey,
+  unique,
+} from 'drizzle-orm/pg-core';
 import { users } from './users';
 import { performances } from './shows';
 

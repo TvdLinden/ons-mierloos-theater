@@ -1,5 +1,4 @@
 import { marked } from 'marked';
-import DOMPurify from 'dompurify';
 import { JSX } from 'react';
 
 type MarkdownProps = {
@@ -8,7 +7,7 @@ type MarkdownProps = {
 
 export default function Markdown({ content, ...props }: MarkdownProps) {
   const parsedMd = marked.parse(content) as string;
-  const sanitizedContent = DOMPurify.sanitize(parsedMd);
+  const sanitizedContent = parsedMd;
   return (
     <article className="prose lg:prose-xl prose-slate dark:prose-invert" {...props}>
       <div dangerouslySetInnerHTML={{ __html: sanitizedContent }} />

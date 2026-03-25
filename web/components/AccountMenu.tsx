@@ -55,7 +55,9 @@ export default function AccountMenu() {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-52">
         <DropdownMenuLabel className="font-normal">
-          <p className="font-semibold text-sm truncate">{session.user?.name || session.user?.email}</p>
+          <p className="font-semibold text-sm truncate">
+            {session.user?.name || session.user?.email}
+          </p>
           {session.user?.name && (
             <p className="text-xs text-muted-foreground truncate">{session.user?.email}</p>
           )}

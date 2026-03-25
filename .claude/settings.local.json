@@ -42,7 +42,8 @@
       "Bash(docker-compose ps:*)",
       "Bash(docker-compose:*)",
       "Bash(xargs kill:*)",
-      "Bash(echo:*)"
+      "Bash(echo:*)",
+      "Bash(npm run:*)"
     ]
   }
 }

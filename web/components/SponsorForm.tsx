@@ -39,7 +39,11 @@ export default function SponsorForm({ initialData, action, submitLabel }: Sponso
 
   return (
     <form action={formAction} className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      {state?.error && <Alert variant="destructive" className="lg:col-span-2">{state.error}</Alert>}
+      {state?.error && (
+        <Alert variant="destructive" className="lg:col-span-2">
+          {state.error}
+        </Alert>
+      )}
 
       {/* Left column */}
       <div className="space-y-6">
@@ -114,7 +118,9 @@ export default function SponsorForm({ initialData, action, submitLabel }: Sponso
             selectedImageId={selectedLogoId}
             onSelect={setSelectedLogoId}
           />
-          <p className="text-sm text-muted-foreground">Aanbevolen: PNG met transparante achtergrond</p>
+          <p className="text-sm text-muted-foreground">
+            Aanbevolen: PNG met transparante achtergrond
+          </p>
           <input type="hidden" name="logoId" value={selectedLogoId ?? ''} />
         </div>
       </div>

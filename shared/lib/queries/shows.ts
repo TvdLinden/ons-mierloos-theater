@@ -309,7 +309,7 @@ export async function getUpcomingShows(
     with: {
       image: true,
       performances: {
-        where: and(perfDateFilter, eq(performances.status, 'published')),
+        where: and(perfDateFilter, inArray(performances.status, ['published', 'sold_out'])),
         orderBy: [asc(performances.date)],
       },
       showTags: {
@@ -381,7 +381,7 @@ export async function getUpcomingShowsCount(
             .where(
               and(
                 eq(performances.showId, shows.id),
-                eq(performances.status, 'published'),
+                inArray(performances.status, ['published', 'sold_out']),
                 perfDateFilter,
               ),
             ),

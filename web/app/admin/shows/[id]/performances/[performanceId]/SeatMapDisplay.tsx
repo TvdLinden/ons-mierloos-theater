@@ -55,7 +55,9 @@ export function SeatMapDisplay({
 }: SeatMapDisplayProps) {
   const [isEditMode, setIsEditMode] = useState(false);
   const [pendingChanges, setPendingChanges] = useState<Map<string, PendingChange>>(new Map());
-  const [selectedSeat, setSelectedSeat] = useState<{ rowIndex: number; seatNumber: number } | null>(null);
+  const [selectedSeat, setSelectedSeat] = useState<{ rowIndex: number; seatNumber: number } | null>(
+    null,
+  );
   const [dialogType, setDialogType] = useState<'reserved' | 'unavailable'>('reserved');
   const [dialogReason, setDialogReason] = useState('');
   const [isSaving, setIsSaving] = useState(false);

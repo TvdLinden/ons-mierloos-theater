@@ -32,34 +32,35 @@ export default function NewsletterSignup() {
   };
 
   return (
-    <div className="max-w-sm mx-auto">
-      <form className="flex gap-2" onSubmit={handleSubmit}>
+    <div>
+      <form className="flex" onSubmit={handleSubmit}>
         <input
           type="email"
           placeholder="je@email.nl"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="flex-1 px-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:border-primary transition-colors"
+          className="flex-1 px-4 py-3 bg-white border border-border text-foreground placeholder:text-muted-foreground focus:outline-none"
           required
           disabled={isSubmitting}
         />
         <button
           type="submit"
-          className="px-6 py-3 rounded-lg bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50"
+          className="px-6 py-3 text-white font-bold tracking-widest uppercase text-sm transition-[filter] hover:brightness-110 disabled:opacity-50"
+          style={{ fontFamily: 'var(--font-display)', backgroundColor: 'var(--color-maroon)' }}
           disabled={isSubmitting}
         >
-          {isSubmitting ? 'Bezig...' : 'Abonneren'}
+          {isSubmitting ? 'Bezig...' : 'Aanmelden'}
         </button>
       </form>
 
       {result && (
         <p
-          className={`mt-3 text-sm text-center ${
+          className={`mt-3 text-sm ${
             result.type === 'success'
-              ? 'text-green-700'
+              ? 'text-foreground'
               : result.type === 'info'
-                ? 'text-zinc-500'
-                : 'text-red-600'
+                ? 'text-foreground/60'
+                : 'text-red-700'
           }`}
         >
           {result.message}

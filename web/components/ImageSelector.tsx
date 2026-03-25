@@ -46,7 +46,11 @@ export function ImageSelector({
   const sentinelRef = useRef<HTMLDivElement>(null);
 
   const isMulti = props.mode === 'multi';
-  const selectedIds: string[] = isMulti ? props.selectedImageIds : props.selectedImageId ? [props.selectedImageId] : [];
+  const selectedIds: string[] = isMulti
+    ? props.selectedImageIds
+    : props.selectedImageId
+      ? [props.selectedImageId]
+      : [];
   const maxImages = isMulti ? (props.maxImages ?? Infinity) : 1;
 
   const fetchImages = async (offset: number) => {
@@ -56,7 +60,7 @@ export function ImageSelector({
       const response = await fetch(`/api/images?limit=${PAGE_SIZE}&offset=${offset}`);
       if (response.ok) {
         const data = await response.json();
-        setAvailableImages((prev) => offset === 0 ? data.images : [...prev, ...data.images]);
+        setAvailableImages((prev) => (offset === 0 ? data.images : [...prev, ...data.images]));
         setHasMore(data.hasMore);
         offsetRef.current = offset + data.images.length;
       }
@@ -153,47 +157,45 @@ export function ImageSelector({
             </div>
           )}
         </div>
-      ) : (
-        props.selectedImageId ? (
-          <div className="relative inline-block mt-2">
-            <div className="relative w-32 h-32 border rounded overflow-hidden">
-              <Image
-                src={`/api/images/${props.selectedImageId}`}
-                alt={label}
-                fill
-                className="object-cover"
-                sizes="128px"
-                style={getFocalPointStyle(
-                  availableImages.find((img) => img.id === props.selectedImageId)?.focalPoints as any,
-                  focalPointContext,
-                )}
-              />
-            </div>
-            <Button
-              type="button"
-              variant="destructive"
-              size="sm"
-              className="absolute -top-2 -right-2"
-              onClick={() => handleRemove(props.selectedImageId!)}
-            >
-              <X className="h-4 w-4" />
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="mt-2 w-full"
-              onClick={handleOpenPicker}
-            >
-              Wijzigen
-            </Button>
+      ) : props.selectedImageId ? (
+        <div className="relative inline-block mt-2">
+          <div className="relative w-32 h-32 border rounded overflow-hidden">
+            <Image
+              src={`/api/images/${props.selectedImageId}`}
+              alt={label}
+              fill
+              className="object-cover"
+              sizes="128px"
+              style={getFocalPointStyle(
+                availableImages.find((img) => img.id === props.selectedImageId)?.focalPoints as any,
+                focalPointContext,
+              )}
+            />
           </div>
-        ) : (
-          <Button type="button" variant="outline" onClick={handleOpenPicker}>
-            <ImageIcon className="mr-2 h-4 w-4" />
-            Selecteer Afbeelding
+          <Button
+            type="button"
+            variant="destructive"
+            size="sm"
+            className="absolute -top-2 -right-2"
+            onClick={() => handleRemove(props.selectedImageId!)}
+          >
+            <X className="h-4 w-4" />
           </Button>
-        )
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="mt-2 w-full"
+            onClick={handleOpenPicker}
+          >
+            Wijzigen
+          </Button>
+        </div>
+      ) : (
+        <Button type="button" variant="outline" onClick={handleOpenPicker}>
+          <ImageIcon className="mr-2 h-4 w-4" />
+          Selecteer Afbeelding
+        </Button>
       )}
 
       {/* Picker dialog */}
@@ -253,7 +255,9 @@ export function ImageSelector({
                   <p className="text-sm text-muted-foreground text-center py-4">Laden...</p>
                 )}
                 {!hasMore && availableImages.length > 0 && (
-                  <p className="text-sm text-muted-foreground text-center py-4">Alle afbeeldingen geladen</p>
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    Alle afbeeldingen geladen
+                  </p>
                 )}
               </>
             )}

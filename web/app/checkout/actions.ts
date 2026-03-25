@@ -275,13 +275,18 @@ export async function processCheckout(
           }
         }
 
-        // Reserve seats in performances (decrement available_seats)
+        // Reserve seats in performances (decrement available_seats, mark sold_out if exhausted)
         // Rows are still locked from the SELECT ... FOR UPDATE above
         for (const [perfId, quantity] of performanceGroups.entries()) {
           await tx.execute(
             sql`
               UPDATE ${performances}
-              SET available_seats = available_seats - ${quantity}
+              SET
+                available_seats = available_seats - ${quantity},
+                status = CASE
+                  WHEN available_seats - ${quantity} = 0 THEN 'sold_out'
+                  ELSE status
+                END
               WHERE id = ${perfId}
               AND available_seats >= ${quantity}
             `,

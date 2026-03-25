@@ -1,7 +1,12 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { db } from '@ons-mierloos-theater/shared/db';
-import { performances, orders, tickets, blockedSeats } from '@ons-mierloos-theater/shared/db/schema';
+import {
+  performances,
+  orders,
+  tickets,
+  blockedSeats,
+} from '@ons-mierloos-theater/shared/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { Button } from '@/components/ui';

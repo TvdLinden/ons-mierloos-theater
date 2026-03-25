@@ -3,10 +3,7 @@ import { authOptions } from '@/lib/utils/auth';
 import { getTicketById } from '@ons-mierloos-theater/shared/queries/orders';
 import { generateTicketPDF } from '@ons-mierloos-theater/shared/utils/ticketGenerator';
 
-export async function GET(
-  request: Request,
-  context: { params: Promise<{ ticketId: string }> },
-) {
+export async function GET(request: Request, context: { params: Promise<{ ticketId: string }> }) {
   try {
     const session = await getServerSession(authOptions);
 

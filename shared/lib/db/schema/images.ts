@@ -1,4 +1,15 @@
-import { pgTable, varchar, text, timestamp, jsonb, index, uuid, integer, primaryKey, customType } from 'drizzle-orm/pg-core';
+import {
+  pgTable,
+  varchar,
+  text,
+  timestamp,
+  jsonb,
+  index,
+  uuid,
+  integer,
+  primaryKey,
+  customType,
+} from 'drizzle-orm/pg-core';
 
 const bytea = customType<{ data: Buffer }>({
   dataType() {
