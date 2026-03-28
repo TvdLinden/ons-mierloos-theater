@@ -16,6 +16,7 @@ export interface NumberInputProps extends Omit<
   min?: number;
   max?: number;
   step?: number;
+  variant?: 'default' | 'public';
 }
 
 const NumberInput = React.forwardRef<HTMLInputElement, NumberInputProps>(
@@ -30,6 +31,7 @@ const NumberInput = React.forwardRef<HTMLInputElement, NumberInputProps>(
       step = 1,
       disabled,
       name,
+      variant = 'default',
       ...inputProps
     },
     ref,
@@ -129,6 +131,35 @@ const NumberInput = React.forwardRef<HTMLInputElement, NumberInputProps>(
 
     const isDecrementDisabled = disabled || (min !== undefined && currentValue <= min);
     const isIncrementDisabled = disabled || (max !== undefined && currentValue >= max);
+
+    if (variant === 'public') {
+      return (
+        <div className={cn('inline-flex items-stretch border border-border', className)}>
+          <input type="hidden" ref={ref} name={name} value={currentValue} />
+          <button
+            type="button"
+            onClick={handleDecrement}
+            disabled={isDecrementDisabled}
+            className="w-9 flex items-center justify-center text-lg font-light bg-white text-foreground hover:bg-(--color-maroon) hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+            aria-label="Verminderen"
+          >
+            −
+          </button>
+          <span className="w-9 flex items-center justify-center text-sm font-semibold bg-white border-x border-border select-none">
+            {currentValue}
+          </span>
+          <button
+            type="button"
+            onClick={handleIncrement}
+            disabled={isIncrementDisabled}
+            className="w-9 flex items-center justify-center text-lg font-light bg-white text-foreground hover:bg-(--color-maroon) hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+            aria-label="Verhogen"
+          >
+            +
+          </button>
+        </div>
+      );
+    }
 
     return (
       <div className={cn('relative inline-flex', className)}>

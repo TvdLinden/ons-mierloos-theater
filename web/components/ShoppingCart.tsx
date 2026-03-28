@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import { X } from 'lucide-react';
 import { NumberInput } from './ui/number-input';
 import { isCartItemExpired } from '@ons-mierloos-theater/shared/utils/validation';
 
@@ -21,6 +22,7 @@ export type ShoppingCartProps = {
   showCheckoutButton?: boolean;
   showTotal?: boolean;
   showTitle?: boolean;
+  inputVariant?: 'default' | 'public';
 };
 
 export default function ShoppingCart({
@@ -31,6 +33,7 @@ export default function ShoppingCart({
   showCheckoutButton = true,
   showTotal = true,
   showTitle = true,
+  inputVariant = 'default',
 }: ShoppingCartProps) {
   // Separate valid and expired items
   const validItems = items.filter((item) => {
@@ -47,20 +50,20 @@ export default function ShoppingCart({
   const isCheckoutDisabled = items.length > 0 && validItems.length === 0;
 
   return (
-    <div className="bg-gray-50 rounded-lg p-6 w-full">
+    <div className="bg-muted/50 rounded-lg p-6 w-full">
       {showTitle && <h2 className="text-2xl font-bold mb-4 text-primary">Winkelwagen</h2>}
 
       {/* Show warning for expired items */}
       {expiredItems.length > 0 && (
-        <div className="bg-red-50 border border-red-200 rounded p-4 mb-4">
-          <h3 className="font-semibold text-red-900">Niet meer beschikbare items</h3>
-          <p className="text-red-800 text-sm mt-1">
+        <div className="bg-destructive/10 border border-destructive/20 rounded p-4 mb-4">
+          <h3 className="font-semibold text-destructive">Niet meer beschikbare items</h3>
+          <p className="text-destructive/80 text-sm mt-1">
             {expiredItems.length} item{expiredItems.length > 1 ? 's' : ''} in je winkelwagen{' '}
             {expiredItems.length > 1 ? 'zijn' : 'is'} niet meer beschikbaar (de voorstelling is al
             geweest).
           </p>
           {expiredItems.length > 0 && (
-            <ul className="mt-2 text-sm text-red-700">
+            <ul className="mt-2 text-sm text-destructive/70">
               {expiredItems.map((item) => (
                 <li key={item.id}>• {item.title}</li>
               ))}
@@ -70,16 +73,16 @@ export default function ShoppingCart({
       )}
 
       {validItems.length === 0 ? (
-        <p className="text-gray-500">Je winkelwagen is leeg.</p>
+        <p className="text-muted-foreground">Je winkelwagen is leeg.</p>
       ) : (
-        <ul className="divide-y divide-gray-200 mb-4">
+        <ul className="divide-y divide-border mb-4">
           {validItems.map((item) => (
-            <li key={item.id} className="py-3 flex items-center justify-between">
-              <div>
-                <span className="font-semibold text-gray-900">{item.title}</span>
-                <span className="ml-2 text-gray-600">€{item.price.toFixed(2)}</span>
+            <li key={item.id} className="py-4 flex items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <p className="font-semibold text-foreground leading-snug">{item.title}</p>
+                <p className="text-sm text-muted-foreground mt-0.5">€{item.price.toFixed(2)} p.p.</p>
                 {onChangeWheelchairAccess && (
-                  <div className="flex items-center gap-2 mt-1">
+                  <div className="flex items-center gap-2 mt-2">
                     <input
                       type="checkbox"
                       id={`wheelchair-${item.id}`}
@@ -89,25 +92,27 @@ export default function ShoppingCart({
                     />
                     <label
                       htmlFor={`wheelchair-${item.id}`}
-                      className="text-sm text-gray-600 cursor-pointer"
+                      className="text-sm text-muted-foreground cursor-pointer"
                     >
                       Ik heb een rolstoel nodig
                     </label>
                   </div>
                 )}
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 shrink-0">
                 <NumberInput
                   value={item.quantity}
                   onChange={(value) => onChangeQuantity && onChangeQuantity(item.id, value ?? 1)}
                   min={1}
+                  variant={inputVariant}
                 />
                 {onRemove && (
                   <button
                     onClick={() => onRemove(item.id)}
-                    className="px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors text-sm font-medium"
+                    className="p-1.5 text-muted-foreground hover:text-destructive transition-colors"
+                    aria-label="Verwijder"
                   >
-                    Verwijder
+                    <X className="size-4" />
                   </button>
                 )}
               </div>
@@ -116,7 +121,7 @@ export default function ShoppingCart({
         </ul>
       )}
       {showTotal && validItems.length > 0 && (
-        <div className="text-lg font-bold text-right mb-2 text-gray-900">
+        <div className="text-lg font-bold text-right mb-2 text-foreground">
           Totaal: €{total.toFixed(2)}
         </div>
       )}

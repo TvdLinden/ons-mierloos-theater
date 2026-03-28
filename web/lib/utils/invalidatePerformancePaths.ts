@@ -11,8 +11,8 @@ export function invalidatePerformancePaths(performanceId: string) {
   revalidatePath('/voorstellingen'); // Public listing (Dutch)
   revalidatePath(`/voorstellingen/${performanceId}`); // Performance detail page (Dutch)
   revalidatePath('/');
-  revalidateTag('homepage');
-  revalidateTag('voorstellingen');
+  revalidateTag('homepage', 'default');
+  revalidateTag('voorstellingen', 'default');
 
   // Add more paths here if needed
 }

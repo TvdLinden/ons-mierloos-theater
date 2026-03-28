@@ -5,10 +5,16 @@ import { useCart } from '@/components/CartContext';
 
 export default function CheckoutSuccessPage() {
   return (
-    <div className="max-w-2xl mx-auto py-12 px-6">
-      <Suspense fallback={<div>Laden...</div>}>
-        <SuccessContent />
-      </Suspense>
+    <div
+      className="page-parchment min-h-screen"
+      style={{ backgroundColor: 'var(--color-parchment)' }}
+    >
+      <div className="bg-white h-8" />
+      <div className="max-w-xl mx-auto px-4 py-12">
+        <Suspense fallback={<div>Laden...</div>}>
+          <SuccessContent />
+        </Suspense>
+      </div>
     </div>
   );
 }
@@ -17,14 +23,14 @@ function SuccessContent() {
   const { clearCart } = useCart();
 
   useEffect(() => {
-    // Clear shopping cart on successful checkout
     clearCart();
   }, [clearCart]);
+
   return (
-    <div className="bg-surface p-8 text-center">
+    <div className="border border-border bg-white p-8 lg:p-12 shadow-lg text-center">
       <div className="mb-6">
         <svg
-          className="mx-auto h-16 w-16 text-green-500"
+          className="mx-auto h-16 w-16 text-success"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -37,16 +43,22 @@ function SuccessContent() {
           />
         </svg>
       </div>
-      <h1 className="text-3xl font-bold mb-4 text-primary">Betaling in behandeling</h1>
-      <p className="text-zinc-700 mb-6">
+      <h1
+        className="text-3xl md:text-4xl font-bold uppercase mb-4"
+        style={{ fontFamily: 'var(--font-display)' }}
+      >
+        Betaling in behandeling
+      </h1>
+      <p className="text-muted-foreground mb-3">
         Je betaling wordt verwerkt. Je ontvangt een bevestigingsmail zodra de betaling is voltooid.
       </p>
-      <p className="text-sm text-zinc-600 mb-8">
+      <p className="text-sm text-muted-foreground mb-8">
         Dit kan enkele momenten duren. Controleer je e-mail voor de bevestiging en tickets.
       </p>
       <Link
         href="/"
-        className="inline-block px-6 py-3 bg-primary text-surface rounded font-bold hover:bg-secondary"
+        className="inline-block px-6 py-3 bg-primary text-primary-foreground font-bold uppercase tracking-wide hover:bg-secondary hover:text-secondary-foreground transition-colors"
+        style={{ fontFamily: 'var(--font-display)' }}
       >
         Terug naar home
       </Link>

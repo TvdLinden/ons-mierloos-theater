@@ -22,9 +22,9 @@ export function invalidateShowPaths(showId?: string) {
 
   // Public pages
   revalidatePath('/'); // Homepage (displays upcoming shows)
-  revalidateTag('homepage');
+  revalidateTag('homepage', 'default');
   revalidatePath('/voorstellingen');
-  revalidateTag('voorstellingen');
+  revalidateTag('voorstellingen', 'default');
   revalidatePath('/performances'); // Public performances listing
 
   if (showId) {
@@ -45,8 +45,8 @@ export function invalidateShowPaths(showId?: string) {
 export function invalidateShowPathsBySlug(slug: string) {
   revalidatePath(`/performances/${slug}`);
   revalidatePath('/');
-  revalidateTag('homepage');
+  revalidateTag('homepage', 'default');
   revalidatePath('/voorstellingen');
-  revalidateTag('voorstellingen');
+  revalidateTag('voorstellingen', 'default');
   revalidatePath('/performances');
 }
