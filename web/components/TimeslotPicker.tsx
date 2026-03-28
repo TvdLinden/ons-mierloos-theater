@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { cn } from '@/lib/utils';
 import { Performance } from '@ons-mierloos-theater/shared/db';
 import DateDisplay from '@/components/DateDisplay';
 import CurrencyDisplay from '@/components/CurrencyDisplay';
@@ -13,12 +14,14 @@ export type TimeslotPickerProps = {
   performances: Performance[];
   showTitle: string;
   onSelectPerformanceAction?: (performance: Performance, quantity: number) => Promise<void>;
+  listClassName?: string; // Tailwind classes to override the list max-height, e.g. 'max-h-60'
 };
 
 export default function TimeslotPicker({
   performances,
   showTitle,
   onSelectPerformanceAction,
+  listClassName,
 }: TimeslotPickerProps) {
   const router = useRouter();
   const { addToCart } = useCart();
@@ -64,11 +67,74 @@ export default function TimeslotPicker({
   };
 
   if (availablePerformances.length === 0) {
+    const soldOutPerformances = performances.filter((p) => p.status === 'sold_out');
+    const pastPerformances = performances.filter(
+      (p) => p.status === 'published' && new Date(p.date) <= now,
+    );
+
+    const isSoldOut = soldOutPerformances.length > 0;
+    const isPast = pastPerformances.length > 0 && !isSoldOut;
+
+    const shownPerformances = isSoldOut ? soldOutPerformances : pastPerformances;
+
     return (
-      <div id="tickets" className="w-full">
+      <div id="tickets" className="w-full flex flex-col gap-5">
+        {/* Status badge */}
+        <div className="flex items-center gap-2">
+          <span
+            className="inline-block px-3 py-1 text-xs font-bold uppercase tracking-widest text-white"
+            style={{
+              backgroundColor: isSoldOut ? 'var(--color-maroon)' : '#6b7280',
+              fontFamily: 'var(--font-display)',
+            }}
+          >
+            {isSoldOut ? 'Uitverkocht' : 'Afgelopen'}
+          </span>
+        </div>
+
+        {/* Message */}
         <p className="text-sm text-muted-foreground">
-          Helaas zijn er geen beschikbare voorstellingen.
+          {isSoldOut
+            ? 'Alle voorstellingen zijn uitverkocht. Schrijf je in voor de nieuwsbrief om als eerste te weten wanneer er nieuwe data zijn.'
+            : isPast
+              ? 'Deze voorstelling heeft al plaatsgevonden. Schrijf je in voor de nieuwsbrief om op de hoogte te blijven van nieuwe voorstellingen.'
+              : 'Er zijn momenteel geen beschikbare voorstellingen.'}
         </p>
+
+        {/* Past/sold-out dates shown greyed out */}
+        {shownPerformances.length > 0 && (
+          <div className={cn('space-y-1 max-h-44 opacity-40 overflow-y-auto', listClassName)}>
+            {shownPerformances.map((p) => (
+              <div
+                key={p.id}
+                className="w-full py-2 border-b border-black/10 text-sm flex items-center justify-between line-through"
+              >
+                <DateDisplay
+                  value={new Date(p.date)}
+                  options={{ weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }}
+                />
+                <CurrencyDisplay value={p.price} />
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Newsletter CTA */}
+        <div className="mt-auto pt-2 border-t border-black/10">
+          <p
+            className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2"
+            style={{ fontFamily: 'var(--font-display)' }}
+          >
+            Blijf op de hoogte
+          </p>
+          <a
+            href="/#nieuwsbrief"
+            className="w-full flex items-center justify-center px-5 py-3 text-white text-sm uppercase font-bold tracking-wider transition-[filter] hover:brightness-125"
+            style={{ backgroundColor: 'var(--color-maroon)', fontFamily: 'var(--font-display)' }}
+          >
+            Nieuwsbrief
+          </a>
+        </div>
       </div>
     );
   }
@@ -76,7 +142,7 @@ export default function TimeslotPicker({
   return (
     <div id="tickets" className="w-full flex flex-col gap-4">
       {/* Performance selector — always shown */}
-      <div className="space-y-1">
+      <div className={cn('space-y-1 max-h-44 overflow-y-auto', listClassName)}>
         {availablePerformances.map((performance) => (
           <button
             key={performance.id}

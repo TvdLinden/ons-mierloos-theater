@@ -118,7 +118,11 @@ export default async function PerformancePage({ params }: Props) {
               )}
             </div>
             <div className="flex-1 flex flex-col">
-              <TimeslotPicker performances={show.performances || []} showTitle={show.title || ''} />
+              <TimeslotPicker
+                performances={show.performances || []}
+                showTitle={show.title || ''}
+                listClassName="max-h-28"
+              />
             </div>
           </div>
         </div>
