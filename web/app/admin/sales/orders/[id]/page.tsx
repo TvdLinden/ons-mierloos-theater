@@ -8,6 +8,7 @@ import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { DataTable, EmptyRow } from '@/components/admin/DataTable';
 import { StatCard } from '@/components/admin/StatCard';
 import { OrderStatusBadge, PaymentStatusBadge } from '@/components/ui/order-status-badge';
+import { RefundOrderButton } from './RefundOrderButton';
 
 interface OrderDetailPageProps {
   params: Promise<{ id: string }>;
@@ -32,7 +33,18 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
           { label: 'Verkopen', href: '/admin/sales' },
           { label: `Bestelling ${order.id.substring(0, 8)}...` },
         ]}
-        action={<OrderStatusBadge status={order.status} />}
+        action={
+          <div className="flex items-center gap-3">
+            <OrderStatusBadge status={order.status} />
+            {order.status === 'paid' && (
+              <RefundOrderButton
+                orderId={order.id}
+                totalAmount={order.totalAmount}
+                lineItems={order.lineItems}
+              />
+            )}
+          </div>
+        }
       />
 
       {/* Order Stats */}
@@ -165,6 +177,54 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
           ))
         )}
       </DataTable>
+
+      {/* Refund History */}
+      {order.orderRefunds && order.orderRefunds.length > 0 && (
+        <div className="mt-8 bg-white rounded-lg shadow p-6">
+          <h2 className="text-lg font-semibold mb-4">Terugbetalingen</h2>
+          <DataTable title="" headers={['Bedrag', 'Status', 'Reden', 'Aangevraagd', 'Voltooid']}>
+            {order.orderRefunds.map((refund) => (
+              <tr key={refund.id} className="hover:bg-zinc-50">
+                <td className="px-6 py-4 font-bold text-primary">€{refund.amount}</td>
+                <td className="px-6 py-4">
+                  <span
+                    className={
+                      refund.status === 'completed'
+                        ? 'inline-flex items-center rounded-md px-2.5 py-0.5 text-xs font-semibold bg-green-100 text-green-800'
+                        : refund.status === 'failed'
+                          ? 'inline-flex items-center rounded-md px-2.5 py-0.5 text-xs font-semibold bg-red-100 text-red-800'
+                          : 'inline-flex items-center rounded-md px-2.5 py-0.5 text-xs font-semibold bg-yellow-100 text-yellow-800'
+                    }
+                  >
+                    {refund.status === 'completed'
+                      ? 'Voltooid'
+                      : refund.status === 'failed'
+                        ? 'Mislukt'
+                        : 'In behandeling'}
+                  </span>
+                </td>
+                <td className="px-6 py-4 text-sm text-zinc-600">{refund.description ?? '-'}</td>
+                <td className="px-6 py-4 text-sm text-zinc-600">
+                  {refund.requestedAt
+                    ? new Date(refund.requestedAt).toLocaleString('nl-NL', {
+                        dateStyle: 'short',
+                        timeStyle: 'short',
+                      })
+                    : '-'}
+                </td>
+                <td className="px-6 py-4 text-sm text-zinc-600">
+                  {refund.completedAt
+                    ? new Date(refund.completedAt).toLocaleString('nl-NL', {
+                        dateStyle: 'short',
+                        timeStyle: 'short',
+                      })
+                    : '-'}
+                </td>
+              </tr>
+            ))}
+          </DataTable>
+        </div>
+      )}
 
       {/* Payment Information */}
       {order.payments && order.payments.length > 0 && (

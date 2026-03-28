@@ -66,6 +66,7 @@ interface BlockEditorProps {
   name?: string;
   onChange?: (blocks: BlocksArray) => void;
   allowedBlockTypes?: Block['type'][];
+  hidePreview?: boolean;
 }
 
 interface SortableBlockProps {
@@ -240,6 +241,7 @@ export function BlockEditor({
   name = 'blocks',
   onChange,
   allowedBlockTypes,
+  hidePreview = false,
 }: BlockEditorProps) {
   const [blocks, setBlocks] = useState<BlocksArray>(initialBlocks);
   const [isPreview, setIsPreview] = useState(false);
@@ -336,21 +338,23 @@ export function BlockEditor({
 
   return (
     <div className="space-y-3">
-      <Tabs
-        value={isPreview ? 'preview' : 'edit'}
-        onValueChange={(v) => setIsPreview(v === 'preview')}
-      >
-        <TabsList className="w-full">
-          <TabsTrigger value="edit" className="flex-1">
-            <Pencil className="mr-1.5 h-3.5 w-3.5" />
-            Bewerken
-          </TabsTrigger>
-          <TabsTrigger value="preview" className="flex-1">
-            <Eye className="mr-1.5 h-3.5 w-3.5" />
-            Voorbeeld
-          </TabsTrigger>
-        </TabsList>
-      </Tabs>
+      {!hidePreview && (
+        <Tabs
+          value={isPreview ? 'preview' : 'edit'}
+          onValueChange={(v) => setIsPreview(v === 'preview')}
+        >
+          <TabsList className="w-full">
+            <TabsTrigger value="edit" className="flex-1">
+              <Pencil className="mr-1.5 h-3.5 w-3.5" />
+              Bewerken
+            </TabsTrigger>
+            <TabsTrigger value="preview" className="flex-1">
+              <Eye className="mr-1.5 h-3.5 w-3.5" />
+              Voorbeeld
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+      )}
 
       {!isPreview ? (
         <>

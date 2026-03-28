@@ -11,6 +11,7 @@ const orderStatusVariants = cva(
         failed: 'bg-red-100 text-red-800',
         cancelled: 'bg-zinc-100 text-zinc-700',
         refunded: 'bg-sky-100 text-sky-800',
+        refund_pending: 'bg-amber-100 text-amber-800',
       },
     },
     defaultVariants: {
@@ -27,6 +28,7 @@ const dotVariants = cva('size-2 rounded-full', {
       failed: 'bg-red-500',
       cancelled: 'bg-zinc-400',
       refunded: 'bg-sky-500',
+      refund_pending: 'bg-amber-500',
     },
   },
   defaultVariants: {
@@ -40,9 +42,10 @@ const STATUS_LABELS: Record<string, string> = {
   failed: 'Mislukt',
   cancelled: 'Geannuleerd',
   refunded: 'Terugbetaald',
+  refund_pending: 'Terugbetaling in behandeling',
 };
 
-type OrderStatus = 'paid' | 'pending' | 'failed' | 'cancelled' | 'refunded';
+type OrderStatus = 'paid' | 'pending' | 'failed' | 'cancelled' | 'refunded' | 'refund_pending';
 
 interface OrderStatusBadgeProps {
   status: string;

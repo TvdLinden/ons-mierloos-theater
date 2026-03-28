@@ -1,6 +1,6 @@
 'use client';
 
-import { useEditor, EditorContent } from '@tiptap/react';
+import { useEditor, EditorContent, useEditorState } from '@tiptap/react';
 import type { Editor } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
@@ -20,7 +20,7 @@ import {
   Image as ImageIcon,
   Play,
 } from 'lucide-react';
-import { useState, useImperativeHandle, useEffect, useRef } from 'react';
+import { useState, useImperativeHandle } from 'react';
 import { Popover, PopoverTrigger, PopoverContent } from './ui/popover';
 import { Input } from './ui/input';
 import { Button } from './ui/button';
@@ -43,14 +43,197 @@ export type WysiwygEditorRef = {
   getMarkdownWithUploadedImages: () => Promise<string>;
 };
 
-export default function WysiwygEditor({ name, defaultValue, disabled, ref }: WysiwygEditorProps) {
+function EditorToolbar({ editor }: { editor: Editor }) {
   const [imageUrl, setImageUrl] = useState('');
   const [youtubeUrl, setYoutubeUrl] = useState('');
   const [imageOpen, setImageOpen] = useState(false);
   const [youtubeOpen, setYoutubeOpen] = useState(false);
-  const [, setEditorUpdate] = useState(0); // Force re-render on editor update
-  const editorRef = useRef<Editor | null>(null);
 
+  const activeStates = useEditorState({
+    editor,
+    selector: (ctx) => ({
+      bold: ctx.editor.isActive('bold'),
+      italic: ctx.editor.isActive('italic'),
+      h1: ctx.editor.isActive('heading', { level: 1 }),
+      h2: ctx.editor.isActive('heading', { level: 2 }),
+      h3: ctx.editor.isActive('heading', { level: 3 }),
+      h4: ctx.editor.isActive('heading', { level: 4 }),
+      h5: ctx.editor.isActive('heading', { level: 5 }),
+      h6: ctx.editor.isActive('heading', { level: 6 }),
+      ul: ctx.editor.isActive('bulletList'),
+      ol: ctx.editor.isActive('orderedList'),
+    }),
+  });
+
+  const handleAddImage = () => {
+    if (imageUrl) {
+      editor.chain().focus().setImage({ src: imageUrl }).run();
+      setImageUrl('');
+      setImageOpen(false);
+    }
+  };
+
+  const handleAddYoutube = () => {
+    if (youtubeUrl) {
+      editor.chain().focus().setYoutubeVideo({ src: youtubeUrl }).run();
+      setYoutubeUrl('');
+      setYoutubeOpen(false);
+    }
+  };
+
+  const toggleItems = [
+    {
+      value: 'bold',
+      icon: Bold,
+      area: 'vet',
+      title: 'Vet (Ctrl+B)',
+      isActive: activeStates.bold,
+      onClick: () => editor.chain().focus().toggleBold().run(),
+    },
+    {
+      value: 'italic',
+      icon: Italic,
+      title: 'Cursief (Ctrl+I)',
+      area: 'italic',
+      isActive: activeStates.italic,
+      onClick: () => editor.chain().focus().toggleItalic().run(),
+    },
+    {
+      value: 'h1',
+      icon: Heading1,
+      title: 'Kop 1',
+      area: 'h1',
+      isActive: activeStates.h1,
+      onClick: () => editor.chain().focus().toggleHeading({ level: 1 }).run(),
+    },
+    {
+      value: 'h2',
+      icon: Heading2,
+      title: 'Kop 2',
+      area: 'h2',
+      isActive: activeStates.h2,
+      onClick: () => editor.chain().focus().toggleHeading({ level: 2 }).run(),
+    },
+    {
+      value: 'h3',
+      icon: Heading3,
+      title: 'Kop 3',
+      area: 'h3',
+      isActive: activeStates.h3,
+      onClick: () => editor.chain().focus().toggleHeading({ level: 3 }).run(),
+    },
+    {
+      value: 'h4',
+      icon: Heading4,
+      title: 'Kop 4',
+      area: 'h4',
+      isActive: activeStates.h4,
+      onClick: () => editor.chain().focus().toggleHeading({ level: 4 }).run(),
+    },
+    {
+      value: 'h5',
+      icon: Heading5,
+      title: 'Kop 5',
+      area: 'h5',
+      isActive: activeStates.h5,
+      onClick: () => editor.chain().focus().toggleHeading({ level: 5 }).run(),
+    },
+    {
+      value: 'h6',
+      icon: Heading6,
+      title: 'Kop 6',
+      area: 'h6',
+      isActive: activeStates.h6,
+      onClick: () => editor.chain().focus().toggleHeading({ level: 6 }).run(),
+    },
+    {
+      value: 'ul',
+      icon: List,
+      title: 'Opsomming',
+      area: 'ul',
+      isActive: activeStates.ul,
+      onClick: () => editor.chain().focus().toggleBulletList().run(),
+    },
+    {
+      value: 'ol',
+      icon: ListOrdered,
+      title: 'Genummerde lijst',
+      area: 'ol',
+      isActive: activeStates.ol,
+      onClick: () => editor.chain().focus().toggleOrderedList().run(),
+    },
+  ];
+
+  return (
+    <ToggleGroup type="single" className="flex-wrap">
+      {toggleItems.map((item) => (
+        <Toggle
+          key={item.value}
+          aria-label={item.area}
+          onClick={item.onClick}
+          title={item.title}
+          pressed={item.isActive}
+        >
+          <item.icon className="size-4" />
+        </Toggle>
+      ))}
+
+      <div className="border-l border-gray-300 dark:border-slate-700" />
+
+      <Popover open={imageOpen} onOpenChange={setImageOpen}>
+        <PopoverTrigger asChild>
+          <Toggle aria-label="Afbeelding toevoegen" title="Afbeelding toevoegen">
+            <ImageIcon className="size-4" />
+          </Toggle>
+        </PopoverTrigger>
+        <PopoverContent className="w-80">
+          <div className="space-y-3">
+            <h4 className="font-medium text-sm">Afbeelding toevoegen</h4>
+            <Input
+              type="url"
+              placeholder="Plak afbeeldings-URL..."
+              value={imageUrl}
+              onChange={(e) => setImageUrl(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleAddImage();
+              }}
+            />
+            <Button size="sm" onClick={handleAddImage} className="w-full">
+              Afbeelding toevoegen
+            </Button>
+          </div>
+        </PopoverContent>
+      </Popover>
+
+      <Popover open={youtubeOpen} onOpenChange={setYoutubeOpen}>
+        <PopoverTrigger asChild>
+          <Toggle aria-label="YouTube-video toevoegen" title="YouTube-video toevoegen">
+            <Play className="size-4" />
+          </Toggle>
+        </PopoverTrigger>
+        <PopoverContent className="w-80">
+          <div className="space-y-3">
+            <h4 className="font-medium text-sm">YouTube-video toevoegen</h4>
+            <Input
+              type="url"
+              placeholder="Plak YouTube-URL..."
+              value={youtubeUrl}
+              onChange={(e) => setYoutubeUrl(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleAddYoutube();
+              }}
+            />
+            <Button size="sm" onClick={handleAddYoutube} className="w-full">
+              Video toevoegen
+            </Button>
+          </div>
+        </PopoverContent>
+      </Popover>
+    </ToggleGroup>
+  );
+}
+
+export default function WysiwygEditor({ name, defaultValue, disabled, ref }: WysiwygEditorProps) {
   const editor = useEditor({
     extensions: [
       PasteImage.configure(),
@@ -121,24 +304,16 @@ export default function WysiwygEditor({ name, defaultValue, disabled, ref }: Wys
     content: defaultValue || '',
     editorProps: {
       attributes: {
-        class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-2xl mx-auto focus:outline-none',
+        class: 'prose mx-auto focus:outline-none',
       },
     },
     immediatelyRender: false,
-    onUpdate: () => {
-      // Force re-render when editor content changes
-      setEditorUpdate((prev) => prev + 1);
+    onCreate: ({ editor }) => {
+      if (defaultValue && editor.getHTML() === '<p></p>') {
+        editor.commands.setContent(defaultValue);
+      }
     },
   });
-
-  // Update content when defaultValue changes
-  useEffect(() => {
-    if (editor && defaultValue && editor.getHTML() === '<p></p>') {
-      // Only update if editor is empty to avoid overwriting user edits
-      editor.commands.setContent(defaultValue);
-    }
-    editorRef.current = editor;
-  }, [editor, defaultValue]);
 
   // Extract base64 images from data URL and upload them
   const uploadBase64Image = async (dataUrl: string): Promise<{ id?: string; r2Url: string }> => {
@@ -227,194 +402,10 @@ export default function WysiwygEditor({ name, defaultValue, disabled, ref }: Wys
     return null;
   }
 
-  // Expose ref methods to get editor content
-  const handleButtonClick = (command: () => boolean) => {
-    command();
-    editor.view.focus();
-    // Force re-render immediately after command execution
-    setEditorUpdate((prev) => prev + 1);
-  };
-
-  const handleAddImage = () => {
-    if (imageUrl) {
-      editor.chain().focus().setImage({ src: imageUrl }).run();
-      setImageUrl('');
-      setImageOpen(false);
-    }
-  };
-
-  const handleAddYoutube = () => {
-    if (youtubeUrl) {
-      editor.chain().focus().setYoutubeVideo({ src: youtubeUrl }).run();
-      setYoutubeUrl('');
-      setYoutubeOpen(false);
-    }
-  };
-
-  // Recalculate toggleItems on every render to ensure isActive is always current
-  const toggleItems = [
-    {
-      value: 'bold',
-      icon: Bold,
-      area: 'vet',
-      title: 'Vet (Ctrl+B)',
-      isActive: editor.isActive('bold'),
-      onClick: () => handleButtonClick(() => editor.chain().focus().toggleBold().run()),
-    },
-    {
-      value: 'italic',
-      icon: Italic,
-      title: 'Cursief (Ctrl+I)',
-      area: 'italic',
-      isActive: editor.isActive('italic'),
-      onClick: () => handleButtonClick(() => editor.chain().focus().toggleItalic().run()),
-    },
-    {
-      value: 'h1',
-      icon: Heading1,
-      title: 'Kop 1',
-      area: 'h1',
-      isActive: editor.isActive('heading', { level: 1 }),
-      onClick: () =>
-        handleButtonClick(() => editor.chain().focus().toggleHeading({ level: 1 }).run()),
-    },
-    {
-      value: 'h2',
-      icon: Heading2,
-      title: 'Kop 2',
-      area: 'h2',
-      isActive: editor.isActive('heading', { level: 2 }),
-      onClick: () =>
-        handleButtonClick(() => editor.chain().focus().toggleHeading({ level: 2 }).run()),
-    },
-    {
-      value: 'h3',
-      icon: Heading3,
-      title: 'Kop 3',
-      area: 'h3',
-      isActive: editor.isActive('heading', { level: 3 }),
-      onClick: () =>
-        handleButtonClick(() => editor.chain().focus().toggleHeading({ level: 3 }).run()),
-    },
-    {
-      value: 'h4',
-      icon: Heading4,
-      title: 'Kop 4',
-      area: 'h4',
-      isActive: editor.isActive('heading', { level: 4 }),
-      onClick: () =>
-        handleButtonClick(() => editor.chain().focus().toggleHeading({ level: 4 }).run()),
-    },
-    {
-      value: 'h5',
-      icon: Heading5,
-      title: 'Kop 5',
-      area: 'h5',
-      isActive: editor.isActive('heading', { level: 5 }),
-      onClick: () =>
-        handleButtonClick(() => editor.chain().focus().toggleHeading({ level: 5 }).run()),
-    },
-    {
-      value: 'h6',
-      icon: Heading6,
-      title: 'Kop 6',
-      area: 'h6',
-      isActive: editor.isActive('heading', { level: 6 }),
-      onClick: () =>
-        handleButtonClick(() => editor.chain().focus().toggleHeading({ level: 6 }).run()),
-    },
-    {
-      value: 'ul',
-      icon: List,
-      title: 'Opsomming',
-      area: 'ul',
-      isActive: editor.isActive('bulletList'),
-      onClick: () => handleButtonClick(() => editor.chain().focus().toggleBulletList().run()),
-    },
-    {
-      value: 'ol',
-      icon: ListOrdered,
-      title: 'Genummerde lijst',
-      area: 'ol',
-      isActive: editor.isActive('orderedList'),
-      onClick: () => handleButtonClick(() => editor.chain().focus().toggleOrderedList().run()),
-    },
-  ];
-
   return (
     <div className="flex flex-col gap-2 w-full h-full">
-      <ToggleGroup type="single" className="flex-wrap">
-        {toggleItems.map((item) => (
-          <Toggle
-            key={item.value}
-            aria-label={item.area}
-            onClick={item.onClick}
-            title={item.title}
-            pressed={item.isActive}
-          >
-            <item.icon className="size-4" />
-          </Toggle>
-        ))}
-
-        <div className="border-l border-gray-300 dark:border-slate-700" />
-
-        <Popover open={imageOpen} onOpenChange={setImageOpen}>
-          <PopoverTrigger asChild>
-            <Toggle aria-label="Afbeelding toevoegen" title="Afbeelding toevoegen">
-              <ImageIcon className="size-4" />
-            </Toggle>
-          </PopoverTrigger>
-          <PopoverContent className="w-80">
-            <div className="space-y-3">
-              <h4 className="font-medium text-sm">Afbeelding toevoegen</h4>
-              <Input
-                type="url"
-                placeholder="Plak afbeeldings-URL..."
-                value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    handleAddImage();
-                  }
-                }}
-              />
-              <Button size="sm" onClick={handleAddImage} className="w-full">
-                Afbeelding toevoegen
-              </Button>
-            </div>
-          </PopoverContent>
-        </Popover>
-
-        <Popover open={youtubeOpen} onOpenChange={setYoutubeOpen}>
-          <PopoverTrigger asChild>
-            <Toggle aria-label="YouTube-video toevoegen" title="YouTube-video toevoegen">
-              <Play className="size-4" />
-            </Toggle>
-          </PopoverTrigger>
-          <PopoverContent className="w-80">
-            <div className="space-y-3">
-              <h4 className="font-medium text-sm">YouTube-video toevoegen</h4>
-              <Input
-                type="url"
-                placeholder="Plak YouTube-URL..."
-                value={youtubeUrl}
-                onChange={(e) => setYoutubeUrl(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    handleAddYoutube();
-                  }
-                }}
-              />
-              <Button size="sm" onClick={handleAddYoutube} className="w-full">
-                Video toevoegen
-              </Button>
-            </div>
-          </PopoverContent>
-        </Popover>
-      </ToggleGroup>
-
+      <EditorToolbar editor={editor} />
       <EditorContent className="flex-1" editor={editor} />
-
       {/* Hidden input to store the HTML content */}
       <input type="hidden" name={name} value={editor?.getHTML() || ''} />
     </div>

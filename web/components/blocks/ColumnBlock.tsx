@@ -22,13 +22,13 @@ export function ColumnBlockEdit({ block, onChange }: ColumnBlockEditProps) {
   return (
     <div className="space-y-3">
       <div className="bg-blue-50 border border-blue-200 rounded p-4">
-        <p className="text-sm font-medium text-blue-900 mb-4">Column (Vertical Stack)</p>
         <div className="space-y-3">
           <BlockEditor
             initialBlocks={block.children}
             name={`${block.id}-children`}
             onChange={(children) => onChange({ children })}
             allowedBlockTypes={['text', 'image', 'youtube', 'gallery', 'row']}
+            hidePreview={true}
           />
         </div>
       </div>

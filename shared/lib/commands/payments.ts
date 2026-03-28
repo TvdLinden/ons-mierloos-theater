@@ -1,6 +1,6 @@
 import { db, Payment, Order } from '../db';
-import { payments, orders } from '../db/schema';
-import { eq } from 'drizzle-orm';
+import { payments, orders, orderRefunds } from '../db/schema';
+import { and, eq } from 'drizzle-orm';
 
 // Mollie client setup
 const MOLLIE_API_KEY = process.env.MOLLIE_API_KEY;
@@ -263,6 +263,93 @@ async function getMockPaymentStatus(mockPaymentId: string): Promise<{
   } catch (error) {
     console.error('Error fetching mock payment:', error);
     return { success: false, error: 'Failed to fetch mock payment status' };
+  }
+}
+
+/**
+ * Create a Mollie refund for an order
+ */
+export async function createMollieRefund(
+  orderId: string,
+  amount: string,
+  ticketIdsToCancel: string[],
+  description?: string,
+): Promise<{ success: boolean; refundId?: string; error?: string }> {
+  // Find the succeeded payment for this order
+  const payment = await db.query.payments.findFirst({
+    where: and(eq(payments.orderId, orderId), eq(payments.status, 'succeeded')),
+  });
+
+  if (!payment || !payment.providerTransactionId) {
+    return { success: false, error: 'No succeeded payment found for this order' };
+  }
+
+  // Mock mode: skip Mollie, create refund record directly as completed
+  if (USE_MOCK_PAYMENT || payment.paymentProvider === 'mock') {
+    const mockRefundId = `mock_refund_${Date.now()}`;
+    await db.insert(orderRefunds).values({
+      orderId,
+      mollieRefundId: mockRefundId,
+      amount,
+      currency: payment.currency,
+      description: description ?? null,
+      status: 'pending',
+      ticketIdsToCancel: JSON.stringify(ticketIdsToCancel),
+    });
+    await db
+      .update(orders)
+      .set({ status: 'refund_pending', updatedAt: new Date() })
+      .where(eq(orders.id, orderId));
+    return { success: true, refundId: mockRefundId };
+  }
+
+  if (!MOLLIE_API_KEY) {
+    return { success: false, error: 'Mollie API key not configured' };
+  }
+
+  try {
+    const response = await fetch(
+      `${MOLLIE_API_URL}/payments/${payment.providerTransactionId}/refunds`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${MOLLIE_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          amount: { currency: payment.currency, value: amount },
+          description: description ?? `Terugbetaling bestelling`,
+        }),
+      },
+    );
+
+    if (!response.ok) {
+      const error = await response.text();
+      console.error('Mollie refund API error:', error);
+      return { success: false, error: 'Refund creation failed' };
+    }
+
+    const mollieRefund = await response.json();
+
+    await db.insert(orderRefunds).values({
+      orderId,
+      mollieRefundId: mollieRefund.id,
+      amount,
+      currency: payment.currency,
+      description: description ?? null,
+      status: 'pending',
+      ticketIdsToCancel: JSON.stringify(ticketIdsToCancel),
+    });
+
+    await db
+      .update(orders)
+      .set({ status: 'refund_pending', updatedAt: new Date() })
+      .where(eq(orders.id, orderId));
+
+    return { success: true, refundId: mollieRefund.id };
+  } catch (error) {
+    console.error('Error creating Mollie refund:', error);
+    return { success: false, error: 'Refund creation failed' };
   }
 }
 

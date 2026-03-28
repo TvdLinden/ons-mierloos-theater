@@ -29,7 +29,7 @@ import { getImageUrl } from '@ons-mierloos-theater/shared/utils/image-url';
 import { getFocalPointStyle } from '@ons-mierloos-theater/shared/utils/focalPoints';
 
 import type { GalleryBlock } from '@ons-mierloos-theater/shared/schemas/blocks';
-import type { ImageMetadata } from '@ons-mierloos-theater/shared/db';
+import type { ImageMetadata, FocalPoints } from '@ons-mierloos-theater/shared/db';
 
 function FullscreenImageDialog({
   imageId,
@@ -66,14 +66,8 @@ interface GalleryBlockDisplayProps {
 export function GalleryBlockDisplay({ block, images = [] }: GalleryBlockDisplayProps) {
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
 
-  const sizes = {
-    xs: [100, 56],
-    sm: [200, 112],
-    md: [400, 225],
-    lg: [800, 450],
-    xl: [1200, 675],
-  };
-  const [width, height] = sizes[block.imageSize || 'md'];
+  const widths = { xs: 100, sm: 200, md: 400, lg: 800, xl: 1200 };
+  const width = widths[block.imageSize || 'md'];
 
   if (block.imageIds.length === 0) return null;
   const visibleCount = block.visibleImages || 1;
@@ -87,16 +81,16 @@ export function GalleryBlockDisplay({ block, images = [] }: GalleryBlockDisplayP
             return (
               <CarouselItem key={imageId} className={`basis-1/${visibleCount}`}>
                 <div
-                  className="relative w-full aspect-video cursor-pointer"
+                  className="relative w-full aspect-video cursor-pointer overflow-hidden rounded"
                   onClick={() => setFullscreenImage(imageId)}
                 >
                   <Image
                     src={getImageUrl(imageId)}
                     alt="Gallery image"
-                    width={width}
-                    height={height}
-                    className="object-cover rounded"
-                    style={getFocalPointStyle(imageData?.focalPoints as any, '16:9')}
+                    fill
+                    className="object-cover"
+                    style={getFocalPointStyle(imageData?.focalPoints as FocalPoints, '16:9')}
+                    sizes={`${width}px`}
                   />
                 </div>
               </CarouselItem>

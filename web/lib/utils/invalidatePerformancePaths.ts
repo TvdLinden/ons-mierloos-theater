@@ -1,4 +1,4 @@
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 
 /**
  * Invalidates all relevant paths that depend on performance data.
@@ -10,7 +10,9 @@ export function invalidatePerformancePaths(performanceId: string) {
   revalidatePath('/performances'); // Public listing
   revalidatePath('/voorstellingen'); // Public listing (Dutch)
   revalidatePath(`/voorstellingen/${performanceId}`); // Performance detail page (Dutch)
-  revalidatePath('/'); // Homepage
+  revalidatePath('/');
+  revalidateTag('homepage');
+  revalidateTag('voorstellingen');
 
   // Add more paths here if needed
 }

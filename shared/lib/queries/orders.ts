@@ -60,6 +60,7 @@ export async function getOrderById(orderId: string) {
           coupon: true,
         },
       },
+      orderRefunds: true,
     },
   });
 }

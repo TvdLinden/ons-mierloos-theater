@@ -29,7 +29,10 @@ export default function HomeNews({ articles }: HomeNewsProps) {
         <Carousel className="w-full">
           <CarouselContent className="-ml-6 items-stretch">
             {articles.map((article) => (
-              <CarouselItem key={article.id} className="pl-6 md:basis-1/2 lg:basis-1/3 flex flex-col">
+              <CarouselItem
+                key={article.id}
+                className="pl-6 md:basis-1/2 lg:basis-1/3 flex flex-col"
+              >
                 <NewsCard article={article} />
               </CarouselItem>
             ))}

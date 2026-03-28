@@ -5,7 +5,6 @@ type ProseProps = {
 } & JSX.IntrinsicElements['article'];
 
 export default function Prose({ content }: ProseProps) {
-
   return (
     <article className="prose prose-lg">
       <div dangerouslySetInnerHTML={{ __html: content }} />

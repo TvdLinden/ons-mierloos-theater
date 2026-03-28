@@ -303,9 +303,23 @@ export async function getUpcomingShows(
     perfDateFilter = gte(performances.date, nowUTC);
   }
 
-  // Build the query with conditional limit and offset
+  // Require at least one upcoming performance at the SQL level so the LIMIT
+  // is applied after filtering, matching the behaviour of getUpcomingShowsCount.
+  const hasUpcomingPerformance = exists(
+    db
+      .select()
+      .from(performances)
+      .where(
+        and(
+          eq(performances.showId, shows.id),
+          inArray(performances.status, ['published', 'sold_out']),
+          perfDateFilter,
+        ),
+      ),
+  );
+
   const queryConfig = {
-    where: whereConditions,
+    where: and(whereConditions, hasUpcomingPerformance),
     with: {
       image: true,
       performances: {
@@ -321,16 +335,12 @@ export async function getUpcomingShows(
     ...(limit && limit > 0 ? { limit } : {}),
   } as const;
 
-  // Execute query
   const result = await db.query.shows.findMany(queryConfig as any);
 
-  // Filter out shows with no upcoming performances and map tags
-  return result
-    .filter((show: any) => show.performances.length > 0)
-    .map((show: any) => ({
-      ...show,
-      tags: show.showTags.map((st: any) => st.tag).filter(Boolean),
-    })) as ShowWithTagsAndPerformances[];
+  return result.map((show: any) => ({
+    ...show,
+    tags: show.showTags.map((st: any) => st.tag).filter(Boolean),
+  })) as ShowWithTagsAndPerformances[];
 }
 
 /**

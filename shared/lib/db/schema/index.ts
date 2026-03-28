@@ -18,7 +18,7 @@ import { shows, performances } from './shows';
 import { images } from './images';
 import { tags, showTags } from './tags';
 import { users } from './users';
-import { orders, lineItems, tickets, blockedSeats } from './orders';
+import { orders, lineItems, tickets, blockedSeats, orderRefunds } from './orders';
 import { payments } from './payments';
 import { coupons, couponPerformances, couponUsages } from './coupons';
 import { sponsors } from './sponsors';
@@ -66,6 +66,11 @@ export const ordersRelations = relations(orders, ({ one, many }) => ({
   lineItems: many(lineItems),
   payments: many(payments),
   couponUsages: many(couponUsages),
+  orderRefunds: many(orderRefunds),
+}));
+
+export const orderRefundsRelations = relations(orderRefunds, ({ one }) => ({
+  order: one(orders, { fields: [orderRefunds.orderId], references: [orders.id] }),
 }));
 
 export const paymentsRelations = relations(payments, ({ one }) => ({

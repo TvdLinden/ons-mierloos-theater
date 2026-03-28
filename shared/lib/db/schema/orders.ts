@@ -16,7 +16,14 @@ import {
 import { users } from './users';
 import { performances } from './shows';
 
-const orderStatusValues = ['pending', 'paid', 'failed', 'cancelled', 'refunded'] as const;
+const orderStatusValues = [
+  'pending',
+  'paid',
+  'failed',
+  'cancelled',
+  'refunded',
+  'refund_pending',
+] as const;
 type OrderStatus = (typeof orderStatusValues)[number];
 
 export const orderStatus = pgEnum(
@@ -94,6 +101,37 @@ export const tickets = pgTable(
     index('tickets_order_id_idx').on(table.orderId),
     index('tickets_qr_token_idx').on(table.qrToken),
     index('tickets_ticket_number_idx').on(table.ticketNumber),
+  ],
+);
+
+const refundStatusValues = ['pending', 'completed', 'failed'] as const;
+type RefundStatus = (typeof refundStatusValues)[number];
+
+export const refundStatus = pgEnum(
+  'refund_status',
+  refundStatusValues as unknown as [RefundStatus, ...RefundStatus[]],
+);
+
+export const orderRefunds = pgTable(
+  'order_refunds',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    orderId: uuid('order_id')
+      .notNull()
+      .references(() => orders.id, { onDelete: 'cascade' }),
+    mollieRefundId: varchar('mollie_refund_id', { length: 255 }),
+    amount: decimal('amount', { precision: 10, scale: 2 }).notNull(),
+    currency: varchar('currency', { length: 3 }).default('EUR').notNull(),
+    description: text('description'),
+    status: refundStatus('status').default('pending').notNull(),
+    ticketIdsToCancel: text('ticket_ids_to_cancel'), // JSON array of ticket UUIDs
+    requestedAt: timestamp('requested_at', { withTimezone: true }).defaultNow(),
+    completedAt: timestamp('completed_at', { withTimezone: true }),
+  },
+  (table) => [
+    index('order_refunds_order_id_idx').on(table.orderId),
+    index('order_refunds_mollie_refund_id_idx').on(table.mollieRefundId),
+    index('order_refunds_status_idx').on(table.status),
   ],
 );
 

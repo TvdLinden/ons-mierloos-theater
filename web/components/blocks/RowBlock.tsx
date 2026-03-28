@@ -26,12 +26,12 @@ export function RowBlockEdit({ block, onChange }: RowBlockEditProps) {
   return (
     <div className="space-y-3">
       <div className="bg-purple-50 border border-purple-200 rounded p-4">
-        <p className="text-sm font-medium text-purple-900 mb-4">Row (Horizontal Stack)</p>
         <BlockEditor
           initialBlocks={block.children}
           name={`${block.id}-children`}
           onChange={(children) => onChange({ children })}
           allowedBlockTypes={['text', 'image', 'youtube', 'gallery', 'column']}
+          hidePreview={true}
         />
       </div>
     </div>

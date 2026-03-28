@@ -1,4 +1,4 @@
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 
 /**
  * Invalidates all relevant paths that depend on show data.
@@ -22,6 +22,9 @@ export function invalidateShowPaths(showId?: string) {
 
   // Public pages
   revalidatePath('/'); // Homepage (displays upcoming shows)
+  revalidateTag('homepage');
+  revalidatePath('/voorstellingen');
+  revalidateTag('voorstellingen');
   revalidatePath('/performances'); // Public performances listing
 
   if (showId) {
@@ -41,6 +44,9 @@ export function invalidateShowPaths(showId?: string) {
  */
 export function invalidateShowPathsBySlug(slug: string) {
   revalidatePath(`/performances/${slug}`);
-  revalidatePath('/'); // Homepage
-  revalidatePath('/performances'); // Public performances listing
+  revalidatePath('/');
+  revalidateTag('homepage');
+  revalidatePath('/voorstellingen');
+  revalidateTag('voorstellingen');
+  revalidatePath('/performances');
 }

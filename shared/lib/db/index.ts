@@ -6,6 +6,7 @@ import {
   users,
   lineItems,
   orders,
+  orderRefunds,
   payments,
   tags,
   showTags,
@@ -23,6 +24,7 @@ import {
   usersRelations,
   lineItemsRelations,
   ordersRelations,
+  orderRefundsRelations,
   paymentsRelations,
   tagsRelations,
   showTagsRelations,
@@ -57,6 +59,7 @@ export type UserRole = User['role'];
 export type LineItem = typeof lineItems.$inferSelect;
 export type Order = typeof orders.$inferSelect;
 export type OrderStatus = Order['status'];
+export type OrderRefund = typeof orderRefunds.$inferSelect;
 export type Payment = typeof payments.$inferSelect;
 export type PaymentStatus = Payment['status'];
 export type Tag = typeof tags.$inferSelect;
@@ -137,6 +140,7 @@ const db = drizzle(pool, {
     users,
     lineItems,
     orders,
+    orderRefunds,
     payments,
     tags,
     showTags,
@@ -154,6 +158,7 @@ const db = drizzle(pool, {
     usersRelations,
     lineItemsRelations,
     ordersRelations,
+    orderRefundsRelations,
     paymentsRelations,
     tagsRelations,
     showTagsRelations,

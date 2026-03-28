@@ -7,8 +7,11 @@ import {
   coupons,
   couponUsages,
   tickets,
+  orderRefunds,
 } from '@ons-mierloos-theater/shared/db/schema';
-import { eq, sql } from 'drizzle-orm';
+import { and, eq, inArray, sql } from 'drizzle-orm';
+
+const MOLLIE_API_URL = 'https://api.mollie.com/v2';
 import { createTicketsForLineItem } from '@ons-mierloos-theater/shared/commands/tickets';
 import { sendOrderConfirmationEmail } from '@ons-mierloos-theater/shared/utils/email';
 
@@ -50,7 +53,11 @@ export async function handlePaymentWebhook(
   const orderId = paymentRecord.orderId;
 
   // Check idempotency - don't reprocess if already in final state
-  if (paymentRecord.status === 'succeeded' || paymentRecord.status === 'failed') {
+  // Exception: allow re-processing when order is refund_pending (waiting for refund webhook)
+  if (
+    (paymentRecord.status === 'succeeded' || paymentRecord.status === 'failed') &&
+    paymentRecord.order?.status !== 'refund_pending'
+  ) {
     console.log(
       `[PAYMENT_WEBHOOK] Payment ${paymentId} already in final state: ${paymentRecord.status}`,
     );
@@ -58,6 +65,11 @@ export async function handlePaymentWebhook(
   }
 
   try {
+    // Handle refund webhook when order is awaiting refund confirmation
+    if (paymentRecord.order?.status === 'refund_pending') {
+      return await handleRefundWebhook(orderId, paymentId, paymentRecord.paymentProvider ?? '');
+    }
+
     let paymentStatus: string;
 
     // Handle mock payments differently
@@ -324,4 +336,141 @@ async function handlePaymentFailure(
 
     console.log(`✅ Order ${orderId} marked as failed, seats and coupons released`);
   });
+}
+
+/**
+ * Handle refund webhook — called when order is in refund_pending state.
+ * Fetches refund status from Mollie and delegates to complete/fail handler.
+ */
+async function handleRefundWebhook(
+  orderId: string,
+  paymentId: string,
+  paymentProvider: string,
+): Promise<{ success: boolean; orderId: string; status: string }> {
+  console.log(`[REFUND_WEBHOOK] Processing refund for order ${orderId}`);
+
+  // Find our pending refund record
+  const pendingRefund = await db.query.orderRefunds.findFirst({
+    where: and(eq(orderRefunds.orderId, orderId), eq(orderRefunds.status, 'pending')),
+  });
+
+  if (!pendingRefund) {
+    console.warn(`[REFUND_WEBHOOK] No pending refund found for order ${orderId}`);
+    return { success: true, orderId, status: 'no_pending_refund' };
+  }
+
+  // Mock: auto-complete the refund
+  if (USE_MOCK_PAYMENT || paymentProvider === 'mock') {
+    console.log(`[REFUND_WEBHOOK] Auto-completing mock refund for order ${orderId}`);
+    await handleRefundComplete(orderId, pendingRefund);
+    return { success: true, orderId, status: 'refunded' };
+  }
+
+  if (!process.env.MOLLIE_API_KEY) {
+    throw new Error('MOLLIE_API_KEY not configured');
+  }
+
+  // Fetch refunds for this payment from Mollie
+  const response = await fetch(`${MOLLIE_API_URL}/payments/${paymentId}/refunds`, {
+    headers: { Authorization: `Bearer ${process.env.MOLLIE_API_KEY}` },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch Mollie refunds: ${await response.text()}`);
+  }
+
+  const { _embedded } = await response.json();
+  const mollieRefunds: Array<{ id: string; status: string }> = _embedded?.refunds ?? [];
+
+  const mollieRefund = mollieRefunds.find((r) => r.id === pendingRefund.mollieRefundId);
+
+  if (!mollieRefund) {
+    console.warn(`[REFUND_WEBHOOK] Mollie refund ${pendingRefund.mollieRefundId} not found yet`);
+    return { success: true, orderId, status: 'refund_pending' };
+  }
+
+  console.log(`[REFUND_WEBHOOK] Mollie refund status: ${mollieRefund.status}`);
+
+  if (mollieRefund.status === 'refunded') {
+    await handleRefundComplete(orderId, pendingRefund);
+    return { success: true, orderId, status: 'refunded' };
+  }
+
+  if (mollieRefund.status === 'failed') {
+    await handleRefundFailed(orderId, pendingRefund.id);
+    return { success: true, orderId, status: 'refund_failed' };
+  }
+
+  // queued / pending / processing — still waiting
+  return { success: true, orderId, status: 'refund_pending' };
+}
+
+/**
+ * Complete a refund: mark order refunded, delete selected tickets, release seats.
+ */
+async function handleRefundComplete(
+  orderId: string,
+  refund: { id: string; ticketIdsToCancel: string | null },
+): Promise<void> {
+  console.log(`[REFUND_COMPLETE] Completing refund for order ${orderId}`);
+
+  const ticketIds: string[] = JSON.parse(refund.ticketIdsToCancel ?? '[]');
+
+  await db.transaction(async (tx) => {
+    // Mark refund record as completed
+    await tx
+      .update(orderRefunds)
+      .set({ status: 'completed', completedAt: new Date() })
+      .where(eq(orderRefunds.id, refund.id));
+
+    // Mark order as refunded
+    await tx
+      .update(orders)
+      .set({ status: 'refunded', updatedAt: new Date() })
+      .where(eq(orders.id, orderId));
+
+    if (ticketIds.length > 0) {
+      // Fetch tickets to determine which performances need seat release
+      const ticketsToDelete = await tx.query.tickets.findMany({
+        where: inArray(tickets.id, ticketIds),
+      });
+
+      // Release seats grouped by performance
+      const seatsByPerf = new Map<string, number>();
+      for (const t of ticketsToDelete) {
+        seatsByPerf.set(t.performanceId, (seatsByPerf.get(t.performanceId) ?? 0) + 1);
+      }
+
+      for (const [perfId, qty] of seatsByPerf.entries()) {
+        await tx.execute(
+          sql`UPDATE ${performances} SET available_seats = available_seats + ${qty} WHERE id = ${perfId}`,
+        );
+        console.log(`[REFUND_COMPLETE] Released ${qty} seats for performance ${perfId}`);
+      }
+
+      // Delete the ticket rows (invalidates QR codes)
+      await tx.delete(tickets).where(inArray(tickets.id, ticketIds));
+      console.log(`[REFUND_COMPLETE] Deleted ${ticketIds.length} ticket(s)`);
+    }
+  });
+
+  console.log(`✅ Refund completed for order ${orderId}`);
+}
+
+/**
+ * Handle a failed refund: revert order status back to paid.
+ */
+async function handleRefundFailed(orderId: string, refundId: string): Promise<void> {
+  console.log(`[REFUND_FAILED] Refund failed for order ${orderId}`);
+
+  await db.transaction(async (tx) => {
+    await tx.update(orderRefunds).set({ status: 'failed' }).where(eq(orderRefunds.id, refundId));
+
+    await tx
+      .update(orders)
+      .set({ status: 'paid', updatedAt: new Date() })
+      .where(eq(orders.id, orderId));
+  });
+
+  console.log(`[REFUND_FAILED] Order ${orderId} reverted to paid`);
 }
